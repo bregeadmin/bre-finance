@@ -126,7 +126,7 @@ input[type=date]{max-width:100%;font-size:13px}
 <div id="b-prepay-block" style="display:none;background:var(--bg3);border-radius:var(--r8);padding:12px;margin-bottom:12px">
 <div style="font-size:11px;font-weight:600;color:var(--t3);text-transform:uppercase;margin-bottom:8px">Детали предоплаты</div>
 <div class="form-grid" style="margin-bottom:0">
-<div class="fg"><label>Сумма предоплаты</label><input type="number" id="b-pre-amt" placeholder="0.00"></div>
+<div class="fg"><label>Сумма предоплаты</label><input type="number" id="b-pre-amt" placeholder="0.00" oninput="calcP()"></div>
 <div class="fg"><label>Способ</label><select id="b-pre-type"><option value="cash">Кэш</option><option value="card">Карта</option><option value="transfer">Перевод</option></select></div>
 <div class="fg"><label>Остаток к оплате</label><input type="number" id="b-pre-rest" placeholder="0.00"></div>
 <div class="fg"><label>Когда</label><select id="b-pre-when"><option value="checkin">При заезде</option><option value="later">Позже</option></select></div>
@@ -232,9 +232,6 @@ input[type=date]{max-width:100%;font-size:13px}
 <div class="card" style="margin-bottom:12px"><div class="card-b" style="padding:10px 16px">
 <select class="si" id="pnl-mon" onchange="renderPnl()" style="width:180px">
 <option value="all">Все месяцы</option>
-<option value="2026-05" selected>Май 2026</option>
-<option value="2026-04">Апрель 2026</option>
-<option value="2026-03">Март 2026</option>
 </select>
 </div></div>
 <div class="card">
@@ -396,7 +393,7 @@ document.getElementById('nav-'+name).classList.add('active');
 document.getElementById('tb-t').textContent=PTITLES[name]||name;
 document.getElementById('tb-s').textContent=PSUBS[name]||'';
 closeSb();
-({dashboard:renderDash,bookings:renderB,expenses:renderE,owners:renderOwners,reports:()=>popMons(),pnl:renderPnl,split:renderSplit,object:initObjDetail,settings:renderSettings})[name]?.();
+({dashboard:renderDash,bookings:renderB,expenses:renderE,owners:renderOwners,reports:()=>popMons(),pnl:()=>{popMons();renderPnl();},split:renderSplit,object:initObjDetail,settings:renderSettings})[name]?.();
 }
 function popSels(){
 ['b-obj','e-obj','r-obj','od-obj'].forEach(id=>{
@@ -408,9 +405,19 @@ if(cur)el.value=cur;
 });
 }
 function popMons(){
-const el=document.getElementById('r-mon');if(!el)return;el.innerHTML='';
-const now=new Date();
-for(let i=0;i<12;i++){const d=new Date(now.getFullYear(),now.getMonth()-i,1);const k=d.toISOString().substring(0,7);const op=document.createElement('option');op.value=k;op.textContent=mlbl(k);if(i===0)op.selected=true;el.appendChild(op);}
+  // Build month list from bookings data + last 12 months
+  const monSet=new Set();
+  const now=new Date();
+  for(let i=0;i<12;i++){const d=new Date(now.getFullYear(),now.getMonth()-i,1);monSet.add(d.toISOString().substring(0,7));}
+  S.bookings.forEach(b=>{if(b.ci)monSet.add(b.ci.substring(0,7));});
+  const mons=[...monSet].sort((a,b)=>b.localeCompare(a));
+  const curMon=cmon();
+
+  // Populate reports month select
+  const el=document.getElementById('r-mon');if(el){el.innerHTML='';mons.forEach(k=>{const op=document.createElement('option');op.value=k;op.textContent=mlbl(k);if(k===curMon)op.selected=true;el.appendChild(op);});}
+
+  // Populate pnl month select
+  const pel=document.getElementById('pnl-mon');if(pel){const cur=pel.value;pel.innerHTML='<option value="all">Все месяцы</option>';mons.forEach(k=>{const op=document.createElement('option');op.value=k;op.textContent=mlbl(k);if(k===curMon)op.selected=true;pel.appendChild(op);});if(cur&&cur!=='all')pel.value=cur;}
 }
 function toggleFinStatus(){
   const v=document.getElementById('b-fstatus').value;
@@ -429,8 +436,17 @@ const cur=document.getElementById('b-cur').value,cl=parseFloat(document.getEleme
 const cp=parseFloat(document.getElementById('b-cp').value)||0,src=document.getElementById('b-src').value;
 const ci=document.getElementById('b-ci').value,co=document.getElementById('b-co').value,obj=document.getElementById('b-obj').value;
 const nights=ci&&co?nb(ci,co):0;
-const g=toUSD(amt,cur)+toUSD(cl,'usd'),comm=src==='direct'?0:g*cp/100,net=g-comm;
+const g=toUSD(amt,cur)+toUSD(cl,'usd'),comm=(src==='direct'||src==='other')?0:g*cp/100,net=g-comm;
 const op=obj?opct(obj,nights):(nights>=30?0.85:0.70);
+// Auto-calculate prepay rest
+const fst=document.getElementById('b-fstatus').value;
+if(fst==='prepay'){
+  const preAmt=parseFloat(document.getElementById('b-pre-amt').value)||0;
+  if(preAmt>0){
+    const rest=Math.max(0,parseFloat(amt)-preAmt);
+    document.getElementById('b-pre-rest').value=rest.toFixed(2);
+  }
+}
 box.style.display='block';
 box.innerHTML=`Собрано: <b>${fu(g)}</b> · Комиссия: <b style="color:var(--pink)">-${fu(comm).slice(1)}</b> · Чистая: <b>${fu(net)}</b><br>Схема: <b style="color:var(--pink-d)">${nights>=30?'≥30н':'&lt;30н'} → ${(op*100).toFixed(0)}% собственнику</b> · Собственнику: <b>${fu(net*op)}</b> · Нам: <b>${fu(net*(1-op))}</b>`;
 }
