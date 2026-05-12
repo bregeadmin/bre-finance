@@ -109,11 +109,30 @@ input[type=date]{max-width:100%;font-size:13px}
 <div class="fg"><label>Выезд</label><input type="date" id="b-co" oninput="autoN();calcP()"></div>
 <div class="fg"><label>Сумма</label><input type="number" id="b-amt" placeholder="0.00" oninput="calcP()"></div>
 <div class="fg"><label>Валюта</label><select id="b-cur" onchange="calcP()"><option value="usd">USD</option><option value="gel">GEL</option></select></div>
-<div class="fg"><label>Источник</label><select id="b-src" onchange="togC();calcP()"><option value="airbnb">Airbnb</option><option value="booking">Booking</option><option value="direct">Прямое</option><option value="other">Другое</option></select></div>
+<div class="fg"><label>Источник</label><select id="b-src" onchange="togC();calcP()"><option value="airbnb">Airbnb</option><option value="booking">Booking</option><option value="sutochno">Суточно</option><option value="direct">Прямое</option><option value="other">Другое</option></select></div>
 <div class="fg" id="cw"><label>Комиссия %</label><input type="number" id="b-cp" value="15" oninput="calcP()"></div>
-<div class="fg"><label>Уборка (гость)</label><input type="number" id="b-cl" placeholder="0" oninput="calcP()"></div>
+<div class="fg"><label>Уборка — сумма</label><input type="number" id="b-cl" placeholder="0" oninput="calcP()"></div>
+<div class="fg"><label>Уборка за счёт</label><select id="b-cl-who"><option value="client">Клиента</option><option value="us">Нас</option></select></div>
+<div class="fg"><label>Вид оплаты</label><select id="b-paytype"><option value="cash">Кэш</option><option value="card">Карта</option><option value="transfer">Перевод</option></select></div>
+<div class="fg"><label>Кто принял</label><select id="b-who"><option value="olya">Оля</option><option value="artem">Артём</option></select></div>
 <div class="fg"><label>Ночей <span id="n-a" style="color:var(--pink);font-weight:600"></span></label><input type="number" id="b-n" readonly style="background:var(--bg3);color:var(--t3)"></div>
+<div class="fg"><label>Финансовый статус</label><select id="b-fstatus" onchange="toggleFinStatus()">
+<option value="full">Оплачено полностью</option>
+<option value="prepay">Внесена предоплата</option>
+<option value="platform">На счету платформы</option>
+<option value="pending">Ожидает оплаты</option>
+</select></div>
 </div>
+<div id="b-prepay-block" style="display:none;background:var(--bg3);border-radius:var(--r8);padding:12px;margin-bottom:12px">
+<div style="font-size:11px;font-weight:600;color:var(--t3);text-transform:uppercase;margin-bottom:8px">Детали предоплаты</div>
+<div class="form-grid" style="margin-bottom:0">
+<div class="fg"><label>Сумма предоплаты</label><input type="number" id="b-pre-amt" placeholder="0.00"></div>
+<div class="fg"><label>Способ</label><select id="b-pre-type"><option value="cash">Кэш</option><option value="card">Карта</option><option value="transfer">Перевод</option></select></div>
+<div class="fg"><label>Остаток к оплате</label><input type="number" id="b-pre-rest" placeholder="0.00"></div>
+<div class="fg"><label>Когда</label><select id="b-pre-when"><option value="checkin">При заезде</option><option value="later">Позже</option></select></div>
+</div>
+</div>
+<div class="fg" style="margin-bottom:12px"><label>Комментарий</label><input type="text" id="b-comment" placeholder="Любые заметки по брони..."></div>
 <div class="prev" id="prevbox"></div>
 <div style="display:flex;gap:8px">
 <button class="btn btn-pk" id="b-sbm" onclick="subB()"><i class="ti ti-check" aria-hidden="true"></i> <span id="b-btn">Добавить</span></button>
@@ -124,9 +143,17 @@ input[type=date]{max-width:100%;font-size:13px}
 <div class="card">
 <div class="card-h">
 <div class="card-t"><i class="ti ti-list" aria-hidden="true"></i> Список</div>
+<div style="display:flex;align-items:center;gap:8px">
+<select id="b-sort" onchange="renderB()" class="si" style="font-size:11px;padding:4px 8px">
+<option value="date-desc">Дата ↓</option>
+<option value="date-asc">Дата ↑</option>
+<option value="obj">По объекту</option>
+<option value="amount">По сумме</option>
+</select>
 <div class="tabs" style="margin:0"><button class="tab active" onclick="fB('all',this)">Все</button><button class="tab" onclick="fB('month',this)">Этот месяц</button></div>
 </div>
-<table><thead><tr><th>Объект</th><th>Гость</th><th>Период</th><th>Собрано</th><th>Ком-я</th><th>Чистая</th><th>Собств.</th><th>Нам</th><th></th></tr></thead><tbody id="btb"></tbody></table>
+</div>
+<table><thead><tr><th>Объект</th><th>Гость</th><th>Период</th><th>Собрано</th><th>Ком-я</th><th>Чистая</th><th>Собств.</th><th>Нам</th><th>Статус</th><th>Кто</th><th>Комментарий</th><th></th></tr></thead><tbody id="btb"></tbody></table>
 </div>
 </div>
 <div class="page" id="page-expenses">
@@ -135,7 +162,16 @@ input[type=date]{max-width:100%;font-size:13px}
 <div class="card-b">
 <div class="form-grid">
 <div class="fg"><label>Объект</label><select id="e-obj"><option value="__all">Общий (все)</option></select></div>
-<div class="fg"><label>Категория</label><select id="e-cat"><option value="communal">Коммунальные (с собственника)</option><option value="cleaning">Уборка (с нас)</option><option value="repair">Ремонт (с нас)</option><option value="rent">Аренда (с нас)</option><option value="ads">Реклама (с нас)</option><option value="other">Другое (с нас)</option></select></div>
+<div class="fg"><label>Категория</label><select id="e-cat" onchange="toggleExpCat()">
+<option value="communal">Коммунальные (с собственника)</option>
+<option value="cleaning">Уборка (с нас)</option>
+<option value="repair">Ремонт (с нас)</option>
+<option value="household">Хозтовары (с нас)</option>
+<option value="ads">Реклама (с нас)</option>
+<option value="other">Другое (с нас)</option>
+<option value="free">Свободный вариант</option>
+</select></div>
+<div class="fg" id="e-free-wrap" style="display:none"><label>Своя категория</label><input type="text" id="e-free-cat" placeholder="Название категории"></div>
 <div class="fg"><label>Сумма</label><input type="number" id="e-amt" placeholder="0.00"></div>
 <div class="fg"><label>Валюта</label><select id="e-cur"><option value="usd">USD</option><option value="gel">GEL</option></select></div>
 <div class="fg"><label>Дата</label><input type="date" id="e-dt"></div>
@@ -144,10 +180,11 @@ input[type=date]{max-width:100%;font-size:13px}
 <option value="company">Средства компании</option>
 <option value="olya">Средства Оли</option>
 <option value="artem">Средства Артёма</option>
-</select>
+</select></div>
+<div class="fg"><label>Вид оплаты</label><select id="e-paytype"><option value="cash">Кэш</option><option value="card">Карта</option><option value="transfer">Перевод</option></select></div>
+<div class="fg"><label>Кто вносит</label><select id="e-who"><option value="olya">Оля</option><option value="artem">Артём</option></select></div>
 </div>
-<div class="fg"><label>Комментарий</label><input type="text" id="e-cm" placeholder="Примечание"></div>
-</div>
+<div class="fg" style="margin-bottom:12px"><label>Комментарий</label><input type="text" id="e-cm" placeholder="Любые заметки..."></div>
 <div style="display:flex;gap:8px">
 <button class="btn btn-pk" id="e-sbm" onclick="subE()"><i class="ti ti-check" aria-hidden="true"></i> <span id="e-btn">Добавить</span></button>
 <button class="btn btn-gh" id="e-can" onclick="canE()" style="display:none"><i class="ti ti-x" aria-hidden="true"></i> Отмена</button>
@@ -155,8 +192,17 @@ input[type=date]{max-width:100%;font-size:13px}
 </div>
 </div>
 <div class="card">
-<div class="card-h"><div class="card-t"><i class="ti ti-list" aria-hidden="true"></i> Расходы</div></div>
-<table><thead><tr><th>Объект</th><th>Категория</th><th>Сумма</th><th>Кто платит</th><th>Оплачено из</th><th>Дата</th><th>Комментарий</th><th></th></tr></thead><tbody id="etb"></tbody></table>
+<div class="card-h">
+<div class="card-t"><i class="ti ti-list" aria-hidden="true"></i> Расходы</div>
+<select id="e-sort" onchange="renderE()" class="si" style="font-size:11px;padding:4px 8px">
+<option value="date-desc">Дата ↓</option>
+<option value="date-asc">Дата ↑</option>
+<option value="obj">По объекту</option>
+<option value="cat">По категории</option>
+<option value="amount">По сумме</option>
+</select>
+</div>
+<table><thead><tr><th>Объект</th><th>Категория</th><th>Сумма</th><th>Кто платит</th><th>Оплачено из</th><th>Вид оплаты</th><th>Кто внёс</th><th>Дата</th><th>Комментарий</th><th></th></tr></thead><tbody id="etb"></tbody></table>
 </div>
 </div>
 <div class="page" id="page-owners">
@@ -311,8 +357,12 @@ input[type=date]{max-width:100%;font-size:13px}
 </div>
 <script>
 const OBJ=['Красная камелия','Белая камелия','Лермонтова','Корал','Кава Вью','НЕКСТ','Батуми Вью','Гринсайд','Санрайс','Гранат','Бургунди'];
-const CATLBL={communal:'Коммунальные',cleaning:'Уборка',repair:'Ремонт',rent:'Аренда',ads:'Реклама',other:'Другое'};
-const CATWHO={communal:'owner',cleaning:'us',repair:'us',rent:'us',ads:'us',other:'us'};
+const CATLBL={communal:'Коммунальные',cleaning:'Уборка',repair:'Ремонт',household:'Хозтовары',ads:'Реклама',other:'Другое',free:'Своё'};
+const CATWHO={communal:'owner',cleaning:'us',repair:'us',household:'us',ads:'us',other:'us',free:'us'};
+const PAYTLBL={cash:'Кэш',card:'Карта',transfer:'Перевод'};
+const FSTLBL={full:'Оплачено',prepay:'Предоплата',platform:'На платформе',pending:'Ожидает'};
+const FSTCLS={full:'pg',prepay:'pa',platform:'ps',pending:'br'};
+const WHOLBL={olya:'Оля',artem:'Артём',company:'Компания'};
 const MRU=['Январь','Февраль','Март','Апрель','Май','Июнь','Июль','Август','Сентябрь','Октябрь','Ноябрь','Декабрь'];
 const SRCLBL={airbnb:'Airbnb',booking:'Booking',direct:'Прямое',other:'Другое'};
 function defOwn(){const o={};OBJ.forEach(x=>{o[x]={name:'',shortPct:70,longPct:x==='Корал'?90:85};});return o;}
@@ -362,8 +412,16 @@ const el=document.getElementById('r-mon');if(!el)return;el.innerHTML='';
 const now=new Date();
 for(let i=0;i<12;i++){const d=new Date(now.getFullYear(),now.getMonth()-i,1);const k=d.toISOString().substring(0,7);const op=document.createElement('option');op.value=k;op.textContent=mlbl(k);if(i===0)op.selected=true;el.appendChild(op);}
 }
+function toggleFinStatus(){
+  const v=document.getElementById('b-fstatus').value;
+  document.getElementById('b-prepay-block').style.display=v==='prepay'?'block':'none';
+}
+function toggleExpCat(){
+  const v=document.getElementById('e-cat').value;
+  document.getElementById('e-free-wrap').style.display=v==='free'?'':'none';
+}
 function autoN(){const ci=document.getElementById('b-ci').value,co=document.getElementById('b-co').value;if(ci&&co){const n=nb(ci,co);document.getElementById('b-n').value=n||'';document.getElementById('n-a').textContent=n?n+'н':'';}}
-function togC(){const src=document.getElementById('b-src').value;document.getElementById('cw').style.opacity=src==='direct'?'0.35':'1';if(src==='direct')document.getElementById('b-cp').value=0;else if(src==='airbnb')document.getElementById('b-cp').value=3;else if(src==='booking')document.getElementById('b-cp').value=15;}
+function togC(){const src=document.getElementById('b-src').value;document.getElementById('cw').style.opacity=(src==='direct'||src==='other')?'0.35':'1';if(src==='direct'||src==='other')document.getElementById('b-cp').value=0;else if(src==='airbnb')document.getElementById('b-cp').value=3;else if(src==='booking')document.getElementById('b-cp').value=15;else if(src==='sutochno')document.getElementById('b-cp').value=20;}
 function calcP(){
 const amt=parseFloat(document.getElementById('b-amt').value)||0;const box=document.getElementById('prevbox');
 if(!amt){box.style.display='none';return;}
@@ -382,35 +440,67 @@ document.getElementById('b-ci').value=b.ci;document.getElementById('b-co').value
 document.getElementById('b-amt').value=b.amount;document.getElementById('b-cur').value=b.currency;
 document.getElementById('b-src').value=b.source;document.getElementById('b-cp').value=b.commissionPct||0;
 document.getElementById('b-cl').value=b.cleaning||0;document.getElementById('b-n').value=b.nights;
-document.getElementById('n-a').textContent=b.nights+'н';document.getElementById('cw').style.opacity=b.source==='direct'?'0.35':'1';calcP();
+document.getElementById('n-a').textContent=b.nights+'н';
+document.getElementById('cw').style.opacity=(b.source==='direct'||b.source==='other')?'0.35':'1';
+document.getElementById('b-cl-who').value=b.cleaningWho||'client';
+document.getElementById('b-paytype').value=b.payType||'cash';
+document.getElementById('b-who').value=b.enteredBy||'olya';
+document.getElementById('b-fstatus').value=b.finStatus||'full';
+document.getElementById('b-comment').value=b.comment||'';
+const isPre=b.finStatus==='prepay';
+document.getElementById('b-prepay-block').style.display=isPre?'block':'none';
+if(isPre){document.getElementById('b-pre-amt').value=b.prepayAmt||0;document.getElementById('b-pre-type').value=b.prepayType||'cash';document.getElementById('b-pre-rest').value=b.prepayRest||0;document.getElementById('b-pre-when').value=b.prepayWhen||'checkin';}
+calcP();
 }
 function editB(id){const b=S.bookings.find(x=>x.id===id);if(!b)return;eBid=id;fillBF(b);document.getElementById('b-ftitle').textContent='Редактировать бронирование';document.getElementById('b-btn').textContent='Сохранить';document.getElementById('b-can').style.display='';go('bookings');renderB();}
-function canB(){eBid=null;['b-gst','b-amt','b-cl'].forEach(id=>document.getElementById(id).value='');document.getElementById('b-obj').value='';document.getElementById('b-n').value='';document.getElementById('n-a').textContent='';document.getElementById('prevbox').style.display='none';document.getElementById('b-ftitle').textContent='Новое бронирование';document.getElementById('b-btn').textContent='Добавить';document.getElementById('b-can').style.display='none';renderB();}
+function canB(){eBid=null;['b-gst','b-amt','b-cl','b-comment','b-pre-amt','b-pre-rest'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});document.getElementById('b-obj').value='';document.getElementById('b-n').value='';document.getElementById('n-a').textContent='';document.getElementById('prevbox').style.display='none';document.getElementById('b-prepay-block').style.display='none';document.getElementById('b-fstatus').value='full';document.getElementById('b-ftitle').textContent='Новое бронирование';document.getElementById('b-btn').textContent='Добавить';document.getElementById('b-can').style.display='none';renderB();}
 function subB(){
 const obj=document.getElementById('b-obj').value,gst=document.getElementById('b-gst').value.trim();
 const ci=document.getElementById('b-ci').value,co=document.getElementById('b-co').value;
 const amt=parseFloat(document.getElementById('b-amt').value)||0,cur=document.getElementById('b-cur').value;
-const src=document.getElementById('b-src').value,cp=src==='direct'?0:parseFloat(document.getElementById('b-cp').value)||0;
+const src=document.getElementById('b-src').value,cp=(src==='direct'||src==='other')?0:parseFloat(document.getElementById('b-cp').value)||0;
 const cl=parseFloat(document.getElementById('b-cl').value)||0;
+const fst=document.getElementById('b-fstatus').value;
 if(!obj||!ci||!co||!amt){alert('Заполните объект, даты и сумму');return;}
-const data={obj,guest:gst,ci,co,nights:nb(ci,co),amount:amt,currency:cur,source:src,commissionPct:cp,cleaning:cl,amountUsd:toUSD(amt,cur)};
+const data={obj,guest:gst,ci,co,nights:nb(ci,co),amount:amt,currency:cur,source:src,commissionPct:cp,cleaning:cl,amountUsd:toUSD(amt,cur),
+  cleaningWho:document.getElementById('b-cl-who').value,
+  payType:document.getElementById('b-paytype').value,
+  enteredBy:document.getElementById('b-who').value,
+  finStatus:fst,
+  comment:document.getElementById('b-comment').value.trim(),
+  prepayAmt:fst==='prepay'?parseFloat(document.getElementById('b-pre-amt').value)||0:0,
+  prepayType:fst==='prepay'?document.getElementById('b-pre-type').value:'',
+  prepayRest:fst==='prepay'?parseFloat(document.getElementById('b-pre-rest').value)||0:0,
+  prepayWhen:fst==='prepay'?document.getElementById('b-pre-when').value:''
+};
 if(eBid){const i=S.bookings.findIndex(x=>x.id===eBid);if(i!==-1)S.bookings[i]={...S.bookings[i],...data};eBid=null;}
 else S.bookings.push({id:Date.now(),...data});
 save();canB();renderB();renderDash();
 }
 function delB(id){if(!confirm('Удалить бронирование?'))return;S.bookings=S.bookings.filter(b=>b.id!==id);save();renderB();renderDash();}
-function editE(id){const e=S.expenses.find(x=>x.id===id);if(!e)return;eEid=id;document.getElementById('e-obj').value=e.obj;document.getElementById('e-cat').value=e.cat;document.getElementById('e-amt').value=e.amount;document.getElementById('e-cur').value=e.currency;document.getElementById('e-dt').value=e.date;document.getElementById('e-paid').value=e.paidBy||'company';document.getElementById('e-cm').value=e.comment||'';document.getElementById('e-ftitle').textContent='Редактировать расход';document.getElementById('e-btn').textContent='Сохранить';document.getElementById('e-can').style.display='';renderE();}
-function canE(){eEid=null;['e-amt','e-cm'].forEach(id=>document.getElementById(id).value='');document.getElementById('e-obj').value='__all';document.getElementById('e-paid').value='company';document.getElementById('e-ftitle').textContent='Новый расход';document.getElementById('e-btn').textContent='Добавить';document.getElementById('e-can').style.display='none';renderE();}
+function editE(id){const e=S.expenses.find(x=>x.id===id);if(!e)return;eEid=id;
+document.getElementById('e-obj').value=e.obj;document.getElementById('e-cat').value=e.cat;
+document.getElementById('e-amt').value=e.amount;document.getElementById('e-cur').value=e.currency;
+document.getElementById('e-dt').value=e.date;document.getElementById('e-paid').value=e.paidBy||'company';
+document.getElementById('e-paytype').value=e.payType||'cash';
+document.getElementById('e-who').value=e.enteredBy||'olya';
+document.getElementById('e-cm').value=e.comment||'';
+if(e.cat==='free'){document.getElementById('e-free-wrap').style.display='';document.getElementById('e-free-cat').value=e.freeCat||'';}
+document.getElementById('e-ftitle').textContent='Редактировать расход';document.getElementById('e-btn').textContent='Сохранить';document.getElementById('e-can').style.display='';renderE();}
+function canE(){eEid=null;['e-amt','e-cm','e-free-cat'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});document.getElementById('e-obj').value='__all';document.getElementById('e-paid').value='company';document.getElementById('e-free-wrap').style.display='none';document.getElementById('e-ftitle').textContent='Новый расход';document.getElementById('e-btn').textContent='Добавить';document.getElementById('e-can').style.display='none';renderE();}
 function subE(){
 const obj=document.getElementById('e-obj').value,cat=document.getElementById('e-cat').value;
 const amt=parseFloat(document.getElementById('e-amt').value)||0,cur=document.getElementById('e-cur').value;
 const date=document.getElementById('e-dt').value,comment=document.getElementById('e-cm').value.trim();
 const paidBy=document.getElementById('e-paid').value;
+const payType=document.getElementById('e-paytype').value;
+const enteredBy=document.getElementById('e-who').value;
+const freeCat=cat==='free'?document.getElementById('e-free-cat').value.trim():'';
 if(!amt||!date){alert('Заполните сумму и дату');return;}
-const data={obj,cat,amount:amt,currency:cur,date,comment,paidBy,amountUsd:toUSD(amt,cur),who:CATWHO[cat]};
+const data={obj,cat,amount:amt,currency:cur,date,comment,paidBy,payType,enteredBy,freeCat,amountUsd:toUSD(amt,cur),who:CATWHO[cat]||'us'};
 if(eEid){const i=S.expenses.findIndex(x=>x.id===eEid);if(i!==-1)S.expenses[i]={...S.expenses[i],...data};eEid=null;}
 else S.expenses.push({id:Date.now(),...data});
-save();['e-amt','e-cm'].forEach(id=>document.getElementById(id).value='');canE();renderE();
+save();['e-amt','e-cm','e-free-cat'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});canE();renderE();
 }
 function delE(id){if(!confirm('Удалить расход?'))return;S.expenses=S.expenses.filter(e=>e.id!==id);save();renderE();}
 function getStats(fm){
@@ -430,11 +520,39 @@ const rows=OBJ.filter(o=>bo[o].g>0);const tb=document.getElementById('dash-tb');
 if(!rows.length){tb.innerHTML='<tr><td colspan="7"><div class="empty"><i class="ti ti-calendar-off" aria-hidden="true"></i><span>Нет бронирований в текущем месяце</span></div></td></tr>';return;}
 tb.innerHTML=rows.map(o=>{const d=bo[o];const u=d.os-d.oe;return`<tr><td class="s">${o}</td><td>${d.nights}</td><td style="color:var(--sage)">${fu(d.g)}</td><td style="color:var(--pink-d)">${fu(d.comm)}</td><td>${fu(d.net)}</td><td style="color:var(--beige-d)">${fu(d.ob-d.ce)}</td><td style="color:${u>=0?'var(--sage)':'var(--pink-d)'};font-weight:600">${fu(u)}</td></tr>`;}  ).join('');
 }
+function sortBks(bks){
+const s=document.getElementById('b-sort')?.value||'date-desc';
+const arr=[...bks];
+if(s==='date-desc') arr.sort((a,b)=>b.ci.localeCompare(a.ci));
+else if(s==='date-asc') arr.sort((a,b)=>a.ci.localeCompare(b.ci));
+else if(s==='obj') arr.sort((a,b)=>a.obj.localeCompare(b.obj));
+else if(s==='amount') arr.sort((a,b)=>b.amountUsd-a.amountUsd);
+return arr;
+}
 function renderB(){
-const bks=bFilt==='month'?S.bookings.filter(b=>mkey(b.ci)===cmon()):S.bookings;
+const bks=sortBks(bFilt==='month'?S.bookings.filter(b=>mkey(b.ci)===cmon()):S.bookings);
 const tb=document.getElementById('btb');
-if(!bks.length){tb.innerHTML='<tr><td colspan="9"><div class="empty"><i class="ti ti-calendar-off" aria-hidden="true"></i><span>Нет бронирований</span></div></td></tr>';return;}
-tb.innerHTML=[...bks].reverse().map(b=>{const c=cB(b);const isE=eBid===b.id;return`<tr class="${isE?'erow':''}"><td class="s">${b.obj}<br><span class="pill ${b.nights>=30?'pp':'ps'}" style="font-size:9px">${b.nights>=30?'≥30н':'<30н'} ${(c.op*100).toFixed(0)}%</span></td><td>${b.guest||'—'}</td><td style="font-size:11px">${b.ci}<br>${b.co}</td><td style="color:var(--sage)">${fu(c.g)}<br><span style="font-size:10px;color:var(--t3)">${SRCLBL[b.source]}</span></td><td style="color:var(--pink-d)">${b.source==='direct'?'—':'-'+fu(c.comm)}</td><td>${fu(c.net)}</td><td style="color:var(--beige-d)">${fu(c.ob)}</td><td style="font-weight:600;color:var(--pink-d)">${fu(c.os)}</td><td style="white-space:nowrap;display:flex;gap:3px;padding:7px 9px"><button class="btn btn-xs bxe" onclick="editB(${b.id})" aria-label="Редактировать"><i class="ti ti-edit" aria-hidden="true"></i></button><button class="btn btn-xs bxd" onclick="delB(${b.id})" aria-label="Удалить"><i class="ti ti-trash" aria-hidden="true"></i></button></td></tr>`;}  ).join('');
+if(!bks.length){tb.innerHTML='<tr><td colspan="12"><div class="empty"><i class="ti ti-calendar-off" aria-hidden="true"></i><span>Нет бронирований</span></div></td></tr>';return;}
+tb.innerHTML=bks.map(b=>{const c=cB(b);const isE=eBid===b.id;
+const fst=b.finStatus||'full';const fstCls=FSTCLS[fst]||'pg';
+const whoLabel=b.enteredBy==='artem'?'<span class="pill ps" style="font-size:9px">А</span>':'<span class="pill pp" style="font-size:9px">О</span>';
+const ptLabel=PAYTLBL[b.payType||'cash'];
+let finDetail='';
+if(fst==='prepay'&&b.prepayAmt){finDetail=`<div style="font-size:9px;color:var(--t3)">Аванс: ${fu(b.prepayAmt)}</div>`;}
+return`<tr class="${isE?'erow':''}">
+<td class="s">${b.obj}<br><span class="pill ${b.nights>=30?'pp':'ps'}" style="font-size:9px">${b.nights>=30?'≥30н':'<30н'} ${(c.op*100).toFixed(0)}%</span></td>
+<td>${b.guest||'—'}</td>
+<td style="font-size:11px">${b.ci}<br>${b.co}<br><span style="color:var(--t3)">${b.nights}н</span></td>
+<td style="color:var(--sage)">${fu(c.g)}<br><span style="font-size:10px;color:var(--t3)">${SRCLBL[b.source]||b.source} · ${ptLabel}</span></td>
+<td style="color:var(--pink-d)">${b.source==='direct'||b.source==='other'?'—':'-'+fu(c.comm)}</td>
+<td>${fu(c.net)}</td>
+<td style="color:var(--beige-d)">${fu(c.ob)}</td>
+<td style="font-weight:600;color:var(--pink-d)">${fu(c.os)}</td>
+<td><span class="pill ${fstCls}" style="font-size:9px">${FSTLBL[fst]}</span>${finDetail}</td>
+<td>${whoLabel}</td>
+<td style="font-size:11px;color:var(--t3);max-width:120px;overflow:hidden;text-overflow:ellipsis">${b.comment||'—'}</td>
+<td style="white-space:nowrap;display:flex;gap:3px;padding:7px 9px"><button class="btn btn-xs bxe" onclick="editB(${b.id})" aria-label="Редактировать"><i class="ti ti-edit" aria-hidden="true"></i></button><button class="btn btn-xs bxd" onclick="delB(${b.id})" aria-label="Удалить"><i class="ti ti-trash" aria-hidden="true"></i></button></td>
+</tr>`;}).join('');
 }
 function fB(f,el){bFilt=f;document.querySelectorAll('#page-bookings .tab').forEach(t=>t.classList.remove('active'));el.classList.add('active');renderB();}
 function paidByLabel(p){
@@ -442,10 +560,36 @@ if(p==='olya') return '<span class="pill pp" style="font-size:10px"><i class="ti
 if(p==='artem') return '<span class="pill ps" style="font-size:10px"><i class="ti ti-user" style="font-size:9px" aria-hidden="true"></i> Артём</span>';
 return '<span class="pill pg" style="font-size:10px"><i class="ti ti-building" style="font-size:9px" aria-hidden="true"></i> Компания</span>';
 }
+function sortExps(exps){
+const s=document.getElementById('e-sort')?.value||'date-desc';
+const arr=[...exps];
+if(s==='date-desc') arr.sort((a,b)=>b.date.localeCompare(a.date));
+else if(s==='date-asc') arr.sort((a,b)=>a.date.localeCompare(b.date));
+else if(s==='obj') arr.sort((a,b)=>(a.obj||'').localeCompare(b.obj||''));
+else if(s==='cat') arr.sort((a,b)=>a.cat.localeCompare(b.cat));
+else if(s==='amount') arr.sort((a,b)=>b.amountUsd-a.amountUsd);
+return arr;
+}
 function renderE(){
 const tb=document.getElementById('etb');
-if(!S.expenses.length){tb.innerHTML='<tr><td colspan="8"><div class="empty"><i class="ti ti-receipt-off" aria-hidden="true"></i><span>Нет расходов</span></div></td></tr>';return;}
-tb.innerHTML=[...S.expenses].reverse().map(e=>{const isE=eEid===e.id;return`<tr class="${isE?'erow':''}"><td class="s">${e.obj==='__all'?'Общий':e.obj}</td><td><span class="pill pg">${CATLBL[e.cat]}</span></td><td>${e.amount} ${e.currency.toUpperCase()}<br><span style="font-size:10px;color:var(--t3)">${fu(e.amountUsd)}</span></td><td>${e.cat==='communal'?'<span class="pill pb" style="font-size:10px">С собственника</span>':'<span class="pill ps" style="font-size:10px">С нас</span>'}</td><td>${paidByLabel(e.paidBy||'company')}</td><td style="font-size:11px;color:var(--t3)">${e.date}</td><td style="font-size:11px;color:var(--t3)">${e.comment||'—'}</td><td style="white-space:nowrap;display:flex;gap:3px;padding:7px 9px"><button class="btn btn-xs bxe" onclick="editE(${e.id})" aria-label="Редактировать"><i class="ti ti-edit" aria-hidden="true"></i></button><button class="btn btn-xs bxd" onclick="delE(${e.id})" aria-label="Удалить"><i class="ti ti-trash" aria-hidden="true"></i></button></td></tr>`;}  ).join('');
+if(!S.expenses.length){tb.innerHTML='<tr><td colspan="10"><div class="empty"><i class="ti ti-receipt-off" aria-hidden="true"></i><span>Нет расходов</span></div></td></tr>';return;}
+const exps=sortExps(S.expenses);
+tb.innerHTML=exps.map(e=>{const isE=eEid===e.id;
+const catLbl=e.cat==='free'?(e.freeCat||'Своё'):(CATLBL[e.cat]||e.cat);
+const entWho=e.enteredBy==='artem'?'<span class="pill ps" style="font-size:9px">Артём</span>':'<span class="pill pp" style="font-size:9px">Оля</span>';
+const ptLabel=PAYTLBL[e.payType||'cash']||'';
+return`<tr class="${isE?'erow':''}">
+<td class="s">${e.obj==='__all'?'Общий':e.obj}</td>
+<td><span class="pill pg" style="font-size:10px">${catLbl}</span></td>
+<td>${e.amount} ${e.currency.toUpperCase()}<br><span style="font-size:10px;color:var(--t3)">${fu(e.amountUsd)}</span></td>
+<td>${e.cat==='communal'?'<span class="pill pb" style="font-size:10px">С собственника</span>':'<span class="pill ps" style="font-size:10px">С нас</span>'}</td>
+<td>${paidByLabel(e.paidBy||'company')}</td>
+<td style="font-size:11px;color:var(--t2)">${ptLabel}</td>
+<td>${entWho}</td>
+<td style="font-size:11px;color:var(--t3)">${e.date}</td>
+<td style="font-size:11px;color:var(--t3);max-width:120px">${e.comment||'—'}</td>
+<td style="white-space:nowrap;display:flex;gap:3px;padding:7px 9px"><button class="btn btn-xs bxe" onclick="editE(${e.id})" aria-label="Редактировать"><i class="ti ti-edit" aria-hidden="true"></i></button><button class="btn btn-xs bxd" onclick="delE(${e.id})" aria-label="Удалить"><i class="ti ti-trash" aria-hidden="true"></i></button></td>
+</tr>`;}).join('');
 }
 function renderOwners(){
 const{bo}=getStats('all');
