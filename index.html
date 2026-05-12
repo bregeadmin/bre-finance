@@ -40,6 +40,8 @@ input[type=date]{max-width:100%;font-size:13px}
 <div style="font-size:13px;color:var(--t3);margin-bottom:24px">bre.ge finance · Batumi</div>
 <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:16px">
 <input type="password" id="pwd-input" placeholder="Введите пароль" style="text-align:center;padding:11px 14px;font-size:15px;border-radius:10px;border:1.5px solid var(--bdr);background:var(--bg3);color:var(--t1);font-family:inherit;outline:none;width:100%;transition:border-color .15s" onkeydown="if(event.key==='Enter')checkPwd()">
+<input type="password" id="api-key-input" placeholder="Claude API ключ (sk-ant-...)" style="text-align:center;padding:11px 14px;font-size:13px;border-radius:10px;border:1.5px solid var(--bdr);background:var(--bg3);color:var(--t1);font-family:inherit;outline:none;width:100%;transition:border-color .15s;margin-top:0" onkeydown="if(event.key==='Enter')checkPwd()">
+<div style="font-size:10px;color:var(--t3);text-align:center;margin-top:-4px">API ключ сохранится в браузере автоматически</div>
 <button onclick="checkPwd()" style="padding:11px;background:var(--pink);color:#fff;border:none;border-radius:10px;font-size:14px;font-weight:600;cursor:pointer;font-family:inherit;transition:background .15s" onmouseover="this.style.background='var(--pink-d)'" onmouseout="this.style.background='var(--pink)'">Войти</button>
 </div>
 <div id="pwd-err" style="font-size:12px;color:var(--pink-d);display:none;margin-top:-4px">Неверный пароль</div>
@@ -1319,7 +1321,7 @@ async function parseVoiceWithClaude(text,ctx){
       method:'POST',
       headers:{
         'Content-Type':'application/json',
-        'x-api-key':CLAUDE_API_KEY,
+        'x-api-key':(window.CLAUDE_API_KEY||CLAUDE_API_KEY),
         'anthropic-version':'2023-06-01',
         'anthropic-dangerous-direct-browser-access':'true'
       },
@@ -1588,7 +1590,7 @@ async function sendToAssistant(){
   try{
     const resp=await fetch('https://api.anthropic.com/v1/messages',{
       method:'POST',
-      headers:{'Content-Type':'application/json','x-api-key':CLAUDE_API_KEY,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
+      headers:{'Content-Type':'application/json','x-api-key':(window.CLAUDE_API_KEY||CLAUDE_API_KEY),'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
       body:JSON.stringify({model:'claude-haiku-4-5-20251001',max_tokens:600,system:systemCtx,messages})
     });
     if(!resp.ok)throw new Error(`API ${resp.status}`);
@@ -1686,35 +1688,55 @@ popSels();popMons();togC();renderDash();
 // ============================================================
 const APP_PASSWORD = 'brege2024';           // ← ваш пароль
 const SHEETS_URL   = 'https://script.google.com/macros/s/AKfycbw6IGkXcRPTkwsDsbyvTlv1Ty_x5gd5TI-EHHgVu1sJKHEwdNkcYWNcbP9h144C9ZQ-/exec';
-const CLAUDE_API_KEY = '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';
+const CLAUDE_API_KEY = '';
 // ============================================================
 // AUTH
 function checkPwd() {
 const val = document.getElementById('pwd-input').value;
+const apiKey = document.getElementById('api-key-input').value.trim();
 const err = document.getElementById('pwd-err');
 if (val === APP_PASSWORD) {
-document.getElementById('login-screen').style.opacity = '0';
-document.getElementById('login-screen').style.transition = 'opacity .3s';
-setTimeout(() => {
-document.getElementById('login-screen').style.display = 'none';
-document.getElementById('app').style.display = '';
-}, 300);
-sessionStorage.setItem('bre_auth', '1');
-if (SHEETS_URL) loadFromSheets();
+  // Save API key to localStorage if provided
+  if (apiKey && apiKey.startsWith('sk-ant-')) {
+    localStorage.setItem('bre_api_key', apiKey);
+    window.CLAUDE_API_KEY = apiKey;
+  } else {
+    const saved = localStorage.getItem('bre_api_key');
+    if (saved) window.CLAUDE_API_KEY = saved;
+  }
+  document.getElementById('login-screen').style.opacity = '0';
+  document.getElementById('login-screen').style.transition = 'opacity .3s';
+  setTimeout(() => {
+    document.getElementById('login-screen').style.display = 'none';
+    document.getElementById('app').style.display = '';
+  }, 300);
+  sessionStorage.setItem('bre_auth', '1');
+  if (SHEETS_URL) loadFromSheets();
 } else {
-err.style.display = 'block';
-document.getElementById('pwd-input').style.borderColor = 'var(--pink-d)';
-setTimeout(() => {
-err.style.display = 'none';
-document.getElementById('pwd-input').style.borderColor = 'var(--bdr)';
-}, 2000);
+  err.style.display = 'block';
+  document.getElementById('pwd-input').style.borderColor = 'var(--pink-d)';
+  setTimeout(() => {
+    err.style.display = 'none';
+    document.getElementById('pwd-input').style.borderColor = 'var(--bdr)';
+  }, 2000);
 }
 }
+
 // Auto-login if already authenticated this session
 if (sessionStorage.getItem('bre_auth') === '1') {
-document.getElementById('login-screen').style.display = 'none';
-document.getElementById('app').style.display = '';
-if (SHEETS_URL) loadFromSheets();
+  // Load saved API key
+  const savedKey = localStorage.getItem('bre_api_key');
+  if (savedKey) window.CLAUDE_API_KEY = savedKey;
+  document.getElementById('login-screen').style.display = 'none';
+  document.getElementById('app').style.display = '';
+  if (SHEETS_URL) loadFromSheets();
+} else {
+  // Pre-fill API key field if saved
+  const savedKey = localStorage.getItem('bre_api_key');
+  if (savedKey) {
+    const el = document.getElementById('api-key-input');
+    if (el) el.value = savedKey;
+  }
 }
 // GOOGLE SHEETS SYNC
 function setSyncStatus(msg, color) {
