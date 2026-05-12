@@ -135,9 +135,11 @@ input[type=date]{max-width:100%;font-size:13px}
 </div>
 <div class="fg" style="margin-bottom:12px"><label>Комментарий</label><input type="text" id="b-comment" placeholder="Любые заметки по брони..."></div>
 <div class="prev" id="prevbox"></div>
-<div style="display:flex;gap:8px">
+<div id="voice-status" style="display:none;padding:10px 14px;border-radius:var(--r8);margin-bottom:12px;font-size:12px;background:var(--bg3);border-left:3px solid var(--pink)"></div>
+<div style="display:flex;gap:8px;flex-wrap:wrap">
 <button class="btn btn-pk" id="b-sbm" onclick="subB()"><i class="ti ti-check" aria-hidden="true"></i> <span id="b-btn">Добавить</span></button>
 <button class="btn btn-gh" id="b-can" onclick="canB()" style="display:none"><i class="ti ti-x" aria-hidden="true"></i> Отмена</button>
+<button class="btn btn-gh" id="voice-btn" onclick="startVoice()" title="Голосовой ввод — скажите данные бронирования" style="margin-left:auto"><i class="ti ti-microphone" id="voice-ico" aria-hidden="true"></i> Голосовой ввод</button>
 </div>
 </div>
 </div>
@@ -1174,6 +1176,158 @@ document.addEventListener('click',e=>{
     popup.style.display='none';
   }
 });
+
+// ============================================================
+// ГОЛОСОВОЙ ВВОД
+// ============================================================
+let voiceRecognition=null;
+let isRecording=false;
+
+function startVoice(){
+  if(isRecording){stopVoice();return;}
+  const SpeechRecognition=window.SpeechRecognition||window.webkitSpeechRecognition;
+  if(!SpeechRecognition){
+    setVoiceStatus('❌ Голосовой ввод не поддерживается в этом браузере. Используйте Chrome или Safari.','var(--pink-d)');return;
+  }
+  voiceRecognition=new SpeechRecognition();
+  voiceRecognition.lang='ru-RU';
+  voiceRecognition.continuous=false;
+  voiceRecognition.interimResults=true;
+  voiceRecognition.maxAlternatives=1;
+
+  const btn=document.getElementById('voice-btn');
+  const ico=document.getElementById('voice-ico');
+  btn.style.background='var(--pink)';btn.style.color='#fff';
+  ico.className='ti ti-microphone-off';
+  isRecording=true;
+  setVoiceStatus('🎤 Слушаю... Говорите данные бронирования','var(--pink-d)');
+
+  voiceRecognition.onresult=e=>{
+    const transcript=Array.from(e.results).map(r=>r[0].transcript).join('');
+    setVoiceStatus(`🎤 Распознаю: "${transcript}"...`,'var(--t2)');
+    if(e.results[0].isFinal) parseVoiceWithClaude(transcript);
+  };
+  voiceRecognition.onerror=e=>{
+    stopVoice();
+    setVoiceStatus(`❌ Ошибка: ${e.error==='not-allowed'?'нет доступа к микрофону':e.error}`,'var(--pink-d)');
+  };
+  voiceRecognition.onend=()=>{stopVoice();};
+  voiceRecognition.start();
+}
+
+function stopVoice(){
+  if(voiceRecognition){try{voiceRecognition.stop();}catch(e){}}
+  const btn=document.getElementById('voice-btn');
+  const ico=document.getElementById('voice-ico');
+  if(btn){btn.style.background='';btn.style.color='';}
+  if(ico)ico.className='ti ti-microphone';
+  isRecording=false;
+}
+
+function setVoiceStatus(msg,color){
+  const el=document.getElementById('voice-status');
+  el.style.display=msg?'block':'none';
+  el.textContent=msg;
+  el.style.borderLeftColor=color||'var(--pink)';
+}
+
+async function parseVoiceWithClaude(text){
+  setVoiceStatus(`⏳ Обрабатываю: "${text}"...`,'var(--t3)');
+  const today=new Date().toISOString().split('T')[0];
+  const objList=OBJ.join(', ');
+  const prompt=`Ты помогаешь заполнить форму бронирования апартаментов в Батуми.
+
+Текущая дата: ${today}
+Список доступных объектов: ${objList}
+
+Из следующего голосового сообщения извлеки данные и верни ТОЛЬКО JSON без лишнего текста:
+
+Сообщение: "${text}"
+
+Верни JSON в формате:
+{
+  "obj": "точное название объекта из списка или null",
+  "guest": "имя гостя или null",
+  "ci": "дата заезда YYYY-MM-DD или null",
+  "co": "дата выезда YYYY-MM-DD или null",
+  "amount": число или null,
+  "currency": "usd" или "gel",
+  "source": "airbnb" или "booking" или "sutochno" или "direct" или "other",
+  "commissionPct": число (3 для airbnb, 15 для booking, 20 для суточно, 0 для прямого),
+  "cleaning": число или 0,
+  "cleaningWho": "client" или "us",
+  "payType": "cash" или "card" или "transfer",
+  "enteredBy": "olya" или "artem" или "olya",
+  "finStatus": "full" или "prepay" или "pending",
+  "prepayAmt": число или 0,
+  "comment": "любые дополнительные детали"
+}
+
+Правила:
+- Если упоминается "аванс" или "предоплата" — finStatus = "prepay", prepayAmt = сумма аванса
+- Если дата указана как "15 мая" — преобразуй в YYYY-MM-DD используя текущий год
+- Если объект не назван точно — попробуй найти похожий из списка
+- Источник: если не сказано — "direct"
+- Валюта: если не сказана — "usd"
+- Оплата: если не сказано — "cash"`;
+
+  try{
+    const resp=await fetch('https://api.anthropic.com/v1/messages',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({
+        model:'claude-sonnet-4-20250514',
+        max_tokens:1000,
+        messages:[{role:'user',content:prompt}]
+      })
+    });
+    const data=await resp.json();
+    const raw=data.content?.[0]?.text||'';
+    const jsonMatch=raw.match(/\{[\s\S]*\}/);
+    if(!jsonMatch)throw new Error('Не удалось разобрать ответ');
+    const parsed=JSON.parse(jsonMatch[0]);
+    applyVoiceData(parsed,text);
+  }catch(err){
+    setVoiceStatus(`❌ Ошибка обработки. Попробуйте ещё раз.`,'var(--pink-d)');
+    console.error(err);
+  }
+}
+
+function applyVoiceData(d,originalText){
+  let filled=[];
+  if(d.obj){document.getElementById('b-obj').value=d.obj;filled.push('объект');}
+  if(d.guest){document.getElementById('b-gst').value=d.guest;filled.push('гость');}
+  if(d.ci){document.getElementById('b-ci').value=d.ci;filled.push('заезд');}
+  if(d.co){document.getElementById('b-co').value=d.co;filled.push('выезд');}
+  if(d.amount){document.getElementById('b-amt').value=d.amount;filled.push('сумма');}
+  if(d.currency)document.getElementById('b-cur').value=d.currency;
+  if(d.source){document.getElementById('b-src').value=d.source;togC();}
+  if(d.commissionPct!==undefined)document.getElementById('b-cp').value=d.commissionPct;
+  if(d.cleaning)document.getElementById('b-cl').value=d.cleaning;
+  if(d.cleaningWho)document.getElementById('b-cl-who').value=d.cleaningWho;
+  if(d.payType)document.getElementById('b-paytype').value=d.payType;
+  if(d.enteredBy)document.getElementById('b-who').value=d.enteredBy;
+  if(d.finStatus){
+    document.getElementById('b-fstatus').value=d.finStatus;
+    toggleFinStatus();
+  }
+  if(d.prepayAmt&&d.finStatus==='prepay'){
+    document.getElementById('b-pre-amt').value=d.prepayAmt;
+    if(d.prepayType)document.getElementById('b-pre-type').value=d.prepayType;
+  }
+  if(d.comment)document.getElementById('b-comment').value=d.comment;
+  // Auto-calc nights and preview
+  autoN();calcP();
+  const missing=[];
+  if(!d.obj)missing.push('объект');
+  if(!d.ci)missing.push('дата заезда');
+  if(!d.co)missing.push('дата выезда');
+  if(!d.amount)missing.push('сумма');
+  const msg=filled.length?
+    `✅ Заполнено: ${filled.join(', ')}${missing.length?' · ⚠️ Уточните: '+missing.join(', '):''}`:
+    '⚠️ Не удалось разобрать. Попробуйте сказать иначе.';
+  setVoiceStatus(msg,filled.length?'var(--sage)':'var(--amber)');
+}
 
 popSels();popMons();togC();renderDash();
 </script>
