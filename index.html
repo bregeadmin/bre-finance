@@ -27,6 +27,8 @@
 table{display:block;overflow-x:auto;-webkit-overflow-scrolling:touch}
 .topbar{padding:0 12px;gap:6px}
 .tb-s{display:none}
+input[type=date]{max-width:100%;font-size:13px}
+.pill{white-space:nowrap;font-size:9px;padding:2px 6px}
 }</style>
 </head>
 <body>
@@ -448,7 +450,7 @@ tb.innerHTML=[...S.expenses].reverse().map(e=>{const isE=eEid===e.id;return`<tr 
 function renderOwners(){
 const{bo}=getStats('all');
 document.getElementById('obj-cards').innerHTML=OBJ.map(o=>{const d=bo[o];const cfg=S.owners[o]||{};return`<div class="oc"><div class="oc-name">${o}</div><div class="oc-own">${cfg.name||'Собственник'}</div><div class="oc-val">${fu(d.ob-d.ce)}</div><div class="oc-n">${d.nights} ночей</div></div>`;}  ).join('');
-document.getElementById('own-tb').innerHTML=OBJ.map(o=>{const d=bo[o];const cfg=S.owners[o]||{shortPct:70,longPct:85};return`<tr><td class="s">${o}</td><td style="color:var(--t3);font-size:12px">${cfg.name||'—'}</td><td><span class="pill ps">${cfg.shortPct}% / ${cfg.longPct}%</span></td><td>${fu(d.net)}</td><td style="color:var(--beige-d)">${fu(d.ob)}</td><td style="color:var(--pink-d)">-${fu(d.ce).slice(1)}</td><td style="color:var(--pink-d);font-weight:600">${fu(d.ob-d.ce)}</td></tr>`;}  ).join('');
+document.getElementById('own-tb').innerHTML=OBJ.map(o=>{const d=bo[o];const cfg=S.owners[o]||{shortPct:70,longPct:85};return`<tr><td class="s">${o}</td><td style="color:var(--t3);font-size:12px">${cfg.name||'—'}</td><td style="font-size:12px;color:var(--t2);white-space:nowrap">${cfg.shortPct}% / ${cfg.longPct}%</td><td>${fu(d.net)}</td><td style="color:var(--beige-d)">${fu(d.ob)}</td><td style="color:var(--pink-d)">-${fu(d.ce).slice(1)}</td><td style="color:var(--pink-d);font-weight:600">${fu(d.ob-d.ce)}</td></tr>`;}  ).join('');
 }
 function genRep(){
 const obj=document.getElementById('r-obj').value,monK=document.getElementById('r-mon').value;
