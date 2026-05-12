@@ -63,6 +63,7 @@ input[type=date]{max-width:100%;font-size:13px}
 <div class="ni" onclick="go('expenses')" id="nav-expenses"><i class="ti ti-receipt-2" aria-hidden="true"></i> Расходы</div>
 <div class="ni" onclick="go('owners')" id="nav-owners"><i class="ti ti-building-estate" aria-hidden="true"></i> Собственники</div>
 <div class="sb-grp">Финансы</div>
+<div class="ni" onclick="go('calendar')" id="nav-calendar"><i class="ti ti-calendar-month" aria-hidden="true"></i> Календарь</div>
 <div class="ni" onclick="go('reports')" id="nav-reports"><i class="ti ti-file-analytics" aria-hidden="true"></i> Отчёты</div>
 <div class="ni" onclick="go('pnl')" id="nav-pnl"><i class="ti ti-trending-up" aria-hidden="true"></i> P&L</div>
 <div class="ni" onclick="go('split')" id="nav-split"><i class="ti ti-users-group" aria-hidden="true"></i> Раздел 50/50</div>
@@ -276,6 +277,56 @@ input[type=date]{max-width:100%;font-size:13px}
 </div>
 </div>
 </div>
+
+<div class="page" id="page-calendar">
+<div id="cal-today-panel" style="margin-bottom:14px"></div>
+<div id="cal-upcoming-panel" style="margin-bottom:14px"></div>
+<div class="card" style="margin-bottom:14px">
+  <div class="card-b" style="padding:12px 16px">
+    <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px">
+      <div style="display:flex;align-items:center;gap:8px">
+        <button class="btn btn-gh" style="padding:5px 10px" onclick="calPrevMonth()"><i class="ti ti-chevron-left" aria-hidden="true"></i></button>
+        <span style="font-size:15px;font-weight:600;min-width:140px;text-align:center" id="cal-month-lbl"></span>
+        <button class="btn btn-gh" style="padding:5px 10px" onclick="calNextMonth()"><i class="ti ti-chevron-right" aria-hidden="true"></i></button>
+        <button class="btn btn-gh" style="padding:5px 10px;font-size:11px" onclick="calGoToday()">Сегодня</button>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+        <select id="cal-obj-filter" onchange="renderCalendar()" class="si" style="font-size:12px;padding:5px 9px">
+          <option value="all">Все объекты</option>
+        </select>
+        <div style="display:flex;gap:6px;flex-wrap:wrap;font-size:10px;color:var(--t2)">
+          <span style="display:flex;align-items:center;gap:3px"><span style="width:10px;height:10px;border-radius:2px;background:#eb9d9f;display:inline-block"></span>Airbnb</span>
+          <span style="display:flex;align-items:center;gap:3px"><span style="width:10px;height:10px;border-radius:2px;background:#7ab0e0;display:inline-block"></span>Booking</span>
+          <span style="display:flex;align-items:center;gap:3px"><span style="width:10px;height:10px;border-radius:2px;background:#a890d0;display:inline-block"></span>Суточно</span>
+          <span style="display:flex;align-items:center;gap:3px"><span style="width:10px;height:10px;border-radius:2px;background:#7abf8a;display:inline-block"></span>Прямое</span>
+          <span style="display:flex;align-items:center;gap:3px"><span style="width:10px;height:10px;border-radius:2px;background:#c4a090;display:inline-block"></span>Другое</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<div class="card">
+  <div style="display:grid;grid-template-columns:repeat(7,minmax(0,1fr));border-bottom:1px solid var(--bdr)">
+    <div style="padding:8px 4px;text-align:center;font-size:10px;font-weight:700;color:var(--t3);text-transform:uppercase">Пн</div>
+    <div style="padding:8px 4px;text-align:center;font-size:10px;font-weight:700;color:var(--t3);text-transform:uppercase">Вт</div>
+    <div style="padding:8px 4px;text-align:center;font-size:10px;font-weight:700;color:var(--t3);text-transform:uppercase">Ср</div>
+    <div style="padding:8px 4px;text-align:center;font-size:10px;font-weight:700;color:var(--t3);text-transform:uppercase">Чт</div>
+    <div style="padding:8px 4px;text-align:center;font-size:10px;font-weight:700;color:var(--t3);text-transform:uppercase">Пт</div>
+    <div style="padding:8px 4px;text-align:center;font-size:10px;font-weight:700;color:var(--t3);text-transform:uppercase">Сб</div>
+    <div style="padding:8px 4px;text-align:center;font-size:10px;font-weight:700;color:var(--t3);text-transform:uppercase">Вс</div>
+  </div>
+  <div id="cal-grid" style="display:grid;grid-template-columns:repeat(7,minmax(0,1fr))"></div>
+</div>
+<div id="cal-popup" style="display:none;position:fixed;z-index:200;background:var(--bg2);border:1px solid var(--bdr);border-radius:var(--r12);padding:16px;min-width:260px;max-width:320px;box-shadow:0 8px 32px rgba(0,0,0,0.15)">
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+    <span style="font-size:13px;font-weight:600" id="cp-title"></span>
+    <button onclick="document.getElementById('cal-popup').style.display='none'" style="background:none;border:none;cursor:pointer;color:var(--t3);font-size:16px">×</button>
+  </div>
+  <div id="cp-body" style="font-size:12px;color:var(--t2);line-height:2"></div>
+</div>
+
+</div>
+
 <div class="page" id="page-object">
 <div class="card">
 <div class="card-h"><div class="card-t"><i class="ti ti-home-search" aria-hidden="true"></i> Выбрать объект и период</div></div>
@@ -361,7 +412,7 @@ const FSTLBL={full:'Оплачено',prepay:'Предоплата',platform:'Н
 const FSTCLS={full:'pg',prepay:'pa',platform:'ps',pending:'br'};
 const WHOLBL={olya:'Оля',artem:'Артём',company:'Компания'};
 const MRU=['Январь','Февраль','Март','Апрель','Май','Июнь','Июль','Август','Сентябрь','Октябрь','Ноябрь','Декабрь'];
-const SRCLBL={airbnb:'Airbnb',booking:'Booking',direct:'Прямое',other:'Другое'};
+const SRCLBL={airbnb:'Airbnb',booking:'Booking',sutochno:'Суточно',direct:'Прямое',other:'Другое'};
 function defOwn(){const o={};OBJ.forEach(x=>{o[x]={name:'',shortPct:70,longPct:x==='Корал'?90:85};});return o;}
 let S={bookings:[],expenses:[],gelRate:2.65,owners:defOwn(),theme:'light'};
 let eBid=null,eEid=null,bFilt='all';
@@ -381,8 +432,8 @@ function cmon(){return new Date().toISOString().substring(0,7);}
 function mlbl(k){if(!k)return'';const[y,m]=k.split('-');return MRU[+m-1]+' '+y;}
 function opct(obj,nights){const c=S.owners[obj]||{shortPct:70,longPct:85};return nights>=30?c.longPct/100:c.shortPct/100;}
 function cB(b){const g=b.amountUsd+toUSD(b.cleaning||0,'usd');const comm=b.source==='direct'?0:g*(b.commissionPct||0)/100;const net=g-comm;const op=opct(b.obj,b.nights);return{g,comm,net,ob:net*op,os:net*(1-op),op};}
-const PSUBS={dashboard:'· текущий месяц',bookings:'· все объекты',expenses:'· все объекты',owners:'· за всё время',reports:'· выберите объект',pnl:'· P&L анализ',split:'· Оля & Артём',object:'· история по квартире',settings:'· настройки'};
-const PTITLES={dashboard:'Дашборд',bookings:'Бронирования',expenses:'Расходы',owners:'Собственники',reports:'Отчёты',pnl:'P&L',split:'Раздел 50/50',object:'По объекту',settings:'Настройки'};
+const PSUBS={dashboard:'· текущий месяц',bookings:'· все объекты',expenses:'· все объекты',owners:'· за всё время',calendar:'· все брони',reports:'· выберите объект',pnl:'· P&L анализ',split:'· Оля & Артём',object:'· история по квартире',settings:'· настройки'};
+const PTITLES={dashboard:'Дашборд',bookings:'Бронирования',expenses:'Расходы',owners:'Собственники',calendar:'Календарь',reports:'Отчёты',pnl:'P&L',split:'Раздел 50/50',object:'По объекту',settings:'Настройки'};
 function openSb(){document.getElementById('sidebar').classList.add('open');document.getElementById('sb-overlay').classList.add('open');}
 function closeSb(){document.getElementById('sidebar').classList.remove('open');document.getElementById('sb-overlay').classList.remove('open');}
 function go(name){
@@ -393,7 +444,7 @@ document.getElementById('nav-'+name).classList.add('active');
 document.getElementById('tb-t').textContent=PTITLES[name]||name;
 document.getElementById('tb-s').textContent=PSUBS[name]||'';
 closeSb();
-({dashboard:renderDash,bookings:renderB,expenses:renderE,owners:renderOwners,reports:()=>popMons(),pnl:()=>{popMons();renderPnl();},split:renderSplit,object:initObjDetail,settings:renderSettings})[name]?.();
+({dashboard:renderDash,bookings:renderB,expenses:renderE,owners:renderOwners,calendar:initCalendar,reports:()=>popMons(),pnl:()=>{popMons();renderPnl();},split:renderSplit,object:initObjDetail,settings:renderSettings})[name]?.();
 }
 function popSels(){
 ['b-obj','e-obj','r-obj','od-obj'].forEach(id=>{
@@ -778,7 +829,7 @@ return`<tr>
 <td>${b.nights}</td>
 <td><span class="pill ps" style="font-size:10px">${SRCLBL[b.source]}</span></td>
 <td style="color:var(--sage)">${fu(c.g)}</td>
-<td style="color:var(--pink-d)">${b.source==='direct'?'—':'-'+fu(c.comm)}</td>
+<td style="color:var(--pink-d)">${(b.source==='direct'||b.source==='other')?'—':'-'+fu(c.comm)}</td>
 <td>${fu(c.net)}</td>
 <td><span class="pill ${b.nights>=30?'pp':'ps'}" style="font-size:10px">${b.nights>=30?'≥30н':'<30н'} ${pct}</span></td>
 <td style="color:var(--beige-d);font-weight:500">${fu(c.ob)}</td>
@@ -941,6 +992,189 @@ btn.innerHTML='<i class="ti ti-download" aria-hidden="true"></i> Скачать 
 }
 const today=new Date().toISOString().split('T')[0];
 document.getElementById('b-ci').value=today;document.getElementById('b-co').value=today;document.getElementById('e-dt').value=today;
+// ============================================================
+// CALENDAR
+// ============================================================
+const SRC_COLORS={airbnb:'#eb9d9f',booking:'#7ab0e0',sutochno:'#a890d0',direct:'#7abf8a',other:'#c4a090'};
+const SRC_BG={airbnb:'#fef0f0',booking:'#eef4fc',sutochno:'#f0ecfa',direct:'#edf6ef',other:'#f5eeea'};
+
+let calYear=new Date().getFullYear();
+let calMonth=new Date().getMonth();
+
+function initCalendar(){
+  // populate object filter
+  const sel=document.getElementById('cal-obj-filter');
+  const cur=sel.value;
+  sel.innerHTML='<option value="all">Все объекты</option>';
+  OBJ.forEach(o=>{const op=document.createElement('option');op.value=o;op.textContent=o;sel.appendChild(op);});
+  if(cur)sel.value=cur;
+  renderTodayPanel();
+  renderUpcomingPanel();
+  renderCalendar();
+}
+
+function calPrevMonth(){calMonth--;if(calMonth<0){calMonth=11;calYear--;}renderCalendar();}
+function calNextMonth(){calMonth++;if(calMonth>11){calMonth=0;calYear++;}renderCalendar();}
+function calGoToday(){calYear=new Date().getFullYear();calMonth=new Date().getMonth();renderCalendar();}
+
+function renderTodayPanel(){
+  const today=new Date().toISOString().split('T')[0];
+  const checkins=S.bookings.filter(b=>b.ci===today);
+  const checkouts=S.bookings.filter(b=>b.co===today);
+  if(!checkins.length&&!checkouts.length){
+    document.getElementById('cal-today-panel').innerHTML='';return;
+  }
+  let html=`<div style="display:grid;grid-template-columns:${checkins.length&&checkouts.length?'1fr 1fr':'1fr'};gap:10px">`;
+  if(checkins.length){
+    html+=`<div class="card" style="margin-bottom:0;border-left:3px solid var(--sage)"><div class="card-b" style="padding:12px 14px">
+    <div style="font-size:11px;font-weight:700;color:var(--sage);text-transform:uppercase;margin-bottom:8px"><i class="ti ti-door-enter" aria-hidden="true"></i> Заезды сегодня (${checkins.length})</div>`;
+    checkins.forEach(b=>{html+=`<div style="display:flex;align-items:center;gap:6px;margin-bottom:5px"><span style="width:8px;height:8px;border-radius:50%;background:${SRC_COLORS[b.source]||SRC_COLORS.other};flex-shrink:0"></span><span style="font-size:12px;font-weight:500">${b.obj}</span><span style="font-size:11px;color:var(--t3)">· ${b.guest||'Гость'}</span></div>`;});
+    html+='</div></div>';
+  }
+  if(checkouts.length){
+    html+=`<div class="card" style="margin-bottom:0;border-left:3px solid var(--pink-d)"><div class="card-b" style="padding:12px 14px">
+    <div style="font-size:11px;font-weight:700;color:var(--pink-d);text-transform:uppercase;margin-bottom:8px"><i class="ti ti-door-exit" aria-hidden="true"></i> Выезды сегодня (${checkouts.length}) <span style="color:var(--t3);font-weight:500">· нужен клининг</span></div>`;
+    checkouts.forEach(b=>{html+=`<div style="display:flex;align-items:center;gap:6px;margin-bottom:5px"><span style="width:8px;height:8px;border-radius:50%;background:${SRC_COLORS[b.source]||SRC_COLORS.other};flex-shrink:0"></span><span style="font-size:12px;font-weight:500">${b.obj}</span><span style="font-size:11px;color:var(--t3)">· ${b.guest||'Гость'}</span></div>`;});
+    html+='</div></div>';
+  }
+  html+='</div>';
+  document.getElementById('cal-today-panel').innerHTML=html;
+}
+
+function renderUpcomingPanel(){
+  const today=new Date();today.setHours(0,0,0,0);
+  const in3=new Date(today);in3.setDate(in3.getDate()+3);
+  const fmt=d=>d.toISOString().split('T')[0];
+  const upcoming=S.bookings.filter(b=>{
+    const ci=new Date(b.ci);ci.setHours(0,0,0,0);
+    const co=new Date(b.co);co.setHours(0,0,0,0);
+    return(ci>today&&ci<=in3)||(co>today&&co<=in3);
+  }).sort((a,b)=>a.ci.localeCompare(b.ci));
+  if(!upcoming.length){document.getElementById('cal-upcoming-panel').innerHTML='';return;}
+  let html=`<div class="card" style="margin-bottom:0"><div class="card-b" style="padding:12px 16px">
+  <div style="font-size:11px;font-weight:700;color:var(--t3);text-transform:uppercase;margin-bottom:10px"><i class="ti ti-clock" aria-hidden="true"></i> Ближайшие 3 дня</div>
+  <div style="display:flex;flex-direction:column;gap:6px">`;
+  upcoming.forEach(b=>{
+    const ci=new Date(b.ci);ci.setHours(0,0,0,0);
+    const co=new Date(b.co);co.setHours(0,0,0,0);
+    const isCI=ci>today&&ci<=in3;
+    const isCO=co>today&&co<=in3;
+    const diffCI=Math.round((ci-today)/86400000);
+    const diffCO=Math.round((co-today)/86400000);
+    if(isCI)html+=`<div style="display:flex;align-items:center;gap:8px;padding:6px 10px;background:var(--bg3);border-radius:var(--r8)"><span style="width:8px;height:8px;border-radius:50%;background:${SRC_COLORS[b.source]||SRC_COLORS.other};flex-shrink:0"></span><i class="ti ti-door-enter" style="color:var(--sage);font-size:13px" aria-hidden="true"></i><span style="font-size:12px;font-weight:500">${b.obj}</span><span style="font-size:11px;color:var(--t2)">${b.guest||'Гость'}</span><span style="margin-left:auto;font-size:11px;font-weight:600;color:var(--sage)">через ${diffCI}д</span></div>`;
+    if(isCO)html+=`<div style="display:flex;align-items:center;gap:8px;padding:6px 10px;background:var(--bg3);border-radius:var(--r8)"><span style="width:8px;height:8px;border-radius:50%;background:${SRC_COLORS[b.source]||SRC_COLORS.other};flex-shrink:0"></span><i class="ti ti-door-exit" style="color:var(--pink-d);font-size:13px" aria-hidden="true"></i><span style="font-size:12px;font-weight:500">${b.obj}</span><span style="font-size:11px;color:var(--t2)">${b.guest||'Гость'}</span><span style="margin-left:auto;font-size:11px;font-weight:600;color:var(--pink-d)">выезд через ${diffCO}д</span></div>`;
+  });
+  html+='</div></div></div>';
+  document.getElementById('cal-upcoming-panel').innerHTML=html;
+}
+
+function renderCalendar(){
+  const MRU2=['Январь','Февраль','Март','Апрель','Май','Июнь','Июль','Август','Сентябрь','Октябрь','Ноябрь','Декабрь'];
+  document.getElementById('cal-month-lbl').textContent=MRU2[calMonth]+' '+calYear;
+  const objF=document.getElementById('cal-obj-filter')?.value||'all';
+  const today=new Date().toISOString().split('T')[0];
+
+  // Filter bookings
+  let bks=S.bookings.filter(b=>{
+    if(objF!=='all'&&b.obj!==objF)return false;
+    const bYear=parseInt(b.ci.substring(0,4)),bMonth=parseInt(b.ci.substring(5,7))-1;
+    const eYear=parseInt(b.co.substring(0,4)),eMonth=parseInt(b.co.substring(5,7))-1;
+    return(bYear<calYear||(bYear===calYear&&bMonth<=calMonth))&&(eYear>calYear||(eYear===calYear&&eMonth>=calMonth));
+  });
+
+  // Build calendar grid
+  const firstDay=new Date(calYear,calMonth,1);
+  let startDow=firstDay.getDay();if(startDow===0)startDow=7;startDow--;
+  const daysInMonth=new Date(calYear,calMonth+1,0).getDate();
+  const totalCells=Math.ceil((startDow+daysInMonth)/7)*7;
+
+  let html='';
+  for(let i=0;i<totalCells;i++){
+    const dayNum=i-startDow+1;
+    const isValid=dayNum>=1&&dayNum<=daysInMonth;
+    const dateStr=isValid?`${calYear}-${String(calMonth+1).padStart(2,'0')}-${String(dayNum).padStart(2,'0')}`:'';
+    const isToday=dateStr===today;
+    const isWeekend=(i%7)>=5;
+
+    // Find events for this day
+    const dayBks=isValid?bks.filter(b=>{
+      return b.ci<=dateStr&&b.co>dateStr;
+    }):[];
+    const checkins=isValid?bks.filter(b=>b.ci===dateStr):[];
+    const checkouts=isValid?bks.filter(b=>b.co===dateStr):[];
+
+    html+=`<div style="min-height:70px;border-right:1px solid var(--bdr);border-bottom:1px solid var(--bdr);padding:4px;background:${isToday?'var(--pink-bg)':isValid?'var(--bg2)':'var(--bg3)'};cursor:${isValid?'pointer':'default'}" onclick="${isValid?`showDayDetail('${dateStr}')`:''}" >`;
+    if(isValid){
+      html+=`<div style="font-size:11px;font-weight:${isToday?700:500};color:${isToday?'var(--pink-d)':isWeekend?'var(--pink-d)':'var(--t2)'};margin-bottom:3px">${dayNum}${isToday?' ●':''}</div>`;
+
+      // Checkout indicators
+      checkouts.slice(0,2).forEach(b=>{
+        html+=`<div style="font-size:9px;padding:1px 4px;border-radius:3px;margin-bottom:1px;background:var(--bg3);color:var(--t2);border-left:2px solid ${SRC_COLORS[b.source]||SRC_COLORS.other};overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${b.obj} - выезд">↑ ${b.obj.split(' ')[0]}</div>`;
+      });
+
+      // Staying
+      const staying=dayBks.filter(b=>!checkins.includes(b)&&!checkouts.includes(b));
+      staying.slice(0,2).forEach(b=>{
+        html+=`<div style="font-size:9px;padding:1px 4px;border-radius:3px;margin-bottom:1px;background:${SRC_BG[b.source]||SRC_BG.other};color:var(--t1);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;border-left:2px solid ${SRC_COLORS[b.source]||SRC_COLORS.other}" title="${b.obj}">${b.obj.split(' ')[0]}</div>`;
+      });
+
+      // Checkin indicators
+      checkins.slice(0,2).forEach(b=>{
+        html+=`<div style="font-size:9px;padding:1px 4px;border-radius:3px;margin-bottom:1px;background:${SRC_COLORS[b.source]||SRC_COLORS.other};color:#fff;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${b.obj} - заезд">↓ ${b.obj.split(' ')[0]}</div>`;
+      });
+
+      const total=checkins.length+staying.length+checkouts.length;
+      if(total>4)html+=`<div style="font-size:9px;color:var(--t3)">+${total-4}</div>`;
+    }
+    html+='</div>';
+  }
+  document.getElementById('cal-grid').innerHTML=html;
+}
+
+function showDayDetail(dateStr){
+  const bks=S.bookings.filter(b=>{
+    const objF=document.getElementById('cal-obj-filter')?.value||'all';
+    if(objF!=='all'&&b.obj!==objF)return false;
+    return b.ci<=dateStr&&b.co>=dateStr;
+  });
+  if(!bks.length)return;
+
+  const[y,m,d]=dateStr.split('-');
+  const MRU2=['января','февраля','марта','апреля','мая','июня','июля','августа','сентября','октября','ноября','декабря'];
+  document.getElementById('cp-title').textContent=`${parseInt(d)} ${MRU2[parseInt(m)-1]} ${y}`;
+
+  let html='';
+  bks.forEach(b=>{
+    const isCI=b.ci===dateStr,isCO=b.co===dateStr;
+    const c=cB(b);
+    const tag=isCI?'<span style="color:var(--sage);font-weight:600">↓ Заезд</span>':isCO?'<span style="color:var(--pink-d);font-weight:600">↑ Выезд</span>':'<span style="color:var(--t3)">Проживает</span>';
+    html+=`<div style="padding:8px 10px;background:var(--bg3);border-radius:var(--r8);margin-bottom:6px;border-left:3px solid ${SRC_COLORS[b.source]||SRC_COLORS.other}">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
+        <span style="font-weight:600;font-size:12px">${b.obj}</span>${tag}
+      </div>
+      <div style="color:var(--t2)">${b.guest||'Гость'} · ${b.nights}н · ${fu(b.amountUsd)}</div>
+      <div style="color:var(--t3);font-size:11px">${b.ci} → ${b.co} · ${SRCLBL[b.source]||b.source}</div>
+      ${isCO?'<div style="color:var(--pink-d);font-size:11px;margin-top:2px">🧹 Нужен клининг</div>':''}
+      ${b.comment?`<div style="color:var(--t3);font-size:11px;margin-top:2px">${b.comment}</div>`:''}
+    </div>`;
+  });
+  document.getElementById('cp-body').innerHTML=html;
+
+  // Position popup
+  const popup=document.getElementById('cal-popup');
+  popup.style.display='block';
+  popup.style.top='50%';popup.style.left='50%';
+  popup.style.transform='translate(-50%,-50%)';
+}
+
+// Close popup on outside click
+document.addEventListener('click',e=>{
+  const popup=document.getElementById('cal-popup');
+  if(popup&&!popup.contains(e.target)&&!e.target.closest('[onclick*="showDayDetail"]')){
+    popup.style.display='none';
+  }
+});
+
 popSels();popMons();togC();renderDash();
 </script>
 <script>
