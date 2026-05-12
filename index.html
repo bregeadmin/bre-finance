@@ -1232,65 +1232,111 @@ function setVoiceStatus(msg,color){
 }
 
 async function parseVoiceWithClaude(text){
-  setVoiceStatus(`⏳ Обрабатываю: "${text}"...`,'var(--t3)');
-  const today=new Date().toISOString().split('T')[0];
-  const objList=OBJ.join(', ');
-  const prompt=`Ты помогаешь заполнить форму бронирования апартаментов в Батуми.
-
-Текущая дата: ${today}
-Список доступных объектов: ${objList}
-
-Из следующего голосового сообщения извлеки данные и верни ТОЛЬКО JSON без лишнего текста:
-
-Сообщение: "${text}"
-
-Верни JSON в формате:
-{
-  "obj": "точное название объекта из списка или null",
-  "guest": "имя гостя или null",
-  "ci": "дата заезда YYYY-MM-DD или null",
-  "co": "дата выезда YYYY-MM-DD или null",
-  "amount": число или null,
-  "currency": "usd" или "gel",
-  "source": "airbnb" или "booking" или "sutochno" или "direct" или "other",
-  "commissionPct": число (3 для airbnb, 15 для booking, 20 для суточно, 0 для прямого),
-  "cleaning": число или 0,
-  "cleaningWho": "client" или "us",
-  "payType": "cash" или "card" или "transfer",
-  "enteredBy": "olya" или "artem" или "olya",
-  "finStatus": "full" или "prepay" или "pending",
-  "prepayAmt": число или 0,
-  "comment": "любые дополнительные детали"
-}
-
-Правила:
-- Если упоминается "аванс" или "предоплата" — finStatus = "prepay", prepayAmt = сумма аванса
-- Если дата указана как "15 мая" — преобразуй в YYYY-MM-DD используя текущий год
-- Если объект не назван точно — попробуй найти похожий из списка
-- Источник: если не сказано — "direct"
-- Валюта: если не сказана — "usd"
-- Оплата: если не сказано — "cash"`;
-
+  setVoiceStatus(`⏳ Разбираю: "${text}"...`,'var(--t3)');
   try{
-    const resp=await fetch('https://api.anthropic.com/v1/messages',{
-      method:'POST',
-      headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({
-        model:'claude-sonnet-4-20250514',
-        max_tokens:1000,
-        messages:[{role:'user',content:prompt}]
-      })
-    });
-    const data=await resp.json();
-    const raw=data.content?.[0]?.text||'';
-    const jsonMatch=raw.match(/\{[\s\S]*\}/);
-    if(!jsonMatch)throw new Error('Не удалось разобрать ответ');
-    const parsed=JSON.parse(jsonMatch[0]);
+    const parsed=parseVoiceLocal(text);
     applyVoiceData(parsed,text);
   }catch(err){
-    setVoiceStatus(`❌ Ошибка обработки. Попробуйте ещё раз.`,'var(--pink-d)');
-    console.error(err);
+    setVoiceStatus(`❌ Не удалось разобрать. Попробуйте ещё раз.`,'var(--pink-d)');
   }
+}
+
+function parseVoiceLocal(text){
+  const t=text.toLowerCase();
+  const result={};
+
+  // Object — find by name match
+  for(const obj of OBJ){
+    if(t.includes(obj.toLowerCase())){result.obj=obj;break;}
+    // short name match (first word)
+    const short=obj.split(' ')[0].toLowerCase();
+    if(short.length>3&&t.includes(short)){result.obj=obj;break;}
+  }
+
+  // Guest name — after keywords
+  const guestMatch=t.match(/(?:гость|гостя|гости|клиент|имя|зовут|бронь|бронирование|заезжает)\s+([а-яёa-z][а-яёa-z\s]{1,30}?)(?:\s+заезд|\s+с\s|\s+от|\s+\d|,|$)/i);
+  if(guestMatch)result.guest=guestMatch[1].trim();
+
+  // Dates
+  const MONTHS={
+    'января':1,'февраля':2,'марта':3,'апреля':4,'мая':5,'июня':6,
+    'июля':7,'августа':8,'сентября':9,'октября':10,'ноября':11,'декабря':12,
+    'янв':1,'фев':2,'мар':3,'апр':4,'май':5,'июн':6,
+    'июл':7,'авг':8,'сен':9,'окт':10,'ноя':11,'дек':12
+  };
+  const now=new Date();
+  const yr=now.getFullYear();
+
+  function toDate(day,mon){
+    const m=String(mon).padStart(2,'0'),d=String(day).padStart(2,'0');
+    return`${yr}-${m}-${d}`;
+  }
+
+  // Pattern: "15 мая" or "с 15 по 20 мая" or "заезд 15 мая выезд 20 мая"
+  const datePattern=/(\d{1,2})\s+(января|февраля|марта|апреля|мая|июня|июля|августа|сентября|октября|ноября|декабря|янв|фев|мар|апр|июн|июл|авг|сен|окт|ноя|дек)/gi;
+  const dates=[];let m;
+  while((m=datePattern.exec(t))!==null){
+    const mon=MONTHS[m[2].toLowerCase()];
+    if(mon)dates.push({day:parseInt(m[1]),mon,idx:m.index});
+  }
+
+  // "с X по Y месяц" pattern
+  const rangeMatch=t.match(/(?:с|заезд)?\s*(\d{1,2})\s+(?:по|до|-)\s*(\d{1,2})\s+(января|февраля|марта|апреля|мая|июня|июля|августа|сентября|октября|ноября|декабря)/i);
+  if(rangeMatch){
+    const mon=MONTHS[rangeMatch[3].toLowerCase()];
+    if(mon){result.ci=toDate(parseInt(rangeMatch[1]),mon);result.co=toDate(parseInt(rangeMatch[2]),mon);}
+  } else if(dates.length>=2){
+    result.ci=toDate(dates[0].day,dates[0].mon);
+    result.co=toDate(dates[1].day,dates[1].mon);
+  } else if(dates.length===1){
+    result.ci=toDate(dates[0].day,dates[0].mon);
+  }
+
+  // Amount
+  const amtMatch=t.match(/(\d+(?:[.,]\d+)?)\s*(доллар|usd|\$|лари|gel|₾)/i);
+  if(amtMatch){
+    result.amount=parseFloat(amtMatch[1].replace(',','.'));
+    result.currency=/лари|gel|₾/i.test(amtMatch[2])?'gel':'usd';
+  } else {
+    const numMatch=t.match(/\b(\d{2,5})\b/);
+    if(numMatch)result.amount=parseInt(numMatch[1]);
+  }
+
+  // Source
+  if(/airbnb|эйрбнб|айрбнб/i.test(t)){result.source='airbnb';result.commissionPct=3;}
+  else if(/booking|букинг/i.test(t)){result.source='booking';result.commissionPct=15;}
+  else if(/суточно/i.test(t)){result.source='sutochno';result.commissionPct=20;}
+  else if(/прям|напрям|direct/i.test(t)){result.source='direct';result.commissionPct=0;}
+  else{result.source='direct';result.commissionPct=0;}
+
+  // Payment type
+  if(/кэш|кеш|наличн/i.test(t))result.payType='cash';
+  else if(/карт|перевод|безнал/i.test(t))result.payType=(/перевод/.test(t)?'transfer':'card');
+  else result.payType='cash';
+
+  // Prepay
+  const preMatch=t.match(/(?:аванс|предоплата|внес[а-я]+)\s+(\d+)/i);
+  if(preMatch){result.finStatus='prepay';result.prepayAmt=parseInt(preMatch[1]);}
+  else result.finStatus='full';
+
+  // Who entered
+  if(/оля|ольга/i.test(t))result.enteredBy='olya';
+  else if(/артем|артём/i.test(t))result.enteredBy='artem';
+
+  // Cleaning
+  const cleanMatch=t.match(/уборк[а-я]+\s+(\d+)/i);
+  if(cleanMatch){result.cleaning=parseInt(cleanMatch[1]);result.cleaningWho='client';}
+
+  // Nights count as fallback for checkout
+  if(result.ci&&!result.co){
+    const nightsMatch=t.match(/(\d+)\s+(?:ноч|ночей|ночи)/i);
+    if(nightsMatch){
+      const d=new Date(result.ci);d.setDate(d.getDate()+parseInt(nightsMatch[1]));
+      result.co=d.toISOString().split('T')[0];
+    }
+  }
+
+  return result;
 }
 
 function applyVoiceData(d,originalText){
