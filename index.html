@@ -126,9 +126,9 @@ input[type=date]{max-width:100%;font-size:13px}
 <div id="b-prepay-block" style="display:none;background:var(--bg3);border-radius:var(--r8);padding:12px;margin-bottom:12px">
 <div style="font-size:11px;font-weight:600;color:var(--t3);text-transform:uppercase;margin-bottom:8px">Детали предоплаты</div>
 <div class="form-grid" style="margin-bottom:0">
-<div class="fg"><label>Сумма предоплаты</label><input type="number" id="b-pre-amt" placeholder="0.00" oninput="calcP()"></div>
+<div class="fg"><label>Сумма предоплаты</label><input type="number" id="b-pre-amt" placeholder="0.00" oninput="calcP();calcPreRest()"></div>
 <div class="fg"><label>Способ</label><select id="b-pre-type"><option value="cash">Кэш</option><option value="card">Карта</option><option value="transfer">Перевод</option></select></div>
-<div class="fg"><label>Остаток к оплате</label><input type="number" id="b-pre-rest" placeholder="0.00"></div>
+<div class="fg"><label>Остаток <span style="font-size:9px;color:var(--t3)">(считается авто)</span></label><input type="number" id="b-pre-rest" placeholder="0.00"></div>
 <div class="fg"><label>Когда</label><select id="b-pre-when"><option value="checkin">При заезде</option><option value="later">Позже</option></select></div>
 </div>
 </div>
@@ -422,6 +422,15 @@ function popMons(){
 function toggleFinStatus(){
   const v=document.getElementById('b-fstatus').value;
   document.getElementById('b-prepay-block').style.display=v==='prepay'?'block':'none';
+  calcP();
+}
+function calcPreRest(){
+  const amt=parseFloat(document.getElementById('b-amt').value)||0;
+  const preAmt=parseFloat(document.getElementById('b-pre-amt').value)||0;
+  if(amt>0){
+    const rest=Math.max(0,amt-preAmt);
+    document.getElementById('b-pre-rest').value=rest.toFixed(2);
+  }
 }
 function toggleExpCat(){
   const v=document.getElementById('e-cat').value;
@@ -442,10 +451,8 @@ const op=obj?opct(obj,nights):(nights>=30?0.85:0.70);
 const fst=document.getElementById('b-fstatus').value;
 if(fst==='prepay'){
   const preAmt=parseFloat(document.getElementById('b-pre-amt').value)||0;
-  if(preAmt>0){
-    const rest=Math.max(0,parseFloat(amt)-preAmt);
-    document.getElementById('b-pre-rest').value=rest.toFixed(2);
-  }
+  const rest=Math.max(0,amt-preAmt);
+  document.getElementById('b-pre-rest').value=rest.toFixed(2);
 }
 box.style.display='block';
 box.innerHTML=`Собрано: <b>${fu(g)}</b> · Комиссия: <b style="color:var(--pink)">-${fu(comm).slice(1)}</b> · Чистая: <b>${fu(net)}</b><br>Схема: <b style="color:var(--pink-d)">${nights>=30?'≥30н':'&lt;30н'} → ${(op*100).toFixed(0)}% собственнику</b> · Собственнику: <b>${fu(net*op)}</b> · Нам: <b>${fu(net*(1-op))}</b>`;
