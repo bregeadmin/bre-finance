@@ -86,6 +86,41 @@ input[type=date]{max-width:100%;font-size:13px}
 <span class="tb-pill"><i class="ti ti-home-2" style="font-size:10px" aria-hidden="true"></i> Batumi</span>
 </div>
 </div>
+<div class="topbar">
+<button class="mob-menu-btn" onclick="openSb()" aria-label="Меню"><i class="ti ti-menu-2" aria-hidden="true"></i></button>
+<span class="tb-t" id="tb-t">Дашборд</span>
+<span class="tb-s" id="tb-s">· текущий месяц</span>
+<div class="tb-r" style="display:flex;align-items:center;gap:8px">
+<span id="sync-status" style="font-size:11px;color:var(--t3);display:none"></span>
+<button id="sync-btn" onclick="syncToSheets()" title="Синхронизировать с Google Sheets" style="display:none;padding:5px 10px;background:var(--bg3);border:1px solid var(--bdr);border-radius:var(--r8);font-size:11px;color:var(--t2);cursor:pointer;font-family:inherit;transition:all .15s;display:flex;align-items:center;gap:5px"><i class="ti ti-cloud-upload" aria-hidden="true"></i> Сохранить в Sheets</button>
+<button onclick="toggleAssistant()" id="asst-btn" title="Голосовой ассистент" style="width:34px;height:34px;border-radius:50%;border:1px solid var(--bdr);background:var(--bg3);cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--t2);font-size:16px;transition:all .15s" aria-label="Ассистент"><i class="ti ti-sparkles" aria-hidden="true"></i></button>
+<span class="tb-pill"><i class="ti ti-home-2" style="font-size:10px" aria-hidden="true"></i> Batumi</span>
+</div>
+</div>
+
+<!-- ASSISTANT PANEL -->
+<div id="asst-panel" style="display:none;position:fixed;bottom:20px;right:20px;width:340px;max-height:500px;background:var(--bg2);border:1px solid var(--bdr);border-radius:var(--r12);box-shadow:0 8px 40px rgba(0,0,0,0.15);z-index:300;display:none;flex-direction:column">
+  <div style="padding:12px 16px;border-bottom:1px solid var(--bdr);display:flex;align-items:center;justify-content:space-between">
+    <div style="display:flex;align-items:center;gap:8px">
+      <div style="width:28px;height:28px;border-radius:50%;background:var(--pink-bg);display:flex;align-items:center;justify-content:center;color:var(--pink-d);font-size:14px"><i class="ti ti-sparkles" aria-hidden="true"></i></div>
+      <div>
+        <div style="font-size:13px;font-weight:600">bre.ge Ассистент</div>
+        <div style="font-size:10px;color:var(--t3)" id="asst-status">Готов к работе</div>
+      </div>
+    </div>
+    <button onclick="toggleAssistant()" style="background:none;border:none;cursor:pointer;color:var(--t3);font-size:18px;padding:4px">×</button>
+  </div>
+  <div id="asst-chat" style="flex:1;overflow-y:auto;padding:12px;display:flex;flex-direction:column;gap:8px;max-height:320px"></div>
+  <div style="padding:10px 12px;border-top:1px solid var(--bdr)">
+    <div style="display:flex;gap:6px;align-items:center">
+      <input type="text" id="asst-input" placeholder="Напишите или нажмите 🎤..." style="flex:1;font-size:12px;padding:7px 10px" onkeydown="if(event.key==='Enter')sendToAssistant()">
+      <button onclick="startAsstVoice()" id="asst-voice-btn" style="width:32px;height:32px;border-radius:50%;border:1px solid var(--bdr);background:var(--bg3);cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--t2);font-size:14px;flex-shrink:0"><i class="ti ti-microphone" aria-hidden="true"></i></button>
+      <button onclick="sendToAssistant()" style="width:32px;height:32px;border-radius:var(--r8);background:var(--pink);border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;color:#fff;font-size:14px;flex-shrink:0"><i class="ti ti-send" aria-hidden="true"></i></button>
+    </div>
+    <div style="font-size:10px;color:var(--t3);margin-top:6px;line-height:1.5">Примеры: "отчёт для Белой камелии за май" · "сколько заработали" · "открой календарь" · "добавь бронирование"</div>
+  </div>
+</div>
+
 <div class="content">
 <div class="page active" id="page-dashboard">
 <div class="metrics">
@@ -188,9 +223,11 @@ input[type=date]{max-width:100%;font-size:13px}
 <div class="fg"><label>Кто вносит</label><select id="e-who"><option value="olya">Оля</option><option value="artem">Артём</option></select></div>
 </div>
 <div class="fg" style="margin-bottom:12px"><label>Комментарий</label><input type="text" id="e-cm" placeholder="Любые заметки..."></div>
+<div id="voice-status-e" style="display:none;padding:10px 14px;border-radius:var(--r8);margin-bottom:12px;font-size:12px;background:var(--bg3);border-left:3px solid var(--pink)"></div>
 <div style="display:flex;gap:8px">
 <button class="btn btn-pk" id="e-sbm" onclick="subE()"><i class="ti ti-check" aria-hidden="true"></i> <span id="e-btn">Добавить</span></button>
 <button class="btn btn-gh" id="e-can" onclick="canE()" style="display:none"><i class="ti ti-x" aria-hidden="true"></i> Отмена</button>
+<button class="btn btn-gh" onclick="startVoice('expense')" title="Голосовой ввод расхода" style="margin-left:auto"><i class="ti ti-microphone" aria-hidden="true"></i> Голосовой ввод</button>
 </div>
 </div>
 </div>
@@ -1182,12 +1219,14 @@ document.addEventListener('click',e=>{
 // ============================================================
 let voiceRecognition=null;
 let isRecording=false;
+let voiceContext='booking';
 
-function startVoice(){
+function startVoice(ctx){
+  voiceContext=ctx||'booking';
   if(isRecording){stopVoice();return;}
   const SpeechRecognition=window.SpeechRecognition||window.webkitSpeechRecognition;
   if(!SpeechRecognition){
-    setVoiceStatus('❌ Голосовой ввод не поддерживается в этом браузере. Используйте Chrome или Safari.','var(--pink-d)');return;
+    setVoiceStatus('❌ Голосовой ввод не поддерживается. Используйте Chrome или Safari.',voiceContext);return;
   }
   voiceRecognition=new SpeechRecognition();
   voiceRecognition.lang='ru-RU';
@@ -1195,49 +1234,112 @@ function startVoice(){
   voiceRecognition.interimResults=true;
   voiceRecognition.maxAlternatives=1;
 
-  const btn=document.getElementById('voice-btn');
-  const ico=document.getElementById('voice-ico');
-  btn.style.background='var(--pink)';btn.style.color='#fff';
-  ico.className='ti ti-microphone-off';
+  // Find and style the button
+  const btns=document.querySelectorAll('[onclick*="startVoice"]');
+  btns.forEach(b=>{if(b.closest('.page.active')){b.style.background='var(--pink)';b.style.color='#fff';}});
   isRecording=true;
-  setVoiceStatus('🎤 Слушаю... Говорите данные бронирования','var(--pink-d)');
+  setVoiceStatus('🎤 Слушаю... Говорите',voiceContext,'var(--pink-d)');
 
   voiceRecognition.onresult=e=>{
     const transcript=Array.from(e.results).map(r=>r[0].transcript).join('');
-    setVoiceStatus(`🎤 Распознаю: "${transcript}"...`,'var(--t2)');
-    if(e.results[0].isFinal) parseVoiceWithClaude(transcript);
+    setVoiceStatus(`🎤 "${transcript}"...`,voiceContext,'var(--t2)');
+    if(e.results[0].isFinal) parseVoiceWithClaude(transcript,voiceContext);
   };
   voiceRecognition.onerror=e=>{
     stopVoice();
-    setVoiceStatus(`❌ Ошибка: ${e.error==='not-allowed'?'нет доступа к микрофону':e.error}`,'var(--pink-d)');
+    setVoiceStatus(`❌ ${e.error==='not-allowed'?'Нет доступа к микрофону':e.error}`,voiceContext,'var(--pink-d)');
   };
-  voiceRecognition.onend=()=>{stopVoice();};
+  voiceRecognition.onend=()=>stopVoice();
   voiceRecognition.start();
 }
 
 function stopVoice(){
   if(voiceRecognition){try{voiceRecognition.stop();}catch(e){}}
-  const btn=document.getElementById('voice-btn');
-  const ico=document.getElementById('voice-ico');
-  if(btn){btn.style.background='';btn.style.color='';}
-  if(ico)ico.className='ti ti-microphone';
+  const btns=document.querySelectorAll('[onclick*="startVoice"]');
+  btns.forEach(b=>{b.style.background='';b.style.color='';});
   isRecording=false;
 }
 
-function setVoiceStatus(msg,color){
-  const el=document.getElementById('voice-status');
+function setVoiceStatus(msg,ctx,color){
+  const id=ctx==='expense'?'voice-status-e':'voice-status';
+  const el=document.getElementById(id);
+  if(!el)return;
   el.style.display=msg?'block':'none';
   el.textContent=msg;
   el.style.borderLeftColor=color||'var(--pink)';
 }
 
-async function parseVoiceWithClaude(text){
-  setVoiceStatus(`⏳ Разбираю: "${text}"...`,'var(--t3)');
+async function parseVoiceWithClaude(text,ctx){
+  ctx=ctx||'booking';
+  setVoiceStatus(`⏳ Разбираю: "${text}"...`,ctx,'var(--t3)');
+  const today=new Date().toISOString().split('T')[0];
+
+  let prompt;
+  if(ctx==='expense'){
+    prompt=`Ты помогаешь заполнить форму расхода для управляющей компании апартаментов в Батуми.
+Текущая дата: ${today}
+Список объектов: ${OBJ.join(', ')}
+Категории: communal (коммунальные, свет, вода, газ, интернет), cleaning (уборка), repair (ремонт), household (хозтовары), ads (реклама), other (другое)
+
+Из голосового сообщения извлеки данные. Верни ТОЛЬКО валидный JSON без пояснений.
+Сообщение: "${text}"
+
+Формат:
+{"obj":"точное название объекта из списка или __all","cat":"communal/cleaning/repair/household/ads/other","amount":число,"currency":"usd или gel","payType":"cash/card/transfer","paidBy":"company/olya/artem","enteredBy":"olya/artem","comment":"детали"}
+
+Правила:
+- Если объект не назван → "__all"
+- Коммунальные/свет/вода/газ/интернет → cat="communal"
+- Уборка/клининг → cat="cleaning"
+- Хозтовары/бытовая химия/мешки/швабра → cat="household"
+- "Оля платила/заплатила" → paidBy="olya"
+- "Артём платил/заплатил" → paidBy="artem"
+- Если не сказано кто платил → paidBy="company"`;
+  } else {
+    prompt=`Ты помогаешь заполнить форму бронирования апартаментов в Батуми.
+Текущая дата: ${today}
+Список объектов: ${OBJ.join(', ')}
+
+Из голосового сообщения извлеки данные. Верни ТОЛЬКО валидный JSON без пояснений.
+Сообщение: "${text}"
+
+Формат:
+{"obj":"точное название из списка или null","guest":"имя гостя или null","ci":"YYYY-MM-DD или null","co":"YYYY-MM-DD или null","amount":число или null,"currency":"usd или gel","source":"airbnb/booking/sutochno/direct/other","commissionPct":число,"cleaning":число,"cleaningWho":"client или us","payType":"cash/card/transfer","enteredBy":"olya/artem","finStatus":"full/prepay/pending","prepayAmt":число,"prepayType":"cash/card/transfer","comment":"доп детали или пусто"}
+
+Правила:
+- Объект: ищи похожее ("белая"="Белая камелия","некст"="НЕКСТ","батуми вью"="Батуми Вью")
+- Даты: "с 15 по 20 мая"→ci=${today.substring(0,4)}-05-15,co=${today.substring(0,4)}-05-20
+- "X ночей с Y" → посчитай дату выезда
+- Комиссия: airbnb=3%, booking=15%, суточно=20%, прямое=0%
+- "аванс/предоплата X"→finStatus=prepay,prepayAmt=X`;
+  }
+
   try{
-    const parsed=parseVoiceLocal(text);
-    applyVoiceData(parsed,text);
+    const resp=await fetch('https://api.anthropic.com/v1/messages',{
+      method:'POST',
+      headers:{
+        'Content-Type':'application/json',
+        'x-api-key':CLAUDE_API_KEY,
+        'anthropic-version':'2023-06-01',
+        'anthropic-dangerous-direct-browser-access':'true'
+      },
+      body:JSON.stringify({
+        model:'claude-haiku-4-5-20251001',
+        max_tokens:500,
+        messages:[{role:'user',content:prompt}]
+      })
+    });
+    if(!resp.ok){const err=await resp.text();throw new Error(`API ${resp.status}: ${err.slice(0,150)}`);}
+    const data=await resp.json();
+    const raw=data.content?.[0]?.text||'';
+    const match=raw.match(/\{[\s\S]*\}/);
+    if(!match) throw new Error('Не удалось разобрать ответ');
+    const parsed=JSON.parse(match[0]);
+    if(ctx==='expense') applyVoiceExpense(parsed,text);
+    else applyVoiceData(parsed,text);
   }catch(err){
-    setVoiceStatus(`❌ Не удалось разобрать. Попробуйте ещё раз.`,'var(--pink-d)');
+    setVoiceStatus(`❌ ${err.message}`,ctx,'var(--pink-d)');
+    console.error('Voice error:',err);
   }
 }
 
@@ -1372,7 +1474,208 @@ function applyVoiceData(d,originalText){
   const msg=filled.length?
     `✅ Заполнено: ${filled.join(', ')}${missing.length?' · ⚠️ Уточните: '+missing.join(', '):''}`:
     '⚠️ Не удалось разобрать. Попробуйте сказать иначе.';
-  setVoiceStatus(msg,filled.length?'var(--sage)':'var(--amber)');
+  setVoiceStatus(msg,'booking',filled.length?'var(--sage)':'var(--amber)');
+}
+
+function applyVoiceExpense(d,originalText){
+  let filled=[];
+  if(d.obj){document.getElementById('e-obj').value=d.obj;filled.push('объект');}
+  if(d.cat){document.getElementById('e-cat').value=d.cat;toggleExpCat();filled.push('категория');}
+  if(d.amount){document.getElementById('e-amt').value=d.amount;filled.push('сумма');}
+  if(d.currency)document.getElementById('e-cur').value=d.currency;
+  if(d.payType)document.getElementById('e-paytype').value=d.payType;
+  if(d.paidBy)document.getElementById('e-paid').value=d.paidBy;
+  if(d.enteredBy)document.getElementById('e-who').value=d.enteredBy;
+  if(d.comment)document.getElementById('e-cm').value=d.comment;
+  if(!document.getElementById('e-dt').value)document.getElementById('e-dt').value=new Date().toISOString().split('T')[0];
+  const missing=[];
+  if(!d.amount)missing.push('сумма');
+  const msg=filled.length?
+    `✅ Заполнено: ${filled.join(', ')}${missing.length?' · ⚠️ Уточните: '+missing.join(', '):''}`:
+    '⚠️ Не удалось разобрать. Попробуйте сказать иначе.';
+  setVoiceStatus(msg,'expense',filled.length?'var(--sage)':'var(--amber)');
+}
+
+// ============================================================
+// ГОЛОСОВОЙ АССИСТЕНТ
+// ============================================================
+let asstOpen=false;
+let asstHistory=[];
+let asstVoiceRec=null;
+let asstRecording=false;
+
+function toggleAssistant(){
+  const panel=document.getElementById('asst-panel');
+  asstOpen=!asstOpen;
+  panel.style.display=asstOpen?'flex':'none';
+  const btn=document.getElementById('asst-btn');
+  btn.style.background=asstOpen?'var(--pink)':'var(--bg3)';
+  btn.style.color=asstOpen?'#fff':'var(--t2)';
+  if(asstOpen&&asstHistory.length===0) addAsstMsg('assistant','Привет! Я ваш ассистент bre.ge. Что хотите сделать?\n\nМогу помочь с:\n• Отчётами для собственников\n• Аналитикой и статистикой\n• Навигацией по разделам\n• Добавлением бронирований');
+}
+
+function addAsstMsg(role,text){
+  const chat=document.getElementById('asst-chat');
+  const isUser=role==='user';
+  const div=document.createElement('div');
+  div.style.cssText=`display:flex;justify-content:${isUser?'flex-end':'flex-start'}`;
+  div.innerHTML=`<div style="max-width:85%;padding:8px 11px;border-radius:${isUser?'12px 12px 2px 12px':'12px 12px 12px 2px'};background:${isUser?'var(--pink)':'var(--bg3)'};color:${isUser?'#fff':'var(--t1)'};font-size:12px;line-height:1.6;white-space:pre-wrap">${text}</div>`;
+  chat.appendChild(div);
+  chat.scrollTop=chat.scrollHeight;
+  asstHistory.push({role,content:text});
+}
+
+function setAsstStatus(s){document.getElementById('asst-status').textContent=s;}
+
+function startAsstVoice(){
+  if(asstRecording){if(asstVoiceRec)try{asstVoiceRec.stop();}catch(e){}asstRecording=false;document.getElementById('asst-voice-btn').style.background='var(--bg3)';document.querySelector('#asst-voice-btn i').className='ti ti-microphone';return;}
+  const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+  if(!SR){addAsstMsg('assistant','❌ Голосовой ввод не поддерживается в этом браузере');return;}
+  asstVoiceRec=new SR();asstVoiceRec.lang='ru-RU';asstVoiceRec.interimResults=true;
+  document.getElementById('asst-voice-btn').style.background='var(--pink)';
+  document.querySelector('#asst-voice-btn i').className='ti ti-microphone-off';
+  asstRecording=true;
+  setAsstStatus('🎤 Слушаю...');
+  asstVoiceRec.onresult=e=>{
+    const t=Array.from(e.results).map(r=>r[0].transcript).join('');
+    document.getElementById('asst-input').value=t;
+    if(e.results[0].isFinal){asstRecording=false;document.getElementById('asst-voice-btn').style.background='var(--bg3)';document.querySelector('#asst-voice-btn i').className='ti ti-microphone';setAsstStatus('Готов к работе');sendToAssistant();}
+  };
+  asstVoiceRec.onerror=()=>{asstRecording=false;document.getElementById('asst-voice-btn').style.background='var(--bg3)';document.querySelector('#asst-voice-btn i').className='ti ti-microphone';setAsstStatus('Готов к работе');};
+  asstVoiceRec.start();
+}
+
+async function sendToAssistant(){
+  const input=document.getElementById('asst-input');
+  const text=input.value.trim();
+  if(!text)return;
+  input.value='';
+  addAsstMsg('user',text);
+  setAsstStatus('⏳ Думаю...');
+
+  // Build context about current data
+  const{tG,tC,tN,tOP,tOS,tOE}=getStats('all');
+  const cm=cmon();
+  const{tG:mG,tOS:mOS,tOE:mOE}=getStats(cm);
+  const mProfit=mOS-mOE;
+
+  const systemCtx=`Ты голосовой ассистент финансовой системы bre.ge (управление посуточной арендой в Батуми).
+
+Текущие данные:
+- Сегодня: ${new Date().toLocaleDateString('ru-RU')}
+- Объекты: ${OBJ.join(', ')}
+- Всего бронирований: ${S.bookings.length}
+- Всего расходов: ${S.expenses.length}
+- За всё время: собрано ${fu(tG)}, прибыль партнёров ${fu(tOS-tOE)} (каждому ${fu((tOS-tOE)/2)})
+- Текущий месяц (${mlbl(cm)}): собрано ${fu(mG)}, прибыль ${fu(mProfit)}
+- Курс: 1 USD = ${S.gelRate} GEL
+
+Доступные действия которые ты МОЖЕШЬ выполнить (верни JSON с action):
+1. navigate - перейти на страницу: {"action":"navigate","page":"dashboard/bookings/expenses/calendar/pnl/split/reports/owners/settings/object"}
+2. report - сгенерировать отчёт: {"action":"report","obj":"название объекта","month":"YYYY-MM"}
+3. answer - просто ответить текстом: {"action":"answer","text":"ответ"}
+4. pnl_filter - показать P&L за период: {"action":"pnl_filter","month":"YYYY-MM или all"}
+5. booking_form - открыть форму бронирования: {"action":"booking_form"}
+6. expense_form - открыть форму расхода: {"action":"expense_form"}
+7. report_all - сгенерировать отчёты для всех объектов за месяц: {"action":"report_all","month":"YYYY-MM"}
+
+Для вопросов об аналитике — считай из данных и отвечай action:answer.
+Верни ТОЛЬКО JSON, без пояснений.`;
+
+  const messages=asstHistory.slice(-6).filter(m=>m.role!=='assistant'||m.content.length<200).map(m=>({role:m.role==='assistant'?'assistant':'user',content:m.content}));
+  messages.push({role:'user',content:text});
+
+  try{
+    const resp=await fetch('https://api.anthropic.com/v1/messages',{
+      method:'POST',
+      headers:{'Content-Type':'application/json','x-api-key':CLAUDE_API_KEY,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
+      body:JSON.stringify({model:'claude-haiku-4-5-20251001',max_tokens:600,system:systemCtx,messages})
+    });
+    if(!resp.ok)throw new Error(`API ${resp.status}`);
+    const data=await resp.json();
+    const raw=data.content?.[0]?.text||'';
+    const match=raw.match(/\{[\s\S]*\}/);
+    if(!match)throw new Error('Нет ответа');
+    const cmd=JSON.parse(match[0]);
+    await executeAsstCommand(cmd,text);
+  }catch(err){
+    addAsstMsg('assistant',`❌ Ошибка: ${err.message}`);
+  }
+  setAsstStatus('Готов к работе');
+}
+
+async function executeAsstCommand(cmd,originalText){
+  if(cmd.action==='navigate'){
+    const names={dashboard:'Дашборд',bookings:'Бронирования',expenses:'Расходы',calendar:'Календарь',pnl:'P&L',split:'Раздел 50/50',reports:'Отчёты',owners:'Собственники',settings:'Настройки',object:'По объекту'};
+    go(cmd.page);
+    addAsstMsg('assistant',`✅ Открываю: ${names[cmd.page]||cmd.page}`);
+  }
+  else if(cmd.action==='answer'){
+    addAsstMsg('assistant',cmd.text);
+    speakText(cmd.text);
+  }
+  else if(cmd.action==='pnl_filter'){
+    go('pnl');
+    setTimeout(()=>{const el=document.getElementById('pnl-mon');if(el){el.value=cmd.month||'all';renderPnl();}},300);
+    addAsstMsg('assistant',`✅ Показываю P&L: ${cmd.month==='all'?'все месяцы':mlbl(cmd.month)}`);
+  }
+  else if(cmd.action==='booking_form'){
+    go('bookings');
+    addAsstMsg('assistant','✅ Открываю форму бронирования. Используйте 🎤 в форме для голосового заполнения.');
+  }
+  else if(cmd.action==='expense_form'){
+    go('expenses');
+    addAsstMsg('assistant','✅ Открываю форму расхода. Используйте 🎤 в форме для голосового заполнения.');
+  }
+  else if(cmd.action==='report'){
+    go('reports');
+    setTimeout(()=>{
+      popMons();
+      const rObj=document.getElementById('r-obj');
+      const rMon=document.getElementById('r-mon');
+      // Find object by partial match
+      if(cmd.obj){
+        const found=OBJ.find(o=>o.toLowerCase().includes(cmd.obj.toLowerCase())||cmd.obj.toLowerCase().includes(o.split(' ')[0].toLowerCase()));
+        if(found)rObj.value=found;
+      }
+      if(cmd.month&&rMon){rMon.value=cmd.month;}
+      genRep();
+      addAsstMsg('assistant',`✅ Сформировал отчёт для ${cmd.obj||'объекта'} за ${cmd.month?mlbl(cmd.month):'выбранный период'}. Нажмите "Скачать PDF" для сохранения.`);
+    },400);
+  }
+  else if(cmd.action==='report_all'){
+    go('reports');
+    addAsstMsg('assistant',`⏳ Генерирую отчёты для всех ${OBJ.length} объектов за ${cmd.month?mlbl(cmd.month):'месяц'}...`);
+    setTimeout(async()=>{
+      popMons();
+      const rMon=document.getElementById('r-mon');
+      if(cmd.month&&rMon)rMon.value=cmd.month;
+      let done=0;
+      for(const obj of OBJ){
+        const d=getStats(cmd.month||cmon()).bo[obj];
+        if(d&&d.bookings&&d.bookings.length>0){
+          document.getElementById('r-obj').value=obj;
+          genRep();
+          await new Promise(r=>setTimeout(r,200));
+          await new Promise(r=>{
+            dlPDF();
+            setTimeout(r,1500);
+          });
+          done++;
+        }
+      }
+      addAsstMsg('assistant',`✅ Скачано ${done} отчётов для объектов с бронированиями за ${cmd.month?mlbl(cmd.month):'месяц'}.`);
+    },500);
+  }
+}
+
+function speakText(text){
+  if(!window.speechSynthesis)return;
+  const short=text.replace(/[✅❌⏳🎤]/g,'').slice(0,200);
+  const utt=new SpeechSynthesisUtterance(short);
+  utt.lang='ru-RU';utt.rate=1.1;
+  window.speechSynthesis.cancel();
+  window.speechSynthesis.speak(utt);
 }
 
 popSels();popMons();togC();renderDash();
@@ -1383,6 +1686,7 @@ popSels();popMons();togC();renderDash();
 // ============================================================
 const APP_PASSWORD = 'brege2024';           // ← ваш пароль
 const SHEETS_URL   = 'https://script.google.com/macros/s/AKfycbw6IGkXcRPTkwsDsbyvTlv1Ty_x5gd5TI-EHHgVu1sJKHEwdNkcYWNcbP9h144C9ZQ-/exec';
+const CLAUDE_API_KEY = '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';
 // ============================================================
 // AUTH
 function checkPwd() {
