@@ -96,16 +96,6 @@ input[type=date]{max-width:100%;font-size:13px}
 <div class="tb-r" style="display:flex;align-items:center;gap:8px">
 <span id="sync-status" style="font-size:11px;color:var(--t3);display:none"></span>
 <button id="sync-btn" onclick="syncToSheets()" title="Сохранить данные" style="display:none;padding:5px 10px;background:var(--bg3);border:1px solid var(--bdr);border-radius:var(--r8);font-size:11px;color:var(--t2);cursor:pointer;font-family:inherit;transition:all .15s;display:flex;align-items:center;gap:5px"><i class="ti ti-cloud-upload" aria-hidden="true"></i> Сохранить</button>
-<span class="tb-pill"><i class="ti ti-home-2" style="font-size:10px" aria-hidden="true"></i> Batumi</span>
-</div>
-</div>
-<div class="topbar">
-<button class="mob-menu-btn" onclick="openSb()" aria-label="Меню"><i class="ti ti-menu-2" aria-hidden="true"></i></button>
-<span class="tb-t" id="tb-t">Дашборд</span>
-<span class="tb-s" id="tb-s">· текущий месяц</span>
-<div class="tb-r" style="display:flex;align-items:center;gap:8px">
-<span id="sync-status" style="font-size:11px;color:var(--t3);display:none"></span>
-<button id="sync-btn" onclick="syncToSheets()" title="Сохранить данные" style="display:none;padding:5px 10px;background:var(--bg3);border:1px solid var(--bdr);border-radius:var(--r8);font-size:11px;color:var(--t2);cursor:pointer;font-family:inherit;transition:all .15s;display:flex;align-items:center;gap:5px"><i class="ti ti-cloud-upload" aria-hidden="true"></i> Сохранить</button>
 <button onclick="toggleAssistant()" id="asst-btn" title="Голосовой ассистент" style="width:34px;height:34px;border-radius:50%;border:1px solid var(--bdr);background:var(--bg3);cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--t2);font-size:16px;transition:all .15s" aria-label="Ассистент"><i class="ti ti-sparkles" aria-hidden="true"></i></button>
 <span class="tb-pill"><i class="ti ti-home-2" style="font-size:10px" aria-hidden="true"></i> Batumi</span>
 </div>
@@ -2655,10 +2645,13 @@ function submitWizard(){
     S.bookings.push(booking);
   }
   save();
-  syncToSheets();
+  try{syncToSheets();}catch(e){console.warn('Sync failed:',e);}
   resetWizard();
   renderB();
   renderDash();
+  // Show success
+  setSyncStatus('✅ Бронирование добавлено','var(--sage)');
+  setTimeout(()=>setSyncStatus(''),3000);
 }
 
 function resetWizard(){
