@@ -652,55 +652,6 @@ function getCleaningTotal(){
   const clVal=clInput&&clInput.style.display!=='none'?parseFloat(clInput.value)||0:(window._totalCleaning||0);
   return clVal;
 }
-  const src=document.getElementById('b-src').value;
-  const hints={
-    airbnb:{guestPaid:'Итого "Уплачено гостем" из Airbnb',youGet:'"Вы заработаете" из Airbnb',title:'Airbnb'},
-    booking:{guestPaid:'Полная сумма с гостя из Booking',youGet:'Сумма минус комиссия Booking (15%+НДС)',title:'Booking'},
-    sutochno:{guestPaid:'Итого с гостя из Суточно',youGet:'Сумма "При заселении" (80%)',title:'Суточно'},
-    direct:{guestPaid:'Сумма от гостя',youGet:'Та же сумма (комиссии нет)',title:'Прямое бронирование'},
-    other:{guestPaid:'Сумма от гостя',youGet:'Сумма после вычета комиссии',title:'Бронирование'}
-  };
-  const h=hints[src]||hints.other;
-  document.getElementById('hint-guest-paid').textContent=h.guestPaid;
-  document.getElementById('hint-you-get').textContent=h.youGet;
-  document.getElementById('amt-block-title').textContent='Суммы · '+h.title;
-  // Auto-fill "you get" for direct (no commission)
-  if(src==='direct'||src==='other'){
-    const gp=document.getElementById('b-guest-paid').value;
-    if(gp&&!document.getElementById('b-amt').value) document.getElementById('b-amt').value=gp;
-  }
-  calcAmounts();
-}
-
-function calcAmounts(){
-  const guestPaid=parseFloat(document.getElementById('b-guest-paid').value)||0;
-  const youGet=parseFloat(document.getElementById('b-amt').value)||0;
-  const src=document.getElementById('b-src').value;
-  if((src==='direct'||src==='other')&&guestPaid&&!youGet){
-    document.getElementById('b-amt').value=guestPaid;
-  }
-  calcCommAuto();
-  calcP();
-}
-
-function calcCommAuto(){
-  const guestPaid=parseFloat(document.getElementById('b-guest-paid').value)||0;
-  const youGet=parseFloat(document.getElementById('b-amt').value)||0;
-  const cleaning=parseFloat(document.getElementById('b-cl').value)||0;
-  if(guestPaid>0&&youGet>0){
-    const comm=Math.max(0,guestPaid-youGet);
-    document.getElementById('b-cp-abs').value=comm.toFixed(2);
-    const pct=guestPaid>0?(comm/guestPaid*100).toFixed(1):'0';
-    document.getElementById('comm-auto-lbl').textContent=`= ${pct}%`;
-    // Store commission pct for calculations
-    window._bCommPct = guestPaid>0?comm/guestPaid*100:0;
-  } else {
-    document.getElementById('b-cp-abs').value='';
-    document.getElementById('comm-auto-lbl').textContent='';
-    window._bCommPct=0;
-  }
-  calcP();
-}
 function calcP(){
 const amt=parseFloat(document.getElementById('b-amt').value)||parseFloat(document.getElementById('b-guest-paid').value)||0;
 const box=document.getElementById('prevbox');
