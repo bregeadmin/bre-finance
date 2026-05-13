@@ -855,8 +855,8 @@ function popMons(){
   const pel=document.getElementById('pnl-mon');if(pel){const cur=pel.value;pel.innerHTML='<option value="all">Все месяцы</option>';mons.forEach(k=>{const op=document.createElement('option');op.value=k;op.textContent=mlbl(k);if(k===curMon)op.selected=true;pel.appendChild(op);});if(cur&&cur!=='all')pel.value=cur;}
 }
 function toggleFinStatus(){
-  const v=document.getElementById('b-fstatus').value;
-  document.getElementById('b-prepay-block').style.display=v==='prepay'?'block':'none';
+  const v=document.getElementById('w-fstatus').value;
+  document.getElementById('wiz-prepay-block').style.display=v==='prepay'?'block':'none';
   calcP();
 }
 function calcPreRest(){
@@ -871,7 +871,7 @@ function toggleExpCat(){
   const v=document.getElementById('e-cat').value;
   document.getElementById('e-free-wrap').style.display=v==='free'?'':'none';
 }
-function autoN(){const ci=document.getElementById('b-ci').value,co=document.getElementById('b-co').value;if(ci&&co){const n=nb(ci,co);document.getElementById('b-n').value=n||'';document.getElementById('n-a').textContent=n?n+'н':'';}}
+function autoN(){const ci=document.getElementById('w-ci').value,co=document.getElementById('w-co').value;if(ci&&co){const n=nb(ci,co);document.getElementById('w-nights').value=n||'';document.getElementById('w-nights-lbl').textContent=n?n+'н':'';}}
 // Commission rates per platform
 const COMM_RATES={airbnb:0.0326,booking:0.177,sutochno:0.20,direct:0,other:0};
 
@@ -958,11 +958,11 @@ const amt=parseFloat(document.getElementById('b-amt').value)||parseFloat(documen
 const box=document.getElementById('prevbox');
 if(!amt){box.style.display='none';return;}
 const cur=document.getElementById('b-cur').value;
-const ci=document.getElementById('b-ci').value,co=document.getElementById('b-co').value,obj=document.getElementById('b-obj').value;
+const ci=document.getElementById('w-ci').value,co=document.getElementById('w-co').value,obj=document.getElementById('w-obj').value;
 const nights=ci&&co?nb(ci,co):0;
 const net=toUSD(amt,cur);
 const op=obj?opct(obj,nights):(nights>=30?0.85:0.70);
-const fst=document.getElementById('b-fstatus').value;
+const fst=document.getElementById('w-fstatus').value;
 if(fst==='prepay'){
   const preAmt=parseFloat(document.getElementById('b-pre-amt').value)||0;
   if(preAmt>0){const rest=Math.max(0,amt-preAmt);document.getElementById('b-pre-rest').value=rest.toFixed(2);}
@@ -973,15 +973,15 @@ const guestTotal=parseFloat(document.getElementById('b-guest-paid').value)||amt;
 box.innerHTML=`Гость: <b>${fu(toUSD(guestTotal,cur))}</b> · Комиссия: <b style="color:var(--pink)">-${fu(toUSD(comm,cur))}</b> · Вы получите: <b style="color:var(--sage)">${fu(net)}</b><br>Схема: <b style="color:var(--pink-d)">${nights>=30?'≥30н':'&lt;30н'} → ${(op*100).toFixed(0)}% собственнику</b> · Собственнику: <b>${fu(net*op)}</b> · Нам: <b>${fu(net*(1-op))}</b>`;
 }
 function fillBF(b){
-document.getElementById('b-obj').value=b.obj;document.getElementById('b-gst').value=b.guest||'';
-document.getElementById('b-ci').value=b.ci;document.getElementById('b-co').value=b.co;
+document.getElementById('w-obj').value=b.obj;document.getElementById('w-guest').value=b.guest||'';
+document.getElementById('w-ci').value=b.ci;document.getElementById('w-co').value=b.co;
 document.getElementById('b-guest-paid').value=b.guestPaid||b.amount;
 document.getElementById('b-amt').value=b.amount;document.getElementById('b-cur').value=b.currency;
 document.getElementById('b-src').value=b.source;
 document.getElementById('b-cp-abs').value=b.commissionAbs||0;
 window._bCommPct=b.commissionPct||0;
 document.getElementById('comm-auto-lbl').textContent=b.commissionPct?`= ${b.commissionPct.toFixed(1)}%`:'';
-document.getElementById('b-cl').value=b.cleaning||0;document.getElementById('b-n').value=b.nights;
+document.getElementById('b-cl').value=b.cleaning||0;document.getElementById('w-nights').value=b.nights;
 // Restore cleaning button state
 const cl=b.cleaning||0;
 if(cl===0) setClean(0);
@@ -989,28 +989,28 @@ else if(cl===20) setClean(20);
 else if(cl===25) setClean(25);
 else{setClean('custom');document.getElementById('b-cl').value=cl;}
 window._totalCleaning=cl;
-document.getElementById('n-a').textContent=b.nights+'н';
+document.getElementById('w-nights-lbl').textContent=b.nights+'н';
 togC();
 document.getElementById('b-cl-who').value=b.cleaningWho||'client';
 document.getElementById('b-paytype').value=b.payType||'cash';
 document.getElementById('b-who').value=b.enteredBy||'olya';
-document.getElementById('b-fstatus').value=b.finStatus||'full';
+document.getElementById('w-fstatus').value=b.finStatus||'full';
 document.getElementById('b-comment').value=b.comment||'';
 const isPre=b.finStatus==='prepay';
-document.getElementById('b-prepay-block').style.display=isPre?'block':'none';
+document.getElementById('wiz-prepay-block').style.display=isPre?'block':'none';
 if(isPre){document.getElementById('b-pre-amt').value=b.prepayAmt||0;document.getElementById('b-pre-type').value=b.prepayType||'cash';document.getElementById('b-pre-rest').value=b.prepayRest||0;document.getElementById('b-pre-when').value=b.prepayWhen||'checkin';}
 calcP();
 }
-function editB(id){const b=S.bookings.find(x=>x.id===id);if(!b)return;eBid=id;fillBF(b);document.getElementById('b-ftitle').textContent='Редактировать бронирование';document.getElementById('b-btn').textContent='Сохранить';document.getElementById('b-can').style.display='';go('bookings');renderB();}
+function editB(id){const b=S.bookings.find(x=>x.id===id);if(!b)return;eBid=id;fillBF(b);document.getElementById('w-ftitle').textContent='Редактировать бронирование';document.getElementById('w-btn').textContent='Сохранить';document.getElementById('w-can').style.display='';go('bookings');renderB();}
 function canB(){eBid=null;['b-gst','b-amt','b-cl','b-extra','b-comment','b-pre-amt','b-pre-rest','b-guest-paid','b-cp-abs'].forEach(id=>{const el=document.getElementById(id);if(el){el.value='';el.style.display='none';}});
 document.getElementById('b-cl').style.display='none';
 document.getElementById('b-extra-check').checked=false;
 ['0','20','25','c'].forEach(v=>{const btn=document.getElementById('cl-btn-'+v);if(btn){btn.style.background='';btn.style.color='';}});
 window._totalCleaning=0;window._bCommPct=0;
-document.getElementById('b-obj').value='';document.getElementById('b-n').value='';document.getElementById('n-a').textContent='';document.getElementById('prevbox').style.display='none';document.getElementById('b-prepay-block').style.display='none';document.getElementById('b-fstatus').value='full';document.getElementById('comm-auto-lbl').textContent='';document.getElementById('b-ftitle').textContent='Новое бронирование';document.getElementById('b-btn').textContent='Добавить';document.getElementById('b-can').style.display='none';renderB();}
+document.getElementById('w-obj').value='';document.getElementById('w-nights').value='';document.getElementById('w-nights-lbl').textContent='';document.getElementById('prevbox').style.display='none';document.getElementById('wiz-prepay-block').style.display='none';document.getElementById('w-fstatus').value='full';document.getElementById('comm-auto-lbl').textContent='';document.getElementById('w-ftitle').textContent='Новое бронирование';document.getElementById('w-btn').textContent='Добавить';document.getElementById('w-can').style.display='none';renderB();}
 function subB(){
-const obj=document.getElementById('b-obj').value,gst=document.getElementById('b-gst').value.trim();
-const ci=document.getElementById('b-ci').value,co=document.getElementById('b-co').value;
+const obj=document.getElementById('w-obj').value,gst=document.getElementById('w-guest').value.trim();
+const ci=document.getElementById('w-ci').value,co=document.getElementById('w-co').value;
 const guestPaidRaw=parseFloat(document.getElementById('b-guest-paid').value)||0;
 const cur=document.getElementById('b-cur').value;
 const src=document.getElementById('b-src').value;
@@ -1019,7 +1019,7 @@ if(guestPaidRaw) autoCalcAll();
 const amt=parseFloat(document.getElementById('b-amt').value)||guestPaidRaw;
 const cl=getCleaningTotal();
 const extraFee=document.getElementById('b-extra-check').checked?(parseFloat(document.getElementById('b-extra').value)||0):0;
-const fst=document.getElementById('b-fstatus').value;
+const fst=document.getElementById('w-fstatus').value;
 if(!obj||!ci||!co||!guestPaidRaw){alert('Заполните объект, даты и сумму');return;}
 const data={obj,guest:gst,ci,co,nights:nb(ci,co),amount:amt,currency:cur,source:src,
   commissionPct:window._bCommPct||0,
@@ -1502,7 +1502,9 @@ btn.innerHTML='<i class="ti ti-download" aria-hidden="true"></i> Скачать 
 });
 }
 const today=new Date().toISOString().split('T')[0];
-document.getElementById('b-ci').value=today;document.getElementById('b-co').value=today;document.getElementById('e-dt').value=today;
+const wci=document.getElementById('w-ci');if(wci)wci.value=today;
+const wco=document.getElementById('w-co');if(wco)wco.value=today;
+const edt=document.getElementById('e-dt');if(edt)edt.value=today;
 // ============================================================
 // CALENDAR
 // ============================================================
@@ -1910,10 +1912,10 @@ function parseVoiceLocal(text){
 
 function applyVoiceData(d,originalText){
   let filled=[];
-  if(d.obj){document.getElementById('b-obj').value=d.obj;filled.push('объект');}
-  if(d.guest){document.getElementById('b-gst').value=d.guest;filled.push('гость');}
-  if(d.ci){document.getElementById('b-ci').value=d.ci;filled.push('заезд');}
-  if(d.co){document.getElementById('b-co').value=d.co;filled.push('выезд');}
+  if(d.obj){document.getElementById('w-obj').value=d.obj;filled.push('объект');}
+  if(d.guest){document.getElementById('w-guest').value=d.guest;filled.push('гость');}
+  if(d.ci){const el=document.getElementById('w-ci');if(el){el.value=d.ci;calcWizNights();}filled.push('заезд');}
+  if(d.co){const el=document.getElementById('w-co');if(el){el.value=d.co;calcWizNights();}filled.push('выезд');}
   if(d.amount){document.getElementById('b-amt').value=d.amount;filled.push('сумма');}
   if(d.currency)document.getElementById('b-cur').value=d.currency;
   if(d.source){document.getElementById('b-src').value=d.source;togC();}
@@ -1923,7 +1925,7 @@ function applyVoiceData(d,originalText){
   if(d.payType)document.getElementById('b-paytype').value=d.payType;
   if(d.enteredBy)document.getElementById('b-who').value=d.enteredBy;
   if(d.finStatus){
-    document.getElementById('b-fstatus').value=d.finStatus;
+    document.getElementById('w-fstatus').value=d.finStatus;
     toggleFinStatus();
   }
   if(d.prepayAmt&&d.finStatus==='prepay'){
