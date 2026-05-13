@@ -9,7 +9,18 @@
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.14.0/dist/tabler-icons.min.css">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-<style>*{box-sizing:border-box;margin:0;padding:0}:root{--pink:#eb9d9f;--pink-l:#f5d5d6;--pink-d:#c97577;--pink-bg:#fef5f5;--beige:#e2d0c4;--beige-l:#f0e8e0;--beige-d:#b89a82;--dark:#1e1e1e;--bg:#f7f4f1;--bg2:#fff;--bg3:#ede8e2;--bg4:#e2dbd3;--t1:#1e1e1e;--t2:#5a5248;--t3:#9a9088;--bdr:#d8d0c6;--bdr2:#c8bfb5;--sage:#5a7a5a;--sage-bg:#edf2ed;--r8:8px;--r12:12px;--r16:16px;}.dark{--bg:#242220;--bg2:#2e2b28;--bg3:#383430;--bg4:#423e3a;--t1:#f0ebe5;--t2:#b0a89e;--t3:#706660;--bdr:#4a4540;--bdr2:#5a5550;--pink-bg:#2e1e1e;--beige-l:#2a2318;--sage-bg:#1a2218;}body{font-family:'DM Sans',sans-serif;font-size:13px;color:var(--t1);background:var(--bg);transition:background .2s,color .2s}.app{display:flex;height:100vh;min-height:620px;overflow:hidden}/* SIDEBAR */.sb{width:216px;flex-shrink:0;background:var(--bg2);border-right:1px solid var(--bdr);display:flex;flex-direction:column}.sb-top{padding:16px;border-bottom:1px solid var(--bdr);display:flex;align-items:center;justify-content:space-between}.sb-logo{height:30px;object-fit:contain}.sb-logo-txt{font-family:'DM Serif Display',serif;font-size:18px;color:var(--pink-d);letter-spacing:-0.5px}.theme-btn{width:28px;height:28px;border-radius:50%;border:1px solid var(--bdr);background:transparent;cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--t3);font-size:13px;transition:all .15s}.theme-btn:hover{background:var(--bg3);color:var(--t1)}.sb-nav{flex:1;overflow-y:auto;padding:6px 8px}.sb-grp{font-size:9.5px;font-weight:600;letter-spacing:.09em;text-transform:uppercase;color:var(--t3);padding:10px 8px 3px}.ni{display:flex;align-items:center;gap:8px;padding:7px 9px;border-radius:var(--r8);cursor:pointer;color:var(--t2);font-size:12.5px;margin-bottom:1px;transition:all .12s}.ni:hover{background:var(--bg3);color:var(--t1)}.ni.active{background:var(--pink-bg);color:var(--pink-d);font-weight:500}.ni i{font-size:14px}.sb-ft{padding:10px 8px;border-top:1px solid var(--bdr)}.sb-user{display:flex;align-items:center;gap:8px;padding:7px 9px;border-radius:var(--r8);background:var(--bg3)}.sb-av{width:28px;height:28px;border-radius:50%;background:var(--pink-l);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:var(--pink-d);flex-shrink:0}.dark .sb-av{background:#4a2828}/* MAIN */.main{flex:1;overflow-y:auto;display:flex;flex-direction:column}.topbar{height:50px;border-bottom:1px solid var(--bdr);display:flex;align-items:center;padding:0 18px;background:var(--bg2);flex-shrink:0}.tb-t{font-size:14px;font-weight:600}.tb-s{font-size:12px;color:var(--t3);margin-left:6px}.tb-r{margin-left:auto}.tb-pill{background:var(--pink-bg);color:var(--pink-d);font-size:11px;padding:3px 10px;border-radius:20px;font-weight:500;border:1px solid var(--pink-l)}.content{padding:18px;flex:1}.page{display:none}.page.active{display:block}/* METRICS */.metrics{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-bottom:18px}.metric{background:var(--bg2);border:1px solid var(--bdr);border-radius:var(--r12);padding:14px 15px}.mi{width:32px;height:32px;border-radius:var(--r8);display:flex;align-items:center;justify-content:center;font-size:15px;margin-bottom:10px}.mi-g{background:var(--sage-bg);color:var(--sage)}.mi-p{background:var(--pink-bg);color:var(--pink-d)}.mi-b{background:var(--beige-l);color:var(--beige-d)}.mi-s{background:#edf0f5;color:#4a5a8a}.dark .mi-s{background:#1e2030;color:#8090c0}.m-lbl{font-size:10.5px;color:var(--t3);font-weight:600;text-transform:uppercase;letter-spacing:.04em;margin-bottom:3px}.m-val{font-size:20px;font-weight:600}/* CARDS */.card{background:var(--bg2);border:1px solid var(--bdr);border-radius:var(--r12);margin-bottom:12px;overflow:hidden}.card-h{padding:12px 16px;border-bottom:1px solid var(--bdr);display:flex;align-items:center;justify-content:space-between}.card-t{font-size:13px;font-weight:600;display:flex;align-items:center;gap:6px}.card-b{padding:16px}/* TABLE */table{width:100%;border-collapse:collapse}th{text-align:left;padding:8px 11px;font-size:10px;font-weight:600;color:var(--t3);text-transform:uppercase;letter-spacing:.05em;border-bottom:1px solid var(--bdr)}td{padding:9px 11px;border-bottom:1px solid var(--bdr);font-size:12px;color:var(--t2);vertical-align:middle}tr:last-child td{border-bottom:none}tr:hover td{background:var(--bg3)}td.s{color:var(--t1);font-weight:500}/* PILLS */.pill{display:inline-flex;align-items:center;font-size:10px;padding:2px 8px;border-radius:20px;font-weight:600}.pp{background:var(--pink-bg);color:var(--pink-d)}.pb{background:var(--beige-l);color:#7a5a40}.dark .pb{background:#2a2010;color:var(--beige)}.pg{background:var(--sage-bg);color:var(--sage)}.ps{background:#edf0f5;color:#3a4a8a}.dark .ps{background:#1e2030;color:#7a90c0}/* FORMS */.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px}.fg{display:flex;flex-direction:column;gap:4px}.fg label{font-size:10px;font-weight:600;color:var(--t3);text-transform:uppercase;letter-spacing:.04em}input[type=text],input[type=number],input[type=date],select{background:var(--bg3);border:1px solid var(--bdr);border-radius:var(--r8);padding:8px 10px;font-size:13px;color:var(--t1);font-family:inherit;outline:none;width:100%;transition:border-color .15s}input:focus,select:focus{border-color:var(--pink)}input::placeholder{color:var(--t3)}select option{background:var(--bg3);color:var(--t1)}/* BUTTONS */.btn{display:inline-flex;align-items:center;gap:6px;padding:8px 14px;border-radius:var(--r8);font-size:13px;font-weight:500;cursor:pointer;font-family:inherit;border:none;transition:all .15s}.btn-pk{background:var(--pink);color:#fff}.btn-pk:hover{background:var(--pink-d)}.btn-gh{background:transparent;color:var(--t2);border:1px solid var(--bdr)}.btn-gh:hover{background:var(--bg3);color:var(--t1)}.btn-xs{padding:4px 8px;font-size:11px;border-radius:6px}.bxe{background:var(--beige-l);color:#7a5a40}.dark .bxe{background:#2a2010;color:var(--beige)}.bxd{background:var(--pink-bg);color:var(--pink-d)}/* TABS */.tabs{display:flex;gap:2px;background:var(--bg3);padding:3px;border-radius:var(--r8);width:fit-content;margin-bottom:12px}.tab{padding:5px 11px;border-radius:6px;font-size:12px;cursor:pointer;color:var(--t3);border:none;background:transparent;font-family:inherit;font-weight:500;transition:all .12s}.tab.active{background:var(--bg2);color:var(--t1)}/* SPLIT */.split-g{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px}.pc{background:var(--bg2);border:1px solid var(--bdr);border-radius:var(--r12);padding:18px;text-align:center}.pav{width:46px;height:46px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-weight:700;font-size:15px;margin-bottom:10px}.po{background:var(--pink-bg);color:var(--pink-d)}.dark .po{background:#3a2020}.pa{background:var(--beige-l);color:#7a5a40}.dark .pa{background:#2a2010;color:var(--beige)}.p-amt{font-size:24px;font-weight:600;margin-bottom:4px}.p-sub{font-size:11px;color:var(--t3)}/* INFO ROWS */.irow{display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--bdr);font-size:13px}.irow:last-child{border-bottom:none}.il{color:var(--t2)}.iv{font-weight:500}/* MISC */.prev{background:var(--bg3);border:1px solid var(--bdr);border-left:3px solid var(--pink);border-radius:var(--r8);padding:11px 13px;font-size:12px;color:var(--t2);line-height:1.9;margin-bottom:12px;display:none}.prev b{color:var(--t1)}.empty{display:flex;flex-direction:column;align-items:center;padding:36px 16px;color:var(--t3);gap:7px}.empty i{font-size:26px}.erow td{background:var(--pink-bg)!important}.rep-wrap{background:var(--bg3);border:1px solid var(--bdr);border-radius:var(--r12);overflow:hidden;margin-top:12px}.rep-ok{padding:10px 16px;border-bottom:1px solid var(--bdr);display:flex;align-items:center;gap:6px;font-size:12px;color:var(--t2)}.obj-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:12px}.oc{background:var(--bg2);border:1px solid var(--bdr);border-radius:var(--r12);padding:13px}.oc-name{font-size:13px;font-weight:600;margin-bottom:2px}.oc-own{font-size:11px;color:var(--t3);margin-bottom:8px}.oc-val{font-size:18px;font-weight:700;color:var(--pink-d)}.oc-n{font-size:11px;color:var(--t3);margin-top:2px}/* CASH RESULT */.cash-ok{font-size:13px;font-weight:500;color:var(--pink-d);padding:10px 12px;background:var(--pink-bg);border-radius:var(--r8);display:none;margin-top:10px;border:1px solid var(--pink-l)}/* SELECT STYLE FIX */.si{background:var(--bg3);border:1px solid var(--bdr);border-radius:var(--r8);padding:7px 10px;font-size:13px;color:var(--t1);font-family:inherit;outline:none}.si:focus{border-color:var(--pink)}
+<style>*{box-sizing:border-box;margin:0;padding:0}:root{--pink:#eb9d9f;--pink-l:#f5d5d6;--pink-d:#c97577;--pink-bg:#fef5f5;--beige:#e2d0c4;--beige-l:#f0e8e0;--beige-d:#b89a82;--dark:#1e1e1e;--bg:#f7f4f1;--bg2:#fff;--bg3:#ede8e2;--bg4:#e2dbd3;--t1:#1e1e1e;--t2:#5a5248;--t3:#9a9088;--bdr:#d8d0c6;--bdr2:#c8bfb5;--sage:#5a7a5a;--sage-bg:#edf2ed;--r8:8px;--r12:12px;--r16:16px;}.dark{--bg:#242220;--bg2:#2e2b28;--bg3:#383430;--bg4:#423e3a;--t1:#f0ebe5;--t2:#b0a89e;--t3:#706660;--bdr:#4a4540;--bdr2:#5a5550;--pink-bg:#2e1e1e;--beige-l:#2a2318;--sage-bg:#1a2218;}body{font-family:'DM Sans',sans-serif;font-size:13px;color:var(--t1);background:var(--bg);transition:background .2s,color .2s}.app{display:flex;height:100vh;min-height:620px;overflow:hidden}/* SIDEBAR */.sb{width:216px;flex-shrink:0;background:var(--bg2);border-right:1px solid var(--bdr);display:flex;flex-direction:column}.sb-top{padding:16px;border-bottom:1px solid var(--bdr);display:flex;align-items:center;justify-content:space-between}.sb-logo{height:30px;object-fit:contain}.sb-logo-txt{font-family:'DM Serif Display',serif;font-size:18px;color:var(--pink-d);letter-spacing:-0.5px}.theme-btn{width:28px;height:28px;border-radius:50%;border:1px solid var(--bdr);background:transparent;cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--t3);font-size:13px;transition:all .15s}.theme-btn:hover{background:var(--bg3);color:var(--t1)}.sb-nav{flex:1;overflow-y:auto;padding:6px 8px}.sb-grp{font-size:9.5px;font-weight:600;letter-spacing:.09em;text-transform:uppercase;color:var(--t3);padding:10px 8px 3px}.ni{display:flex;align-items:center;gap:8px;padding:7px 9px;border-radius:var(--r8);cursor:pointer;color:var(--t2);font-size:12.5px;margin-bottom:1px;transition:all .12s}.ni:hover{background:var(--bg3);color:var(--t1)}.ni.active{background:var(--pink-bg);color:var(--pink-d);font-weight:500}.ni i{font-size:14px}.sb-ft{padding:10px 8px;border-top:1px solid var(--bdr)}.sb-user{display:flex;align-items:center;gap:8px;padding:7px 9px;border-radius:var(--r8);background:var(--bg3)}.sb-av{width:28px;height:28px;border-radius:50%;background:var(--pink-l);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:var(--pink-d);flex-shrink:0}.dark .sb-av{background:#4a2828}/* MAIN */.main{flex:1;overflow-y:auto;display:flex;flex-direction:column}.topbar{height:50px;border-bottom:1px solid var(--bdr);display:flex;align-items:center;padding:0 18px;background:var(--bg2);flex-shrink:0}.tb-t{font-size:14px;font-weight:600}.tb-s{font-size:12px;color:var(--t3);margin-left:6px}.tb-r{margin-left:auto}.tb-pill{background:var(--pink-bg);color:var(--pink-d);font-size:11px;padding:3px 10px;border-radius:20px;font-weight:500;border:1px solid var(--pink-l)}.content{padding:18px;flex:1}.page{display:none}.page.active{display:block}/* METRICS */.metrics{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-bottom:18px}.metric{background:var(--bg2);border:1px solid var(--bdr);border-radius:var(--r12);padding:14px 15px}.mi{width:32px;height:32px;border-radius:var(--r8);display:flex;align-items:center;justify-content:center;font-size:15px;margin-bottom:10px}.mi-g{background:var(--sage-bg);color:var(--sage)}.mi-p{background:var(--pink-bg);color:var(--pink-d)}.mi-b{background:var(--beige-l);color:var(--beige-d)}.mi-s{background:#edf0f5;color:#4a5a8a}.dark .mi-s{background:#1e2030;color:#8090c0}.m-lbl{font-size:10.5px;color:var(--t3);font-weight:600;text-transform:uppercase;letter-spacing:.04em;margin-bottom:3px}.m-val{font-size:20px;font-weight:600}/* CARDS */.card{background:var(--bg2);border:1px solid var(--bdr);border-radius:var(--r12);margin-bottom:12px;overflow:hidden}.card-h{padding:12px 16px;border-bottom:1px solid var(--bdr);display:flex;align-items:center;justify-content:space-between}.card-t{font-size:13px;font-weight:600;display:flex;align-items:center;gap:6px}.card-b{padding:16px}/* TABLE */table{width:100%;border-collapse:collapse}th{text-align:left;padding:8px 11px;font-size:10px;font-weight:600;color:var(--t3);text-transform:uppercase;letter-spacing:.05em;border-bottom:1px solid var(--bdr)}td{padding:9px 11px;border-bottom:1px solid var(--bdr);font-size:12px;color:var(--t2);vertical-align:middle}tr:last-child td{border-bottom:none}tr:hover td{background:var(--bg3)}td.s{color:var(--t1);font-weight:500}/* PILLS */.pill{display:inline-flex;align-items:center;font-size:10px;padding:2px 8px;border-radius:20px;font-weight:600}.pp{background:var(--pink-bg);color:var(--pink-d)}.pb{background:var(--beige-l);color:#7a5a40}.dark .pb{background:#2a2010;color:var(--beige)}.pg{background:var(--sage-bg);color:var(--sage)}.ps{background:#edf0f5;color:#3a4a8a}.dark .ps{background:#1e2030;color:#7a90c0}/* FORMS */.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px}.fg{display:flex;flex-direction:column;gap:4px}.fg label{font-size:10px;font-weight:600;color:var(--t3);text-transform:uppercase;letter-spacing:.04em}input[type=text],input[type=number],input[type=date],select{background:var(--bg3);border:1px solid var(--bdr);border-radius:var(--r8);padding:8px 10px;font-size:13px;color:var(--t1);font-family:inherit;outline:none;width:100%;transition:border-color .15s}input:focus,select:focus{border-color:var(--pink)}input::placeholder{color:var(--t3)}select option{background:var(--bg3);color:var(--t1)}/* BUTTONS */.btn{display:inline-flex;align-items:center;gap:6px;padding:8px 14px;border-radius:var(--r8);font-size:13px;font-weight:500;cursor:pointer;font-family:inherit;border:none;transition:all .15s}.btn-pk{background:var(--pink);color:#fff}.btn-pk:hover{background:var(--pink-d)}.btn-gh{background:transparent;color:var(--t2);border:1px solid var(--bdr)}.btn-gh:hover{background:var(--bg3);color:var(--t1)}.btn-xs{padding:4px 8px;font-size:11px;border-radius:6px}.bxe{background:var(--beige-l);color:#7a5a40}.dark .bxe{background:#2a2010;color:var(--beige)}.bxd{background:var(--pink-bg);color:var(--pink-d)}/* TABS */.tabs{display:flex;gap:2px;background:var(--bg3);padding:3px;border-radius:var(--r8);width:fit-content;margin-bottom:12px}.tab{padding:5px 11px;border-radius:6px;font-size:12px;cursor:pointer;color:var(--t3);border:none;background:transparent;font-family:inherit;font-weight:500;transition:all .12s}.tab.active{background:var(--bg2);color:var(--t1)}/* SPLIT */.split-g{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px}.pc{background:var(--bg2);border:1px solid var(--bdr);border-radius:var(--r12);padding:18px;text-align:center}.pav{width:46px;height:46px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-weight:700;font-size:15px;margin-bottom:10px}.po{background:var(--pink-bg);color:var(--pink-d)}.dark .po{background:#3a2020}.pa{background:var(--beige-l);color:#7a5a40}.dark .pa{background:#2a2010;color:var(--beige)}.p-amt{font-size:24px;font-weight:600;margin-bottom:4px}.p-sub{font-size:11px;color:var(--t3)}/* INFO ROWS */.irow{display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--bdr);font-size:13px}.irow:last-child{border-bottom:none}.il{color:var(--t2)}.iv{font-weight:500}/* MISC */.prev{background:var(--bg3);border:1px solid var(--bdr);border-left:3px solid var(--pink);border-radius:var(--r8);padding:11px 13px;font-size:12px;color:var(--t2);line-height:1.9;margin-bottom:12px;display:none}.prev b{color:var(--t1)}.empty{display:flex;flex-direction:column;align-items:center;padding:36px 16px;color:var(--t3);gap:7px}.empty i{font-size:26px}.erow td{background:var(--pink-bg)!important}.rep-wrap{background:var(--bg3);border:1px solid var(--bdr);border-radius:var(--r12);overflow:hidden;margin-top:12px}.rep-ok{padding:10px 16px;border-bottom:1px solid var(--bdr);display:flex;align-items:center;gap:6px;font-size:12px;color:var(--t2)}.obj-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:12px}.oc{background:var(--bg2);border:1px solid var(--bdr);border-radius:var(--r12);padding:13px}.oc-name{font-size:13px;font-weight:600;margin-bottom:2px}.oc-own{font-size:11px;color:var(--t3);margin-bottom:8px}.oc-val{font-size:18px;font-weight:700;color:var(--pink-d)}.oc-n{font-size:11px;color:var(--t3);margin-top:2px}/* CASH RESULT */.cash-ok{font-size:13px;font-weight:500;color:var(--pink-d);padding:10px 12px;background:var(--pink-bg);border-radius:var(--r8);display:none;margin-top:10px;border:1px solid var(--pink-l)}/* SELECT STYLE FIX */
+.step-ind{display:flex;align-items:center;gap:6px;cursor:pointer;opacity:0.4;transition:opacity .2s}
+.step-ind.active{opacity:1}
+.step-ind.done{opacity:0.7}
+.step-num{width:24px;height:24px;border-radius:50%;background:var(--bg3);border:2px solid var(--bdr);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0}
+.step-ind.active .step-num{background:var(--pink);border-color:var(--pink);color:#fff}
+.step-ind.done .step-num{background:var(--sage);border-color:var(--sage);color:#fff}
+.step-lbl{font-size:12px;font-weight:500;white-space:nowrap}
+.step-line{flex:1;height:2px;background:var(--bdr);margin:0 6px;min-width:20px}
+@media(max-width:500px){.step-lbl{display:none}.step-line{min-width:10px}}
+
+.si{background:var(--bg3);border:1px solid var(--bdr);border-radius:var(--r8);padding:7px 10px;font-size:13px;color:var(--t1);font-family:inherit;outline:none}.si:focus{border-color:var(--pink)}
 .mob-menu-btn{display:none;width:34px;height:34px;border-radius:var(--r8);border:1px solid var(--bdr);background:transparent;cursor:pointer;align-items:center;justify-content:center;color:var(--t2);font-size:18px;flex-shrink:0}
 .sb-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.4);z-index:99}
 @media(max-width:680px){
@@ -137,99 +148,302 @@ input[type=date]{max-width:100%;font-size:13px}
 </div>
 </div>
 <div class="page" id="page-bookings">
-<div class="card">
-<div class="card-h"><div class="card-t"><i class="ti ti-plus" aria-hidden="true"></i> <span id="b-ftitle">Новое бронирование</span></div></div>
-<div class="card-b">
-<div class="form-grid">
-<div class="fg"><label>Объект</label><select id="b-obj" onchange="calcP()"><option value="">Выбрать...</option></select></div>
-<div class="fg"><label>Гость</label><input type="text" id="b-gst" placeholder="Имя гостя"></div>
-<div class="fg"><label>Заезд</label><input type="date" id="b-ci" oninput="autoN();calcP()"></div>
-<div class="fg"><label>Выезд</label><input type="date" id="b-co" oninput="autoN();calcP()"></div>
-<div class="fg"><label>Источник</label><select id="b-src" onchange="togC();calcP()"><option value="airbnb">Airbnb</option><option value="booking">Booking</option><option value="sutochno">Суточно</option><option value="direct">Прямое</option><option value="other">Другое</option></select></div>
-<div class="fg"><label>Валюта</label><select id="b-cur" onchange="calcP()"><option value="usd">USD</option><option value="gel">GEL</option></select></div>
-</div>
-<!-- Amount block -->
-<div style="background:var(--bg3);border-radius:var(--r8);padding:12px;margin-bottom:12px">
-  <div style="font-size:11px;font-weight:600;color:var(--t3);text-transform:uppercase;letter-spacing:.05em;margin-bottom:10px" id="amt-block-title">Сумма</div>
-  <div class="form-grid" style="margin-bottom:8px">
-    <div class="fg">
-      <label id="lbl-guest-paid">Сумма от гостя</label>
-      <input type="number" id="b-guest-paid" placeholder="0.00" oninput="autoCalcAll()">
-      <div style="font-size:10px;color:var(--t3);margin-top:2px" id="hint-guest-paid"></div>
+
+<!-- WIZARD -->
+<div class="card" id="booking-wizard">
+  <!-- Step indicator -->
+  <div style="padding:14px 18px;border-bottom:1px solid var(--bdr);display:flex;align-items:center;gap:0">
+    <div class="step-ind active" id="step-ind-1" onclick="goStep(1)">
+      <span class="step-num">1</span><span class="step-lbl">Детали</span>
     </div>
-    <div class="fg" id="cleaning-select-wrap">
-      <label>Уборка включена</label>
-      <div style="display:flex;gap:6px;margin-top:4px;flex-wrap:wrap">
-        <button type="button" class="btn btn-gh btn-xs" onclick="setClean(0)" id="cl-btn-0">Нет</button>
-        <button type="button" class="btn btn-gh btn-xs" onclick="setClean(20)" id="cl-btn-20">$20</button>
-        <button type="button" class="btn btn-gh btn-xs" onclick="setClean(25)" id="cl-btn-25">$25</button>
-        <button type="button" class="btn btn-gh btn-xs" onclick="setClean('custom')" id="cl-btn-c">Другая</button>
+    <div class="step-line"></div>
+    <div class="step-ind" id="step-ind-2" onclick="goStep(2)">
+      <span class="step-num">2</span><span class="step-lbl">Финансы</span>
+    </div>
+    <div class="step-line"></div>
+    <div class="step-ind" id="step-ind-3" onclick="goStep(3)">
+      <span class="step-num">3</span><span class="step-lbl">Расходы</span>
+    </div>
+    <div class="step-line"></div>
+    <div class="step-ind" id="step-ind-4" onclick="goStep(4)">
+      <span class="step-num">4</span><span class="step-lbl">Итог</span>
+    </div>
+  </div>
+
+  <!-- STEP 1: Booking details -->
+  <div class="wiz-step" id="wiz-step-1">
+    <div class="card-b">
+      <div class="form-grid">
+        <div class="fg"><label>Объект</label>
+          <select id="w-obj" onchange="onObjChange()"><option value="">Выбрать...</option></select>
+        </div>
+        <div class="fg"><label>Источник</label>
+          <select id="w-src" onchange="onSrcChange()">
+            <option value="airbnb">Airbnb</option>
+            <option value="booking">Booking.com</option>
+            <option value="sutochno">Суточно</option>
+            <option value="direct">Прямое</option>
+            <option value="other">Другое</option>
+          </select>
+        </div>
+        <div class="fg"><label>Гость</label><input type="text" id="w-guest" placeholder="Имя гостя"></div>
+        <div class="fg"><label>Телефон</label><input type="text" id="w-phone" placeholder="+995..."></div>
+        <div class="fg"><label>Заезд</label><input type="date" id="w-ci" oninput="calcWizNights()"></div>
+        <div class="fg"><label>Выезд</label><input type="date" id="w-co" oninput="calcWizNights()"></div>
+        <div class="fg"><label>Ночей <span id="w-nights-lbl" style="color:var(--pink);font-weight:600"></span></label>
+          <input type="number" id="w-nights" readonly style="background:var(--bg3);color:var(--t3)">
+        </div>
+        <div class="fg"><label>Валюта</label>
+          <select id="w-cur">
+            <option value="usd">USD</option>
+            <option value="gel">GEL</option>
+          </select>
+        </div>
+        <div class="fg"><label>Взрослых</label><input type="number" id="w-adults" value="2" min="1"></div>
+        <div class="fg"><label>Детей</label><input type="number" id="w-children" value="0" min="0"></div>
       </div>
-      <input type="number" id="b-cl" placeholder="сумма уборки" style="display:none;margin-top:6px" oninput="autoCalcAll()">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px">
+        <input type="checkbox" id="w-pets" onchange="onPetsChange()" style="cursor:pointer">
+        <label style="font-size:13px;cursor:pointer" onclick="document.getElementById('w-pets').click()">🐾 Животные</label>
+      </div>
+      <div style="font-size:12px;color:var(--t3);background:var(--bg3);padding:8px 12px;border-radius:var(--r8)" id="w-booking-ref"></div>
+    </div>
+    <div style="padding:12px 18px;border-top:1px solid var(--bdr);display:flex;justify-content:flex-end">
+      <button class="btn btn-pk" onclick="goStep(2)">Далее → Финансы</button>
     </div>
   </div>
-  <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
-    <input type="checkbox" id="b-extra-check" onchange="toggleExtra()" style="cursor:pointer">
-    <label style="font-size:12px;color:var(--t2);cursor:pointer" onclick="document.getElementById('b-extra-check').click()">Доп. сбор (животные и т.п.)</label>
-    <input type="number" id="b-extra" placeholder="0.00" style="display:none;width:100px" oninput="autoCalcAll()">
-  </div>
-  <div id="amt-results" style="display:none;border-top:1px solid var(--bdr);padding-top:8px">
-    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;font-size:12px">
-      <div><div style="color:var(--t3);font-size:10px;margin-bottom:2px">Уборка</div><div id="res-clean" style="font-weight:600">$0</div></div>
-      <div><div style="color:var(--t3);font-size:10px;margin-bottom:2px">Комиссия платформы</div><div id="res-comm" style="font-weight:600;color:var(--pink-d)">$0</div></div>
-      <div><div style="color:var(--t3);font-size:10px;margin-bottom:2px">Вы получите</div><div id="res-you" style="font-weight:600;color:var(--sage)">$0</div></div>
+
+  <!-- STEP 2: Platform financials -->
+  <div class="wiz-step" id="wiz-step-2" style="display:none">
+    <div class="card-b">
+
+      <!-- AIRBNB -->
+      <div id="fin-airbnb">
+        <div style="font-size:12px;color:var(--t3);background:var(--pink-bg);padding:8px 12px;border-radius:var(--r8);margin-bottom:14px;border-left:3px solid var(--pink)">
+          ℹ️ Уборка уже включена в выплату Airbnb — не добавляйте её повторно
+        </div>
+        <div class="form-grid">
+          <div class="fg"><label>Стоимость проживания</label>
+            <input type="number" id="a-accommodation" placeholder="0.00" oninput="calcAirbnbTotals()">
+          </div>
+          <div class="fg"><label>Уборка (включена гостем)</label>
+            <div style="display:flex;gap:6px;margin-top:4px">
+              <button type="button" class="btn btn-gh btn-xs" onclick="setWizClean(0)" id="wc-0">Нет</button>
+              <button type="button" class="btn btn-gh btn-xs" onclick="setWizClean('default')" id="wc-d">По объекту</button>
+              <button type="button" class="btn btn-gh btn-xs" onclick="setWizClean('custom')" id="wc-c">Другая</button>
+            </div>
+            <input type="number" id="a-cleaning" placeholder="0.00" oninput="calcAirbnbTotals()" style="margin-top:6px">
+          </div>
+          <div class="fg"><label>Сбор с гостя (Airbnb)</label>
+            <input type="number" id="a-guest-fee" placeholder="0.00" oninput="calcAirbnbTotals()">
+          </div>
+          <div class="fg"><label>Сбор с хозяина (Airbnb)</label>
+            <input type="number" id="a-host-fee" placeholder="0.00" oninput="calcAirbnbTotals()">
+          </div>
+        </div>
+        <div style="background:var(--bg3);border-radius:var(--r8);padding:12px;margin-top:4px">
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;font-size:12px">
+            <div><div style="color:var(--t3);font-size:10px;margin-bottom:2px">Гость заплатил</div><div id="a-total-guest" style="font-weight:700;font-size:15px">$0</div></div>
+            <div><div style="color:var(--t3);font-size:10px;margin-bottom:2px">Вы получите (payout)</div><div id="a-payout" style="font-weight:700;font-size:15px;color:var(--sage)">$0</div></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- BOOKING -->
+      <div id="fin-booking" style="display:none">
+        <div style="font-size:12px;color:var(--t3);background:var(--pink-bg);padding:8px 12px;border-radius:var(--r8);margin-bottom:14px;border-left:3px solid var(--pink)">
+          ℹ️ Уборка не разделена в Booking — система вычтет её из общей суммы для аналитики
+        </div>
+        <div class="form-grid">
+          <div class="fg"><label>Итого с гостя</label>
+            <input type="number" id="bk-total" placeholder="0.00" oninput="calcBookingTotals()">
+          </div>
+          <div class="fg"><label>Уборка (вычесть из суммы)</label>
+            <div style="display:flex;gap:6px;margin-top:4px">
+              <button type="button" class="btn btn-gh btn-xs" onclick="setWizClean(0,'bk')" id="wc-bk-0">Нет</button>
+              <button type="button" class="btn btn-gh btn-xs" onclick="setWizClean('default','bk')" id="wc-bk-d">По объекту</button>
+              <button type="button" class="btn btn-gh btn-xs" onclick="setWizClean('custom','bk')" id="wc-bk-c">Другая</button>
+            </div>
+            <input type="number" id="bk-cleaning" placeholder="0.00" oninput="calcBookingTotals()" style="margin-top:6px">
+          </div>
+          <div class="fg"><label>Комиссия Booking</label>
+            <input type="number" id="bk-commission" placeholder="0.00" oninput="calcBookingTotals()">
+          </div>
+          <div class="fg"><label>НДС на комиссию (18%)</label>
+            <input type="number" id="bk-vat" placeholder="0.00" readonly style="background:var(--bg3);color:var(--t3)">
+          </div>
+        </div>
+        <div style="background:var(--bg3);border-radius:var(--r8);padding:12px;margin-top:4px">
+          <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;font-size:12px">
+            <div><div style="color:var(--t3);font-size:10px;margin-bottom:2px">Проживание</div><div id="bk-accommodation" style="font-weight:700">0</div></div>
+            <div><div style="color:var(--t3);font-size:10px;margin-bottom:2px">Комиссия итого</div><div id="bk-total-fees" style="font-weight:700;color:var(--pink-d)">0</div></div>
+            <div><div style="color:var(--t3);font-size:10px;margin-bottom:2px">Вы получите</div><div id="bk-net" style="font-weight:700;color:var(--sage)">0</div></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- SUTOCHNO -->
+      <div id="fin-sutochno" style="display:none">
+        <div style="font-size:12px;color:var(--t3);background:var(--pink-bg);padding:8px 12px;border-radius:var(--r8);margin-bottom:14px;border-left:3px solid var(--pink)">
+          ℹ️ Предоплата 20% = комиссия Суточно. Остаток получите при заезде
+        </div>
+        <div class="form-grid">
+          <div class="fg"><label>Стоимость проживания</label>
+            <input type="number" id="s-accommodation" placeholder="0.00" oninput="calcSutochnoTotals()">
+          </div>
+          <div class="fg"><label>Уборка</label>
+            <div style="display:flex;gap:6px;margin-top:4px">
+              <button type="button" class="btn btn-gh btn-xs" onclick="setWizClean(0,'s')" id="wc-s-0">Нет</button>
+              <button type="button" class="btn btn-gh btn-xs" onclick="setWizClean('default','s')" id="wc-s-d">По объекту</button>
+              <button type="button" class="btn btn-gh btn-xs" onclick="setWizClean('custom','s')" id="wc-s-c">Другая</button>
+            </div>
+            <input type="number" id="s-cleaning" placeholder="0.00" oninput="calcSutochnoTotals()" style="margin-top:6px">
+          </div>
+        </div>
+        <div style="background:var(--bg3);border-radius:var(--r8);padding:12px;margin-top:4px">
+          <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;font-size:12px">
+            <div><div style="color:var(--t3);font-size:10px;margin-bottom:2px">Итого с гостя</div><div id="s-total" style="font-weight:700;font-size:15px">$0</div></div>
+            <div><div style="color:var(--t3);font-size:10px;margin-bottom:2px">Предоплата (20%)</div><div id="s-prepay" style="font-weight:700;color:var(--pink-d)">$0</div></div>
+            <div><div style="color:var(--t3);font-size:10px;margin-bottom:2px">При заезде</div><div id="s-balance" style="font-weight:700;color:var(--sage)">$0</div></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- DIRECT -->
+      <div id="fin-direct" style="display:none">
+        <div class="form-grid">
+          <div class="fg"><label>Сумма от гостя</label>
+            <input type="number" id="d-total" placeholder="0.00" oninput="calcDirectTotals()">
+          </div>
+          <div class="fg"><label>Уборка (если взяли)</label>
+            <div style="display:flex;gap:6px;margin-top:4px">
+              <button type="button" class="btn btn-gh btn-xs" onclick="setWizClean(0,'d')" id="wc-d-0">Нет</button>
+              <button type="button" class="btn btn-gh btn-xs" onclick="setWizClean('default','d')" id="wc-d-d">По объекту</button>
+              <button type="button" class="btn btn-gh btn-xs" onclick="setWizClean('custom','d')" id="wc-d-c">Другая</button>
+            </div>
+            <input type="number" id="d-cleaning" placeholder="0.00" oninput="calcDirectTotals()" style="margin-top:6px">
+          </div>
+        </div>
+        <div style="background:var(--bg3);border-radius:var(--r8);padding:12px;margin-top:4px">
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;font-size:12px">
+            <div><div style="color:var(--t3);font-size:10px;margin-bottom:2px">Проживание</div><div id="d-accommodation" style="font-weight:700">$0</div></div>
+            <div><div style="color:var(--t3);font-size:10px;margin-bottom:2px">Итого получите</div><div id="d-net" style="font-weight:700;color:var(--sage)">$0</div></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Pet fee -->
+      <div id="pet-fee-block" style="display:none;margin-top:12px;padding:10px 12px;background:var(--beige-l);border-radius:var(--r8)">
+        <div style="font-size:12px;font-weight:500;margin-bottom:6px">🐾 Доп. уборка за животных</div>
+        <input type="number" id="w-pet-fee" placeholder="0.00" oninput="recalcCurrentPlatform()" style="width:150px">
+        <span style="font-size:11px;color:var(--t3);margin-left:8px">USD</span>
+      </div>
+
+      <!-- Exchange rate -->
+      <div style="margin-top:12px;display:flex;align-items:center;gap:8px;font-size:12px">
+        <span style="color:var(--t3)">Курс USD/GEL:</span>
+        <input type="number" id="w-rate" value="2.65" step="0.01" style="width:70px" oninput="recalcCurrentPlatform()">
+        <button class="btn btn-gh btn-xs" onclick="fetchTBCRate()"><i class="ti ti-refresh" aria-hidden="true"></i> TBC</button>
+        <span id="rate-status" style="color:var(--t3);font-size:11px"></span>
+      </div>
+    </div>
+    <div style="padding:12px 18px;border-top:1px solid var(--bdr);display:flex;justify-content:space-between">
+      <button class="btn btn-gh" onclick="goStep(1)">← Назад</button>
+      <button class="btn btn-pk" onclick="goStep(3)">Далее → Расходы</button>
     </div>
   </div>
-  <input type="hidden" id="b-amt">
-  <input type="hidden" id="b-cp-abs">
+
+  <!-- STEP 3: Internal costs -->
+  <div class="wiz-step" id="wiz-step-3" style="display:none">
+    <div class="card-b">
+      <div class="form-grid">
+        <div class="fg"><label>Стоимость уборки для клинера</label>
+          <div style="display:flex;gap:6px;margin-top:4px">
+            <button type="button" class="btn btn-gh btn-xs" onclick="setCleanerCost('default')" id="cc-d">По объекту</button>
+            <button type="button" class="btn btn-gh btn-xs" onclick="setCleanerCost('custom')" id="cc-c">Другая</button>
+          </div>
+          <input type="number" id="w-cleaner-cost" placeholder="0" oninput="calcStep3()" style="margin-top:6px">
+          <div style="font-size:10px;color:var(--t3);margin-top:2px" id="cleaner-cost-hint"></div>
+        </div>
+        <div class="fg"><label>Вид оплаты от гостя</label>
+          <select id="w-paytype">
+            <option value="cash">Кэш</option>
+            <option value="card">Карта</option>
+            <option value="transfer">Перевод</option>
+            <option value="platform">На платформе</option>
+          </select>
+        </div>
+        <div class="fg"><label>Кто принял</label>
+          <select id="w-who">
+            <option value="olya">Оля</option>
+            <option value="artem">Артём</option>
+          </select>
+        </div>
+        <div class="fg"><label>Финансовый статус</label>
+          <select id="w-fstatus" onchange="toggleWizPrepay()">
+            <option value="full">Оплачено полностью</option>
+            <option value="prepay">Предоплата</option>
+            <option value="platform">На счету платформы</option>
+            <option value="pending">Ожидает</option>
+          </select>
+        </div>
+      </div>
+      <div id="wiz-prepay-block" style="display:none;background:var(--bg3);border-radius:var(--r8);padding:12px;margin-bottom:12px">
+        <div style="font-size:11px;font-weight:600;color:var(--t3);margin-bottom:8px;text-transform:uppercase">Детали предоплаты</div>
+        <div class="form-grid" style="margin-bottom:0">
+          <div class="fg"><label>Сумма аванса</label><input type="number" id="w-prepay-amt" placeholder="0.00" oninput="calcWizPrepayRest()"></div>
+          <div class="fg"><label>Остаток к оплате</label><input type="number" id="w-prepay-rest" placeholder="0.00" readonly style="background:var(--bg3);color:var(--t3)"></div>
+        </div>
+      </div>
+      <div class="fg"><label>Комментарий</label><input type="text" id="w-comment" placeholder="Любые заметки..."></div>
+      <div style="margin-top:10px;display:flex;align-items:center;gap:8px">
+        <div style="font-size:12px;color:var(--t2)">Cleaning margin:</div>
+        <div id="cleaning-margin" style="font-size:13px;font-weight:600;color:var(--sage)">$0</div>
+        <div style="font-size:11px;color:var(--t3)" id="cleaning-margin-hint"></div>
+      </div>
+    </div>
+    <div style="padding:12px 18px;border-top:1px solid var(--bdr);display:flex;justify-content:space-between">
+      <button class="btn btn-gh" onclick="goStep(2)">← Назад</button>
+      <button class="btn btn-pk" onclick="goStep(4)">Далее → Проверить</button>
+    </div>
+  </div>
+
+  <!-- STEP 4: Review -->
+  <div class="wiz-step" id="wiz-step-4" style="display:none">
+    <div class="card-b">
+      <div id="wiz-review"></div>
+    </div>
+    <div style="padding:12px 18px;border-top:1px solid var(--bdr);display:flex;justify-content:space-between">
+      <button class="btn btn-gh" onclick="goStep(3)">← Назад</button>
+      <div style="display:flex;gap:8px">
+        <button class="btn btn-gh" id="wiz-cancel-btn" onclick="resetWizard()"><i class="ti ti-x" aria-hidden="true"></i> Отмена</button>
+        <button class="btn btn-pk" id="wiz-submit-btn" onclick="submitWizard()"><i class="ti ti-check" aria-hidden="true"></i> Добавить бронирование</button>
+      </div>
+    </div>
+  </div>
 </div>
-<div class="form-grid">
-<div class="fg"><label>Уборка за счёт</label><select id="b-cl-who"><option value="client">Клиента</option><option value="us">Нас</option></select></div>
-<div class="fg"><label>Вид оплаты</label><select id="b-paytype"><option value="cash">Кэш</option><option value="card">Карта</option><option value="transfer">Перевод</option></select></div>
-<div class="fg"><label>Кто принял</label><select id="b-who"><option value="olya">Оля</option><option value="artem">Артём</option></select></div>
-<div class="fg"><label>Ночей <span id="n-a" style="color:var(--pink);font-weight:600"></span></label><input type="number" id="b-n" readonly style="background:var(--bg3);color:var(--t3)"></div>
-<div class="fg"><label>Финансовый статус</label><select id="b-fstatus" onchange="toggleFinStatus()">
-<option value="full">Оплачено полностью</option>
-<option value="prepay">Внесена предоплата</option>
-<option value="platform">На счету платформы</option>
-<option value="pending">Ожидает оплаты</option>
-</select></div>
-</div>
-<div id="b-prepay-block" style="display:none;background:var(--bg3);border-radius:var(--r8);padding:12px;margin-bottom:12px">
-<div style="font-size:11px;font-weight:600;color:var(--t3);text-transform:uppercase;margin-bottom:8px">Детали предоплаты</div>
-<div class="form-grid" style="margin-bottom:0">
-<div class="fg"><label>Сумма предоплаты</label><input type="number" id="b-pre-amt" placeholder="0.00" oninput="calcP();calcPreRest()"></div>
-<div class="fg"><label>Способ</label><select id="b-pre-type"><option value="cash">Кэш</option><option value="card">Карта</option><option value="transfer">Перевод</option></select></div>
-<div class="fg"><label>Остаток <span style="font-size:9px;color:var(--t3)">(считается авто)</span></label><input type="number" id="b-pre-rest" placeholder="0.00"></div>
-<div class="fg"><label>Когда</label><select id="b-pre-when"><option value="checkin">При заезде</option><option value="later">Позже</option></select></div>
-</div>
-</div>
-<div class="fg" style="margin-bottom:12px"><label>Комментарий</label><input type="text" id="b-comment" placeholder="Любые заметки по брони..."></div>
-<div class="prev" id="prevbox"></div>
-<div id="voice-status" style="display:none;padding:10px 14px;border-radius:var(--r8);margin-bottom:12px;font-size:12px;background:var(--bg3);border-left:3px solid var(--pink)"></div>
-<div style="display:flex;gap:8px;flex-wrap:wrap">
-<button class="btn btn-pk" id="b-sbm" onclick="subB()"><i class="ti ti-check" aria-hidden="true"></i> <span id="b-btn">Добавить</span></button>
-<button class="btn btn-gh" id="b-can" onclick="canB()" style="display:none"><i class="ti ti-x" aria-hidden="true"></i> Отмена</button>
-<button class="btn btn-gh" id="voice-btn" onclick="startVoice()" title="Голосовой ввод — скажите данные бронирования" style="margin-left:auto"><i class="ti ti-microphone" id="voice-ico" aria-hidden="true"></i> Голосовой ввод</button>
-</div>
-</div>
-</div>
+
+<!-- Bookings list -->
 <div class="card">
-<div class="card-h">
-<div class="card-t"><i class="ti ti-list" aria-hidden="true"></i> Список</div>
-<div style="display:flex;align-items:center;gap:8px">
-<select id="b-sort" onchange="renderB()" class="si" style="font-size:11px;padding:4px 8px">
-<option value="date-desc">Дата ↓</option>
-<option value="date-asc">Дата ↑</option>
-<option value="obj">По объекту</option>
-<option value="amount">По сумме</option>
-</select>
-<div class="tabs" style="margin:0"><button class="tab active" onclick="fB('all',this)">Все</button><button class="tab" onclick="fB('month',this)">Этот месяц</button></div>
+  <div class="card-h">
+    <div class="card-t"><i class="ti ti-list" aria-hidden="true"></i> Список</div>
+    <div style="display:flex;align-items:center;gap:8px">
+      <select id="b-sort" onchange="renderB()" class="si" style="font-size:11px;padding:4px 8px">
+        <option value="date-desc">Дата ↓</option>
+        <option value="date-asc">Дата ↑</option>
+        <option value="obj">По объекту</option>
+        <option value="amount">По сумме</option>
+      </select>
+      <div class="tabs" style="margin:0">
+        <button class="tab active" onclick="fB('all',this)">Все</button>
+        <button class="tab" onclick="fB('month',this)">Этот месяц</button>
+      </div>
+    </div>
+  </div>
+  <table><thead><tr><th>Объект</th><th>Гость</th><th>Период</th><th>Гость заплатил</th><th>Ком. платформы</th><th>Уборка</th><th>Вы получили</th><th>Собств.</th><th>Нам</th><th>Статус</th><th></th></tr></thead><tbody id="btb"></tbody></table>
 </div>
 </div>
-<table><thead><tr><th>Объект</th><th>Гость</th><th>Период</th><th>Собрано</th><th>Ком-я</th><th>Чистая</th><th>Собств.</th><th>Нам</th><th>Статус</th><th>Кто</th><th>Комментарий</th><th></th></tr></thead><tbody id="btb"></tbody></table>
-</div>
-</div>
+
 <div class="page" id="page-expenses">
 <div class="card">
 <div class="card-h"><div class="card-t"><i class="ti ti-plus" aria-hidden="true"></i> <span id="e-ftitle">Новый расход</span></div></div>
@@ -470,16 +684,44 @@ input[type=date]{max-width:100%;font-size:13px}
 </div>
 </div>
 </div>
+
+<!-- ADD NEW APARTMENT -->
 <div class="card">
-<div class="card-h"><div class="card-t"><i class="ti ti-percent" aria-hidden="true"></i> Объекты и доли собственников</div></div>
-<table><thead><tr><th>Объект</th><th>Собственник</th><th style="width:115px">Кратко &lt;30н</th><th style="width:115px">Долго ≥30н</th></tr></thead><tbody id="obj-set"></tbody></table>
+<div class="card-h"><div class="card-t"><i class="ti ti-building-plus" aria-hidden="true"></i> Добавить объект</div></div>
+<div class="card-b">
+<div class="form-grid">
+  <div class="fg"><label>Название</label><input type="text" id="new-obj-name" placeholder="Например: Синяя камелия"></div>
+  <div class="fg"><label>Тип</label>
+    <select id="new-obj-type">
+      <option value="studio">Студия</option>
+      <option value="one_bedroom">1 спальня</option>
+      <option value="special">Особый</option>
+    </select>
+  </div>
+  <div class="fg"><label>Собственник</label><input type="text" id="new-obj-owner" placeholder="Имя собственника"></div>
+  <div class="fg"><label>Уборка с гостя ($)</label><input type="number" id="new-obj-cleaning" value="20"></div>
+  <div class="fg"><label>Стоимость клинера (₾)</label><input type="number" id="new-obj-cleaner" value="50"></div>
+  <div class="fg"><label>Краткосрочные &lt;30н (%)</label><input type="number" id="new-obj-short" value="70" min="0" max="100"></div>
+  <div class="fg"><label>Долгосрочные ≥30н (%)</label><input type="number" id="new-obj-long" value="85" min="0" max="100"></div>
+  <div class="fg"><label>Комментарий</label><input type="text" id="new-obj-note" placeholder="Адрес, особенности..."></div>
+</div>
+<button class="btn btn-pk" onclick="addNewObj()"><i class="ti ti-plus" aria-hidden="true"></i> Добавить объект</button>
+</div>
+</div>
+
+<!-- APARTMENTS LIST -->
+<div class="card">
+<div class="card-h"><div class="card-t"><i class="ti ti-building-estate" aria-hidden="true"></i> Объекты</div></div>
+<div id="obj-cards-settings"></div>
 </div>
 </div>
 </div>
 </div>
 </div>
 <script>
-const OBJ=['Красная камелия','Белая камелия','Лермонтова','Корал','Кава Вью','НЕКСТ','Батуми Вью','Гринсайд','Санрайс','Гранат','Бургунди'];
+// OBJ is now dynamic — loaded from S.apartments
+const OBJ_DEFAULT=['Красная камелия','Белая камелия','Лермонтова','Корал','Кава Вью','НЕКСТ','Батуми Вью','Гринсайд','Санрайс','Гранат','Бургунди'];
+let OBJ=OBJ_DEFAULT.slice();
 const CATLBL={communal:'Коммунальные',cleaning:'Уборка',repair:'Ремонт',household:'Хозтовары',ads:'Реклама',other:'Другое',free:'Своё'};
 const CATWHO={communal:'owner',cleaning:'us',repair:'us',household:'us',ads:'us',other:'us',free:'us'};
 const PAYTLBL={cash:'Кэш',card:'Карта',transfer:'Перевод'};
@@ -488,7 +730,76 @@ const FSTCLS={full:'pg',prepay:'pa',platform:'ps',pending:'br'};
 const WHOLBL={olya:'Оля',artem:'Артём',company:'Компания'};
 const MRU=['Январь','Февраль','Март','Апрель','Май','Июнь','Июль','Август','Сентябрь','Октябрь','Ноябрь','Декабрь'];
 const SRCLBL={airbnb:'Airbnb',booking:'Booking',sutochno:'Суточно',direct:'Прямое',other:'Другое'};
-function defOwn(){const o={};OBJ.forEach(x=>{o[x]={name:'',shortPct:70,longPct:x==='Корал'?90:85};});return o;}
+const APT_TYPES={studio:'Студия',one_bedroom:'1 спальня',special:'Особый'};
+
+function defOwn(){const o={};OBJ_DEFAULT.forEach(x=>{o[x]={name:'',shortPct:70,longPct:x==='Корал'?90:85,type:'studio',cleaning:20,cleanerCost:50,note:''};});return o;}
+
+function initApartments(){
+  // Sync OBJ array from S.owners keys
+  const customObjs=Object.keys(S.owners).filter(o=>!OBJ_DEFAULT.includes(o));
+  OBJ=[...OBJ_DEFAULT,...customObjs];
+  // Ensure all OBJ have settings
+  OBJ.forEach(o=>{
+    if(!S.owners[o]) S.owners[o]={name:'',shortPct:70,longPct:85,type:'studio',cleaning:20,cleanerCost:50,note:''};
+    // Migrate old entries
+    const cfg=S.owners[o];
+    if(!cfg.type) cfg.type='studio';
+    if(!cfg.cleaning) cfg.cleaning=['Батуми Вью','Гранат','Бургунди','Гринсайд'].includes(o)?25:20;
+    if(!cfg.cleanerCost) cfg.cleanerCost=['Батуми Вью','Гранат','Бургунди','Гринсайд'].includes(o)?65:50;
+  });
+  // Update APT_SETTINGS from S.owners
+  OBJ.forEach(o=>{
+    const cfg=S.owners[o];
+    APT_SETTINGS[o]={type:cfg.type||'studio',cleaning:cfg.cleaning||20,cleanerCost:cfg.cleanerCost||50};
+  });
+}
+
+function addNewObj(){
+  const name=document.getElementById('new-obj-name').value.trim();
+  if(!name){alert('Введите название');return;}
+  if(OBJ.includes(name)){alert('Такой объект уже есть');return;}
+  S.owners[name]={
+    name:document.getElementById('new-obj-owner').value.trim(),
+    shortPct:parseFloat(document.getElementById('new-obj-short').value)||70,
+    longPct:parseFloat(document.getElementById('new-obj-long').value)||85,
+    type:document.getElementById('new-obj-type').value,
+    cleaning:parseFloat(document.getElementById('new-obj-cleaning').value)||20,
+    cleanerCost:parseFloat(document.getElementById('new-obj-cleaner').value)||50,
+    note:document.getElementById('new-obj-note').value.trim()
+  };
+  initApartments();
+  save();
+  popSels();
+  renderSettings();
+  // Clear form
+  ['new-obj-name','new-obj-owner','new-obj-note'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('new-obj-cleaning').value=20;
+  document.getElementById('new-obj-cleaner').value=50;
+  document.getElementById('new-obj-short').value=70;
+  document.getElementById('new-obj-long').value=85;
+}
+
+function deleteObj(name){
+  const hasBk=S.bookings.some(b=>b.obj===name);
+  const hasEx=S.expenses.some(e=>e.obj===name);
+  let msg=`Удалить объект "${name}"?`;
+  if(hasBk||hasEx) msg+=`\n\nВНИМАНИЕ: есть ${hasBk?S.bookings.filter(b=>b.obj===name).length+' бронирований':''}${hasBk&&hasEx?' и ':''}${hasEx?S.expenses.filter(e=>e.obj===name).length+' расходов':''} — они останутся в базе.`;
+  if(!confirm(msg))return;
+  delete S.owners[name];
+  initApartments();
+  save();
+  popSels();
+  renderSettings();
+}
+
+function saveObjField(name, field, val){
+  if(!S.owners[name]) S.owners[name]={};
+  S.owners[name][field]=val;
+  if(field==='type'||field==='cleaning'||field==='cleanerCost'){
+    APT_SETTINGS[name]={...APT_SETTINGS[name],[field==='cleaning'?'cleaning':field==='cleanerCost'?'cleanerCost':'type']:val};
+  }
+  save();
+}
 let S={bookings:[],expenses:[],gelRate:2.65,owners:defOwn(),theme:'light'};
 let eBid=null,eEid=null,bFilt='all';
 try{const d=localStorage.getItem('breclub_v3');if(d){S=JSON.parse(d);OBJ.forEach(o=>{if(!S.owners[o])S.owners[o]={name:'',shortPct:70,longPct:o==='Корал'?90:85};}); }}catch(e){}
@@ -530,7 +841,7 @@ closeSb();
 ({dashboard:renderDash,bookings:renderB,expenses:renderE,owners:renderOwners,calendar:initCalendar,reports:()=>popMons(),pnl:()=>{popMons();renderPnl();},split:renderSplit,object:initObjDetail,settings:renderSettings})[name]?.();
 }
 function popSels(){
-['b-obj','e-obj','r-obj','od-obj'].forEach(id=>{
+['b-obj','e-obj','r-obj','od-obj','w-obj'].forEach(id=>{
 const el=document.getElementById(id);if(!el)return;
 const isE=id==='e-obj',isR=(id==='r-obj'||id==='od-obj'),cur=el.value;
 el.innerHTML=isE?'<option value="__all">Общий (все)</option>':isR?'<option value="">Выбрать...</option>':'<option value="">Выбрать...</option>';
@@ -961,9 +1272,31 @@ else el.style.display='none';
 }
 function saveRate(){S.gelRate=parseFloat(document.getElementById('rate').value)||2.65;save();}
 function renderSettings(){
-document.getElementById('rate').value=S.gelRate||2.65;
-const ist='background:var(--bg3);border:1px solid var(--bdr);border-radius:var(--r8);padding:7px 10px;font-size:12px;color:var(--t1);font-family:inherit;outline:none';
-document.getElementById('obj-set').innerHTML=OBJ.map(o=>{const cfg=S.owners[o]||{name:'',shortPct:70,longPct:o==='Корал'?90:85};return`<tr><td class="s" style="padding:7px 11px">${o}</td><td style="padding:5px 7px"><input type="text" value="${cfg.name||''}" placeholder="Имя собственника" style="${ist};width:100%" onchange="S.owners['${o}'].name=this.value;save()"></td><td style="padding:5px 7px"><div style="display:flex;align-items:center;gap:5px"><input type="number" value="${cfg.shortPct}" min="0" max="100" style="${ist};width:54px" onchange="S.owners['${o}'].shortPct=+this.value;save()"><span style="font-size:11px;color:var(--t3)">%</span></div></td><td style="padding:5px 7px"><div style="display:flex;align-items:center;gap:5px"><input type="number" value="${cfg.longPct}" min="0" max="100" style="${ist};width:54px" onchange="S.owners['${o}'].longPct=+this.value;save()"><span style="font-size:11px;color:var(--t3)">%</span>${o==='Корал'?'<span class="pill pb" style="font-size:9px">90% дефолт</span>':''}</div></td></tr>`;}  ).join('');
+  document.getElementById('rate').value=S.gelRate||2.65;
+  const ist='background:var(--bg3);border:1px solid var(--bdr);border-radius:var(--r8);padding:6px 9px;font-size:12px;color:var(--t1);font-family:inherit;outline:none';
+  const canDelete=n=>!OBJ_DEFAULT.includes(n);
+  const typeBadge=t=>t==='one_bedroom'?'pp':t==='special'?'pb':'ps';
+  document.getElementById('obj-cards-settings').innerHTML=OBJ.map(o=>{
+    const cfg=S.owners[o]||{name:'',shortPct:70,longPct:85,type:'studio',cleaning:20,cleanerCost:50,note:''};
+    return`<div style="border-bottom:1px solid var(--bdr);padding:14px 18px">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+        <div style="display:flex;align-items:center;gap:8px">
+          <span style="font-size:13px;font-weight:600">${o}</span>
+          <span class="pill ${typeBadge(cfg.type)}" style="font-size:10px">${APT_TYPES[cfg.type]||'Студия'}</span>
+        </div>
+        ${canDelete(o)?`<button class="btn btn-xs bxd" onclick="deleteObj('${o}')" title="Удалить"><i class="ti ti-trash" aria-hidden="true"></i></button>`:''}
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:8px">
+        <div class="fg"><label>Собственник</label><input type="text" value="${cfg.name||''}" placeholder="Имя" style="${ist};width:100%" onchange="saveObjField('${o}','name',this.value)"></div>
+        <div class="fg"><label>Тип</label><select style="${ist};width:100%" onchange="saveObjField('${o}','type',this.value)"><option value="studio" ${cfg.type==='studio'?'selected':''}>Студия</option><option value="one_bedroom" ${cfg.type==='one_bedroom'?'selected':''}>1 спальня</option><option value="special" ${cfg.type==='special'?'selected':''}>Особый</option></select></div>
+        <div class="fg"><label>Уборка с гостя ($)</label><input type="number" value="${cfg.cleaning||20}" style="${ist};width:100%" onchange="saveObjField('${o}','cleaning',+this.value)"></div>
+        <div class="fg"><label>Клинер (₾)</label><input type="number" value="${cfg.cleanerCost||50}" style="${ist};width:100%" onchange="saveObjField('${o}','cleanerCost',+this.value)"></div>
+        <div class="fg"><label>Кратко &lt;30н %</label><input type="number" value="${cfg.shortPct||70}" min="0" max="100" style="${ist};width:100%" onchange="saveObjField('${o}','shortPct',+this.value)"></div>
+        <div class="fg"><label>Долго ≥30н %</label><input type="number" value="${cfg.longPct||85}" min="0" max="100" style="${ist};width:100%" onchange="saveObjField('${o}','longPct',+this.value)"></div>
+        <div class="fg" style="grid-column:span 2"><label>Заметки</label><input type="text" value="${cfg.note||''}" placeholder="Адрес, особенности..." style="${ist};width:100%" onchange="saveObjField('${o}','note',this.value)"></div>
+      </div>
+    </div>`;
+  }).join('');
 }
 function initObjDetail(){
 // set default period label
@@ -1827,7 +2160,578 @@ function speakText(text){
   window.speechSynthesis.speak(utt);
 }
 
-popSels();popMons();togC();renderDash();
+// ============================================================
+// APARTMENT SETTINGS
+// ============================================================
+const APT_SETTINGS = {
+  'Красная камелия': {type:'studio', cleaning:20, cleanerCost:50},
+  'Белая камелия':   {type:'studio', cleaning:20, cleanerCost:50},
+  'Лермонтова':      {type:'studio', cleaning:20, cleanerCost:50},
+  'Корал':           {type:'studio', cleaning:20, cleanerCost:50},
+  'Кава Вью':        {type:'studio', cleaning:20, cleanerCost:50},
+  'НЕКСТ':           {type:'studio', cleaning:20, cleanerCost:50},
+  'Батуми Вью':      {type:'one_bedroom', cleaning:25, cleanerCost:65},
+  'Гринсайд':        {type:'special', cleaning:25, cleanerCost:65},
+  'Санрайс':         {type:'studio', cleaning:20, cleanerCost:50},
+  'Гранат':          {type:'one_bedroom', cleaning:25, cleanerCost:65},
+  'Бургунди':        {type:'one_bedroom', cleaning:25, cleanerCost:65},
+};
+
+// OBJ codes for booking ref
+const OBJ_CODES = {
+  'Красная камелия':'RC','Белая камелия':'WC','Лермонтова':'LM','Корал':'CR',
+  'Кава Вью':'KV','НЕКСТ':'NX','Батуми Вью':'BV','Гринсайд':'GS',
+  'Санрайс':'SR','Гранат':'GR','Бургунди':'BG'
+};
+
+// ============================================================
+// WIZARD STATE
+// ============================================================
+let wizState = {step:1, editing:null};
+
+function getWizApt(){return document.getElementById('w-obj').value;}
+function getWizSrc(){return document.getElementById('w-src').value;}
+function getWizRate(){return parseFloat(document.getElementById('w-rate').value)||2.65;}
+function getWizCur(){return document.getElementById('w-cur').value;}
+function getAptSettings(){return APT_SETTINGS[getWizApt()]||{type:'studio',cleaning:20,cleanerCost:50};}
+function fu2(n,cur){const sym=cur==='gel'?'₾':'$';return sym+(Math.abs(+n||0)).toFixed(2);}
+
+function goStep(n){
+  // Validate step 1 before proceeding
+  if(n>1){
+    const obj=document.getElementById('w-obj').value;
+    const ci=document.getElementById('w-ci').value;
+    const co=document.getElementById('w-co').value;
+    if(!obj||!ci||!co){alert('Заполните объект и даты');return;}
+  }
+  if(n===4) buildReview();
+  wizState.step=n;
+  [1,2,3,4].forEach(i=>{
+    document.getElementById('wiz-step-'+i).style.display=i===n?'block':'none';
+    const ind=document.getElementById('step-ind-'+i);
+    ind.classList.remove('active','done');
+    if(i===n) ind.classList.add('active');
+    else if(i<n) ind.classList.add('done');
+  });
+}
+
+function onObjChange(){
+  const apt=getWizApt();
+  const ci=document.getElementById('w-ci').value;
+  if(apt&&ci){
+    const d=new Date(ci);
+    const code=OBJ_CODES[apt]||'XX';
+    const ref=`BRE-${code}-${String(d.getDate()).padStart(2,'0')}${String(d.getMonth()+1).padStart(2,'0')}`;
+    document.getElementById('w-booking-ref').textContent=`ID: ${ref}`;
+  }
+  // Auto-set cleaner cost
+  setCleanerCost('default');
+  // Auto-set cleaning defaults on step 2
+  const src=getWizSrc();
+  autoSetCleaningDefaults(src);
+}
+
+function onSrcChange(){
+  const src=getWizSrc();
+  ['airbnb','booking','sutochno','direct'].forEach(s=>{
+    const el=document.getElementById('fin-'+s);
+    if(el) el.style.display=s===src||(src==='other'&&s==='direct')?'block':'none';
+  });
+  autoSetCleaningDefaults(src);
+}
+
+function autoSetCleaningDefaults(src){
+  const apt=getAptSettings();
+  if(src==='airbnb') setWizClean('default','a');
+  else if(src==='sutochno') setWizClean('default','s');
+  else if(src==='booking') setWizClean('default','bk');
+  else setWizClean(0,'d');
+}
+
+function onPetsChange(){
+  const hasPets=document.getElementById('w-pets').checked;
+  document.getElementById('pet-fee-block').style.display=hasPets?'block':'none';
+  recalcCurrentPlatform();
+}
+
+function setWizClean(val, prefix){
+  prefix=prefix||'a';
+  const suffixes={'a':['0','d','c'],'bk':['bk-0','bk-d','bk-c'],'s':['s-0','s-d','s-c'],'d':['d-0','d-d','d-c']};
+  const sfx=suffixes[prefix]||suffixes['a'];
+  sfx.forEach(s=>{const b=document.getElementById('wc-'+s);if(b){b.style.background='';b.style.color='';}});
+
+  const apt=getAptSettings();
+  const idMap={'a':'a-cleaning','bk':'bk-cleaning','s':'s-cleaning','d':'d-cleaning'};
+  const inputId=idMap[prefix]||'a-cleaning';
+  const input=document.getElementById(inputId);
+
+  let actualVal=0;
+  if(val==='default'){
+    actualVal=apt.cleaning;
+    const key='wc-'+(prefix==='a'?'d':prefix+'-d');
+    const btn=document.getElementById(key);
+    if(btn){btn.style.background='var(--pink)';btn.style.color='#fff';}
+  } else if(val==='custom'){
+    const key='wc-'+(prefix==='a'?'c':prefix+'-c');
+    const btn=document.getElementById(key);
+    if(btn){btn.style.background='var(--pink)';btn.style.color='#fff';}
+    if(input){input.focus();}
+    recalcCurrentPlatform();return;
+  } else {
+    const key='wc-'+(prefix==='a'?'0':prefix+'-0');
+    const btn=document.getElementById(key);
+    if(btn){btn.style.background='var(--pink)';btn.style.color='#fff';}
+  }
+  if(input) input.value=actualVal||'';
+  recalcCurrentPlatform();
+}
+
+function setCleanerCost(mode){
+  const apt=getAptSettings();
+  ['d','c'].forEach(s=>{const b=document.getElementById('cc-'+s);if(b){b.style.background='';b.style.color='';}});
+  const input=document.getElementById('w-cleaner-cost');
+  if(mode==='default'){
+    document.getElementById('cc-d').style.background='var(--pink)';
+    document.getElementById('cc-d').style.color='#fff';
+    input.value=apt.cleanerCost;
+    document.getElementById('cleaner-cost-hint').textContent=
+      apt.type==='studio'?'Студия: 50 ₾':'Однушка: 65 ₾';
+  } else {
+    document.getElementById('cc-c').style.background='var(--pink)';
+    document.getElementById('cc-c').style.color='#fff';
+    input.focus();
+  }
+  calcStep3();
+}
+
+function calcWizNights(){
+  const ci=document.getElementById('w-ci').value;
+  const co=document.getElementById('w-co').value;
+  if(ci&&co){
+    const n=Math.max(0,Math.round((new Date(co)-new Date(ci))/86400000));
+    document.getElementById('w-nights').value=n;
+    document.getElementById('w-nights-lbl').textContent=n?n+'н':'';
+    onObjChange();
+  }
+}
+
+function getPetFee(){return document.getElementById('w-pets').checked?(parseFloat(document.getElementById('w-pet-fee').value)||0):0;}
+
+// Airbnb calculations
+function calcAirbnbTotals(){
+  const acc=parseFloat(document.getElementById('a-accommodation').value)||0;
+  const cl=parseFloat(document.getElementById('a-cleaning').value)||0;
+  const gFee=parseFloat(document.getElementById('a-guest-fee').value)||0;
+  const hFee=parseFloat(document.getElementById('a-host-fee').value)||0;
+  const pet=getPetFee();
+  const totalGuest=acc+cl+gFee+pet;
+  const payout=acc+cl+pet-hFee;
+  document.getElementById('a-total-guest').textContent=fu2(totalGuest,getWizCur());
+  document.getElementById('a-payout').textContent=fu2(payout,getWizCur());
+  calcStep3();
+}
+
+// Booking calculations
+function calcBookingTotals(){
+  const total=parseFloat(document.getElementById('bk-total').value)||0;
+  const comm=parseFloat(document.getElementById('bk-commission').value)||0;
+  const cl=parseFloat(document.getElementById('bk-cleaning').value)||0;
+  const pet=getPetFee();
+  const vat=Math.round(comm*0.18*100)/100;
+  document.getElementById('bk-vat').value=vat.toFixed(2);
+  const totalFees=comm+vat;
+  const accommodation=total-cl-pet;
+  const net=total-totalFees;
+  const cur=getWizCur();
+  document.getElementById('bk-accommodation').textContent=fu2(accommodation,cur);
+  document.getElementById('bk-total-fees').textContent='-'+fu2(totalFees,cur);
+  document.getElementById('bk-net').textContent=fu2(net,cur);
+  calcStep3();
+}
+
+// Sutochno calculations
+function calcSutochnoTotals(){
+  const acc=parseFloat(document.getElementById('s-accommodation').value)||0;
+  const cl=parseFloat(document.getElementById('s-cleaning').value)||0;
+  const pet=getPetFee();
+  const total=acc+cl+pet;
+  const prepay=Math.round(total*0.20*100)/100;
+  const balance=total-prepay;
+  const cur=getWizCur();
+  document.getElementById('s-total').textContent=fu2(total,cur);
+  document.getElementById('s-prepay').textContent=fu2(prepay,cur);
+  document.getElementById('s-balance').textContent=fu2(balance,cur);
+  calcStep3();
+}
+
+// Direct calculations
+function calcDirectTotals(){
+  const total=parseFloat(document.getElementById('d-total').value)||0;
+  const cl=parseFloat(document.getElementById('d-cleaning').value)||0;
+  const pet=getPetFee();
+  const acc=total-cl-pet;
+  const cur=getWizCur();
+  document.getElementById('d-accommodation').textContent=fu2(acc,cur);
+  document.getElementById('d-net').textContent=fu2(total,cur);
+  calcStep3();
+}
+
+function recalcCurrentPlatform(){
+  const src=getWizSrc();
+  if(src==='airbnb') calcAirbnbTotals();
+  else if(src==='booking') calcBookingTotals();
+  else if(src==='sutochno') calcSutochnoTotals();
+  else calcDirectTotals();
+}
+
+function calcStep3(){
+  const src=getWizSrc();
+  const cur=getWizCur();
+  const rate=getWizRate();
+  const cleanerCostGel=parseFloat(document.getElementById('w-cleaner-cost').value)||0;
+  const cleanerCostUsd=cleanerCostGel/rate;
+
+  let cleaningCharged=0;
+  if(src==='airbnb') cleaningCharged=parseFloat(document.getElementById('a-cleaning').value)||0;
+  else if(src==='booking') cleaningCharged=parseFloat(document.getElementById('bk-cleaning').value)||0;
+  else if(src==='sutochno') cleaningCharged=parseFloat(document.getElementById('s-cleaning').value)||0;
+  else cleaningCharged=parseFloat(document.getElementById('d-cleaning').value)||0;
+
+  const cleaningChargedUsd=cur==='gel'?cleaningCharged/rate:cleaningCharged;
+  const margin=cleaningChargedUsd-cleanerCostUsd;
+  const sym=cur==='gel'?'₾':'$';
+  document.getElementById('cleaning-margin').textContent=
+    (margin>=0?'+':'')+fu2(Math.abs(margin),'usd');
+  document.getElementById('cleaning-margin').style.color=margin>=0?'var(--sage)':'var(--pink-d)';
+  document.getElementById('cleaning-margin-hint').textContent=
+    `(${sym}${cleaningCharged.toFixed(0)} от гостя − ₾${cleanerCostGel} клинеру)`;
+}
+
+function toggleWizPrepay(){
+  const fst=document.getElementById('w-fstatus').value;
+  document.getElementById('wiz-prepay-block').style.display=fst==='prepay'?'block':'none';
+}
+
+function calcWizPrepayRest(){
+  const src=getWizSrc();
+  let total=0;
+  if(src==='airbnb'){
+    const acc=parseFloat(document.getElementById('a-accommodation').value)||0;
+    const cl=parseFloat(document.getElementById('a-cleaning').value)||0;
+    const hFee=parseFloat(document.getElementById('a-host-fee').value)||0;
+    total=acc+cl-hFee+getPetFee();
+  } else if(src==='booking'){
+    total=parseFloat(document.getElementById('bk-total').value)||0;
+    const comm=parseFloat(document.getElementById('bk-commission').value)||0;
+    const vat=Math.round(comm*0.18*100)/100;
+    total=total-comm-vat;
+  } else if(src==='sutochno'){
+    const acc=parseFloat(document.getElementById('s-accommodation').value)||0;
+    const cl=parseFloat(document.getElementById('s-cleaning').value)||0;
+    const t=acc+cl+getPetFee();
+    total=t*0.80;
+  } else {
+    total=parseFloat(document.getElementById('d-total').value)||0;
+  }
+  const pre=parseFloat(document.getElementById('w-prepay-amt').value)||0;
+  document.getElementById('w-prepay-rest').value=Math.max(0,total-pre).toFixed(2);
+}
+
+// TBC rate
+async function fetchTBCRate(){
+  document.getElementById('rate-status').textContent='Загрузка...';
+  try{
+    // TBC public API
+    const r=await fetch('https://api.tbcbank.ge/v1/currency/rates?currencies=USD');
+    const d=await r.json();
+    const rate=d?.find?.(x=>x.currency==='USD')?.sell||d?.USD?.sell;
+    if(rate){
+      document.getElementById('w-rate').value=parseFloat(rate).toFixed(4);
+      document.getElementById('rate-status').textContent='✓ TBC '+new Date().toLocaleDateString('ru-RU');
+      recalcCurrentPlatform();
+    } else throw new Error('no rate');
+  }catch(e){
+    // Fallback to NBG
+    try{
+      const r2=await fetch('https://nbg.gov.ge/gw/api/ct/monetarypolicy/currencies/en/json?currencies=USD');
+      const d2=await r2.json();
+      const rate2=d2?.[0]?.currencies?.find?.(x=>x.code==='USD')?.rate;
+      if(rate2){
+        document.getElementById('w-rate').value=parseFloat(rate2).toFixed(4);
+        document.getElementById('rate-status').textContent='✓ НБГ '+new Date().toLocaleDateString('ru-RU');
+        recalcCurrentPlatform();
+      }
+    }catch(e2){
+      document.getElementById('rate-status').textContent='Ошибка — введите вручную';
+    }
+  }
+}
+
+function buildReview(){
+  const src=getWizSrc();
+  const cur=getWizCur();
+  const rate=getWizRate();
+  const apt=getWizApt();
+  const nights=parseInt(document.getElementById('w-nights').value)||0;
+  const obj=document.getElementById('w-obj').value;
+  const opPct=opct(obj,nights);
+  const sym=cur==='gel'?'₾':'$';
+
+  let lines=[];
+  let payout=0,totalGuest=0,accommodation=0,cleaning=0,platformFees=0,pet=getPetFee();
+
+  if(src==='airbnb'){
+    accommodation=parseFloat(document.getElementById('a-accommodation').value)||0;
+    cleaning=parseFloat(document.getElementById('a-cleaning').value)||0;
+    const gFee=parseFloat(document.getElementById('a-guest-fee').value)||0;
+    const hFee=parseFloat(document.getElementById('a-host-fee').value)||0;
+    totalGuest=accommodation+cleaning+gFee+pet;
+    payout=accommodation+cleaning+pet-hFee;
+    platformFees=hFee;
+    lines=[
+      {l:'Проживание',v:fu2(accommodation,cur)},
+      {l:'Уборка (включена)',v:fu2(cleaning,cur)},
+      {l:'Сбор с гостя (Airbnb)',v:fu2(gFee,cur),dim:true},
+      {l:'Сбор с хозяина (Airbnb)',v:'-'+fu2(hFee,cur),red:true},
+      pet?{l:'Доп. сбор (животные)',v:fu2(pet,cur)}:null,
+    ].filter(Boolean);
+  } else if(src==='booking'){
+    const total=parseFloat(document.getElementById('bk-total').value)||0;
+    cleaning=parseFloat(document.getElementById('bk-cleaning').value)||0;
+    const comm=parseFloat(document.getElementById('bk-commission').value)||0;
+    const vat=Math.round(comm*0.18*100)/100;
+    accommodation=total-cleaning-pet;
+    totalGuest=total;
+    platformFees=comm+vat;
+    payout=total-platformFees;
+    lines=[
+      {l:'Итого с гостя',v:fu2(total,cur)},
+      {l:'Уборка (вычтена)',v:'-'+fu2(cleaning,cur),dim:true},
+      {l:'Комиссия Booking',v:'-'+fu2(comm,cur),red:true},
+      {l:'НДС на комиссию (18%)',v:'-'+fu2(vat,cur),red:true},
+      pet?{l:'Доп. сбор (животные)',v:fu2(pet,cur)}:null,
+    ].filter(Boolean);
+  } else if(src==='sutochno'){
+    accommodation=parseFloat(document.getElementById('s-accommodation').value)||0;
+    cleaning=parseFloat(document.getElementById('s-cleaning').value)||0;
+    totalGuest=accommodation+cleaning+pet;
+    const prepay=Math.round(totalGuest*0.20*100)/100;
+    payout=totalGuest-prepay;
+    platformFees=prepay;
+    lines=[
+      {l:'Проживание',v:fu2(accommodation,cur)},
+      {l:'Уборка',v:fu2(cleaning,cur)},
+      {l:'Предоплата 20% (комиссия)',v:'-'+fu2(prepay,cur),red:true},
+      pet?{l:'Доп. сбор (животные)',v:fu2(pet,cur)}:null,
+    ].filter(Boolean);
+  } else {
+    const total=parseFloat(document.getElementById('d-total').value)||0;
+    cleaning=parseFloat(document.getElementById('d-cleaning').value)||0;
+    accommodation=total-cleaning-pet;
+    totalGuest=total;payout=total;platformFees=0;
+    lines=[
+      {l:'Итого от гостя',v:fu2(total,cur)},
+      cleaning?{l:'Уборка',v:fu2(cleaning,cur)}:null,
+    ].filter(Boolean);
+  }
+
+  const payoutUsd=cur==='gel'?payout/rate:payout;
+  const cleanerCostGel=parseFloat(document.getElementById('w-cleaner-cost').value)||0;
+  const cleanerCostUsd=cleanerCostGel/rate;
+  const cleaningUsd=cur==='gel'?cleaning/rate:cleaning;
+  const margin=cleaningUsd-cleanerCostUsd;
+  const ownerAmt=payoutUsd*opPct;
+  const ourAmt=payoutUsd*(1-opPct);
+
+  let html=`
+  <div style="font-size:13px;font-weight:600;margin-bottom:12px">
+    ${apt} · ${document.getElementById('w-guest').value||'Гость'} · 
+    ${document.getElementById('w-ci').value} → ${document.getElementById('w-co').value} (${nights}н)
+  </div>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px">
+    <div style="background:var(--bg3);border-radius:var(--r8);padding:12px">
+      <div style="font-size:10px;font-weight:600;color:var(--t3);text-transform:uppercase;margin-bottom:8px">Разбивка платежей</div>
+      ${lines.map(l=>`<div style="display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid var(--bdr);font-size:12px">
+        <span style="color:${l.dim?'var(--t3)':'var(--t2)'}">${l.l}</span>
+        <span style="color:${l.red?'var(--pink-d)':'var(--t1)'};font-weight:500">${l.v}</span>
+      </div>`).join('')}
+    </div>
+    <div style="background:var(--bg3);border-radius:var(--r8);padding:12px">
+      <div style="font-size:10px;font-weight:600;color:var(--t3);text-transform:uppercase;margin-bottom:8px">Итог</div>
+      <div style="display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid var(--bdr);font-size:12px"><span style="color:var(--t2)">Гость заплатил</span><span style="font-weight:600">${fu2(totalGuest,cur)}</span></div>
+      <div style="display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid var(--bdr);font-size:12px"><span style="color:var(--t2)">Комиссия платформы</span><span style="color:var(--pink-d);font-weight:500">-${fu2(platformFees,cur)}</span></div>
+      <div style="display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid var(--bdr);font-size:12px"><span style="color:var(--t2)">Вы получите</span><span style="color:var(--sage);font-weight:700">${fu2(payout,cur)}</span></div>
+      <div style="display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid var(--bdr);font-size:12px"><span style="color:var(--t2)">Собственнику (${(opPct*100).toFixed(0)}%)</span><span style="font-weight:500">$${ownerAmt.toFixed(2)}</span></div>
+      <div style="display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid var(--bdr);font-size:12px"><span style="color:var(--t2)">Нам</span><span style="color:var(--pink-d);font-weight:700">$${ourAmt.toFixed(2)}</span></div>
+      <div style="display:flex;justify-content:space-between;padding:4px 0;font-size:12px"><span style="color:var(--t2)">Маржа уборки</span><span style="color:${margin>=0?'var(--sage)':'var(--pink-d)'};font-weight:500">${margin>=0?'+':''}$${margin.toFixed(2)}</span></div>
+    </div>
+  </div>`;
+  document.getElementById('wiz-review').innerHTML=html;
+}
+
+function submitWizard(){
+  const src=getWizSrc();
+  const cur=getWizCur();
+  const rate=getWizRate();
+  const obj=document.getElementById('w-obj').value;
+  const ci=document.getElementById('w-ci').value;
+  const co=document.getElementById('w-co').value;
+  const nights=parseInt(document.getElementById('w-nights').value)||0;
+  if(!obj||!ci||!co){alert('Заполните объект и даты');return;}
+  const pet=getPetFee();
+  let payout=0,totalGuest=0,accommodation=0,cleaning=0,commAbs=0,guestFee=0,hostFee=0,vatAmt=0;
+
+  if(src==='airbnb'){
+    accommodation=parseFloat(document.getElementById('a-accommodation').value)||0;
+    cleaning=parseFloat(document.getElementById('a-cleaning').value)||0;
+    guestFee=parseFloat(document.getElementById('a-guest-fee').value)||0;
+    hostFee=parseFloat(document.getElementById('a-host-fee').value)||0;
+    totalGuest=accommodation+cleaning+guestFee+pet;
+    payout=accommodation+cleaning+pet-hostFee;
+    commAbs=hostFee;
+  } else if(src==='booking'){
+    const total=parseFloat(document.getElementById('bk-total').value)||0;
+    cleaning=parseFloat(document.getElementById('bk-cleaning').value)||0;
+    const comm=parseFloat(document.getElementById('bk-commission').value)||0;
+    vatAmt=Math.round(comm*0.18*100)/100;
+    accommodation=total-cleaning-pet;
+    totalGuest=total;commAbs=comm+vatAmt;payout=total-commAbs;
+  } else if(src==='sutochno'){
+    accommodation=parseFloat(document.getElementById('s-accommodation').value)||0;
+    cleaning=parseFloat(document.getElementById('s-cleaning').value)||0;
+    totalGuest=accommodation+cleaning+pet;
+    commAbs=Math.round(totalGuest*0.20*100)/100;payout=totalGuest-commAbs;
+  } else {
+    const total=parseFloat(document.getElementById('d-total').value)||0;
+    cleaning=parseFloat(document.getElementById('d-cleaning').value)||0;
+    accommodation=total-cleaning-pet;totalGuest=total;payout=total;commAbs=0;
+  }
+
+  const payoutUsd=cur==='gel'?payout/rate:payout;
+  const commPct=totalGuest>0?commAbs/totalGuest*100:0;
+  const cleanerCost=parseFloat(document.getElementById('w-cleaner-cost').value)||0;
+
+  const d=new Date(ci);
+  const aptCode=OBJ_CODES[obj]||'XX';
+  const bookingRef=`BRE-${aptCode}-${String(d.getDate()).padStart(2,'0')}${String(d.getMonth()+1).padStart(2,'0')}`;
+
+  const booking={
+    id:Date.now(),
+    obj,guest:document.getElementById('w-guest').value.trim(),
+    ci,co,nights,
+    amount:payout,currency:cur,source:src,
+    commissionPct:commPct,commissionAbs:commAbs,
+    guestPaid:totalGuest,
+    cleaning,cleaningWho:'client',cleanerCostGel:cleanerCost,
+    extraFee:pet,
+    accommodationAmount:accommodation,
+    platformGuestFee:guestFee,
+    platformHostFee:hostFee,
+    platformVat:vatAmt,
+    amountUsd:payoutUsd,
+    payType:document.getElementById('w-paytype').value,
+    enteredBy:document.getElementById('w-who').value,
+    finStatus:document.getElementById('w-fstatus').value,
+    prepayAmt:parseFloat(document.getElementById('w-prepay-amt').value)||0,
+    prepayRest:parseFloat(document.getElementById('w-prepay-rest').value)||0,
+    exchangeRate:rate,
+    bookingRef,
+    adults:parseInt(document.getElementById('w-adults').value)||1,
+    children:parseInt(document.getElementById('w-children').value)||0,
+    pets:document.getElementById('w-pets').checked,
+    comment:document.getElementById('w-comment').value.trim(),
+    outstandingBalance:payout-(parseFloat(document.getElementById('w-prepay-amt').value)||0)
+  };
+
+  if(wizState.editing!==null){
+    const i=S.bookings.findIndex(b=>b.id===wizState.editing);
+    if(i!==-1)S.bookings[i]={...S.bookings[i],...booking,id:wizState.editing};
+    wizState.editing=null;
+  } else {
+    S.bookings.push(booking);
+  }
+  save();
+  syncToSheets();
+  resetWizard();
+  renderB();
+  renderDash();
+}
+
+function resetWizard(){
+  wizState={step:1,editing:null};
+  // Reset all fields
+  ['w-obj','w-src','w-cur','w-paytype','w-who','w-fstatus'].forEach(id=>{
+    const el=document.getElementById(id);if(el)el.value=el.options?.[0]?.value||'';
+  });
+  ['w-guest','w-phone','w-ci','w-co','w-nights','w-comment','w-prepay-amt','w-prepay-rest',
+   'a-accommodation','a-cleaning','a-guest-fee','a-host-fee',
+   'bk-total','bk-cleaning','bk-commission','bk-vat',
+   's-accommodation','s-cleaning',
+   'd-total','d-cleaning','w-pet-fee','w-cleaner-cost'].forEach(id=>{
+    const el=document.getElementById(id);if(el)el.value='';
+  });
+  document.getElementById('w-adults').value=2;
+  document.getElementById('w-children').value=0;
+  document.getElementById('w-pets').checked=false;
+  document.getElementById('pet-fee-block').style.display='none';
+  document.getElementById('wiz-prepay-block').style.display='none';
+  document.getElementById('w-booking-ref').textContent='';
+  document.getElementById('w-nights-lbl').textContent='';
+  onSrcChange();
+  goStep(1);
+}
+
+function editB(id){
+  const b=S.bookings.find(x=>x.id===id);
+  if(!b)return;
+  wizState.editing=id;
+  go('bookings');
+  // Fill wizard fields
+  setTimeout(()=>{
+    document.getElementById('w-obj').value=b.obj||'';
+    document.getElementById('w-src').value=b.source||'airbnb';
+    document.getElementById('w-guest').value=b.guest||'';
+    document.getElementById('w-phone').value=b.guestPhone||'';
+    document.getElementById('w-ci').value=b.ci||'';
+    document.getElementById('w-co').value=b.co||'';
+    document.getElementById('w-cur').value=b.currency||'usd';
+    document.getElementById('w-adults').value=b.adults||2;
+    document.getElementById('w-children').value=b.children||0;
+    document.getElementById('w-pets').checked=b.pets||false;
+    document.getElementById('w-cleaner-cost').value=b.cleanerCostGel||50;
+    document.getElementById('w-paytype').value=b.payType||'cash';
+    document.getElementById('w-who').value=b.enteredBy||'olya';
+    document.getElementById('w-fstatus').value=b.finStatus||'full';
+    document.getElementById('w-comment').value=b.comment||'';
+    document.getElementById('w-rate').value=b.exchangeRate||2.65;
+    calcWizNights();
+    onSrcChange();
+    // Fill platform fields
+    if(b.source==='airbnb'){
+      document.getElementById('a-accommodation').value=b.accommodationAmount||0;
+      document.getElementById('a-cleaning').value=b.cleaning||0;
+      document.getElementById('a-guest-fee').value=b.platformGuestFee||0;
+      document.getElementById('a-host-fee').value=b.platformHostFee||0;
+      calcAirbnbTotals();
+    } else if(b.source==='booking'){
+      document.getElementById('bk-total').value=b.guestPaid||0;
+      document.getElementById('bk-cleaning').value=b.cleaning||0;
+      document.getElementById('bk-commission').value=b.commissionAbs?b.commissionAbs/(1.18):0;
+      calcBookingTotals();
+    } else if(b.source==='sutochno'){
+      document.getElementById('s-accommodation').value=b.accommodationAmount||0;
+      document.getElementById('s-cleaning').value=b.cleaning||0;
+      calcSutochnoTotals();
+    } else {
+      document.getElementById('d-total').value=b.guestPaid||0;
+      document.getElementById('d-cleaning').value=b.cleaning||0;
+      calcDirectTotals();
+    }
+    goStep(1);
+  },100);
+}
+
+popSels();popMons();initApartments();onSrcChange();setCleanerCost('default');renderDash();
 </script>
 <script>
 // ============================================================
