@@ -841,10 +841,10 @@ closeSb();
 ({dashboard:renderDash,bookings:renderB,expenses:renderE,owners:renderOwners,calendar:initCalendar,reports:()=>popMons(),pnl:()=>{popMons();renderPnl();},split:renderSplit,object:initObjDetail,settings:renderSettings})[name]?.();
 }
 function popSels(){
-['b-obj','e-obj','r-obj','od-obj','w-obj'].forEach(id=>{
+['e-obj','r-obj','od-obj','w-obj','cal-obj-filter'].forEach(id=>{
 const el=document.getElementById(id);if(!el)return;
-const isE=id==='e-obj',isR=(id==='r-obj'||id==='od-obj'),cur=el.value;
-el.innerHTML=isE?'<option value="__all">Общий (все)</option>':isR?'<option value="">Выбрать...</option>':'<option value="">Выбрать...</option>';
+const isE=id==='e-obj',isR=(id==='r-obj'||id==='od-obj'),isCal=id==='cal-obj-filter',cur=el.value;
+el.innerHTML=isE?'<option value="__all">Общий (все)</option>':isR?'<option value="">Выбрать...</option>':isCal?'<option value="all">Все объекты</option>':'<option value="">Выбрать...</option>';
 OBJ.forEach(o=>{const op=document.createElement('option');op.value=o;op.textContent=o;el.appendChild(op);});
 if(cur)el.value=cur;
 });
@@ -1523,12 +1523,7 @@ let calYear=new Date().getFullYear();
 let calMonth=new Date().getMonth();
 
 function initCalendar(){
-  // populate object filter
-  const sel=document.getElementById('cal-obj-filter');
-  const cur=sel.value;
-  sel.innerHTML='<option value="all">Все объекты</option>';
-  OBJ.forEach(o=>{const op=document.createElement('option');op.value=o;op.textContent=o;sel.appendChild(op);});
-  if(cur)sel.value=cur;
+  popSels();
   renderTodayPanel();
   renderUpcomingPanel();
   renderCalendar();
@@ -2441,29 +2436,38 @@ function calcWizPrepayRest(){
 async function fetchTBCRate(){
   document.getElementById('rate-status').textContent='Загрузка...';
   try{
-    // TBC public API
-    const r=await fetch('https://api.tbcbank.ge/v1/currency/rates?currencies=USD');
+    // kursi.ge показывает курс TBC в реальном времени
+    const r=await fetch('https://api.myfinance.com.ge/api/rates?bank=tbc',{mode:'cors'});
     const d=await r.json();
-    const rate=d?.find?.(x=>x.currency==='USD')?.sell||d?.USD?.sell;
-    if(rate){
-      document.getElementById('w-rate').value=parseFloat(rate).toFixed(4);
+    const usd=d?.find?.(x=>x?.currency==='USD');
+    if(usd?.sell){
+      const rateVal=parseFloat(usd.sell).toFixed(4);
+      document.getElementById('w-rate').value=rateVal;
+      document.getElementById('rate').value=rateVal;
+      S.gelRate=parseFloat(rateVal);save();
       document.getElementById('rate-status').textContent='✓ TBC '+new Date().toLocaleDateString('ru-RU');
       recalcCurrentPlatform();
-    } else throw new Error('no rate');
-  }catch(e){
-    // Fallback to NBG
-    try{
-      const r2=await fetch('https://nbg.gov.ge/gw/api/ct/monetarypolicy/currencies/en/json?currencies=USD');
-      const d2=await r2.json();
-      const rate2=d2?.[0]?.currencies?.find?.(x=>x.code==='USD')?.rate;
-      if(rate2){
-        document.getElementById('w-rate').value=parseFloat(rate2).toFixed(4);
-        document.getElementById('rate-status').textContent='✓ НБГ '+new Date().toLocaleDateString('ru-RU');
-        recalcCurrentPlatform();
-      }
-    }catch(e2){
-      document.getElementById('rate-status').textContent='Ошибка — введите вручную';
+      return;
     }
+    throw new Error('no rate');
+  }catch(e){
+    // Fallback: myfin.ge
+    try{
+      const r2=await fetch('https://myfin.ge/api/v1/currency/usd?bank=tbc');
+      const d2=await r2.json();
+      const rate2=d2?.sell||d2?.rate;
+      if(rate2){
+        const rateVal=parseFloat(rate2).toFixed(4);
+        document.getElementById('w-rate').value=rateVal;
+        document.getElementById('rate').value=rateVal;
+        S.gelRate=parseFloat(rateVal);save();
+        document.getElementById('rate-status').textContent='✓ TBC (myfin) '+new Date().toLocaleDateString('ru-RU');
+        recalcCurrentPlatform();
+        return;
+      }
+    }catch(e2){}
+    // Last resort: показать страницу TBC вручную
+    document.getElementById('rate-status').innerHTML='❌ Введите вручную · <a href="https://www.tbcbank.ge/web/exchange-rates" target="_blank" style="color:var(--pink-d)">Курс TBC</a>';
   }
 }
 
