@@ -214,9 +214,9 @@ input[type=date]{max-width:100%;font-size:13px}
           ℹ️ Введите стоимость проживания — сбор с хозяина (3%+НДС) считается автоматически
         </div>
         <div class="form-grid">
-          <div class="fg"><label>Стоимость проживания (ночи)</label>
+          <div class="fg"><label>Стоимость ночей</label>
             <input type="number" id="a-accommodation" placeholder="0.00" oninput="calcAirbnbTotals()">
-            <div style="font-size:10px;color:var(--t3);margin-top:2px">Только ночи, без уборки</div>
+            <div style="font-size:10px;color:var(--t3);margin-top:2px">Цена ночи × количество ночей, без уборки</div>
           </div>
           <div class="fg"><label>Уборка (включена гостем)</label>
             <div style="display:flex;gap:6px;margin-top:4px" id="airbnb-clean-btns">
@@ -345,9 +345,9 @@ input[type=date]{max-width:100%;font-size:13px}
       <div style="margin-top:14px;border-top:1px solid var(--bdr);padding-top:14px">
         <div class="form-grid">
           <div class="fg"><label>Вид оплаты от гостя</label>
-            <select id="w-paytype"><option value="cash">Кэш</option><option value="card">Карта</option><option value="transfer">Перевод</option><option value="platform">На платформе</option></select>
+            <select id="w-paytype" onchange="toggleWhoField()"><option value="cash">Кэш</option><option value="card">Карта</option><option value="transfer">Перевод</option><option value="platform">На платформе (Airbnb/Booking)</option></select>
           </div>
-          <div class="fg"><label>Кто принял</label>
+          <div class="fg" id="who-field"><label>Кто принял деньги</label>
             <select id="w-who"><option value="olya">Оля</option><option value="artem">Артём</option></select>
           </div>
           <div class="fg"><label>Финансовый статус</label>
@@ -2366,6 +2366,12 @@ function getWizCur(){return document.getElementById('w-cur').value;}
 function getAptSettings(){return APT_SETTINGS[getWizApt()]||{type:'studio',cleaning:20,cleanerCost:50};}
 function fu2(n,cur){const sym=cur==='gel'?'₾':'$';return sym+(Math.abs(+n||0)).toFixed(2);}
 
+function toggleWhoField(){
+  const v=document.getElementById('w-paytype').value;
+  const el=document.getElementById('who-field');
+  if(el) el.style.display=v==='platform'?'none':'';
+}
+
 function goStep(n){
   if(n>1){
     const obj=document.getElementById('w-obj').value;
@@ -2373,7 +2379,11 @@ function goStep(n){
     const co=document.getElementById('w-co').value;
     if(!obj||!ci||!co){alert('Заполните объект и даты');return;}
   }
-  if(n===3){buildReview();const cc=document.getElementById('w-cleaner-cost');if(cc){const el=document.getElementById('review-cleaner-cost');if(el)el.textContent='₾'+(cc.value||50);}}
+  if(n===3){
+    buildReview();
+    const cc=document.getElementById('w-cleaner-cost');
+    if(cc){const el=document.getElementById('review-cleaner-cost');if(el)el.textContent='₾'+(cc.value||50);}
+  }
   wizState.step=n;
   [1,2,3,4].forEach(i=>{
     const step=document.getElementById('wiz-step-'+i);
@@ -2895,12 +2905,11 @@ function submitWizard(){
 
 function resetWizard(){
   wizState={step:1,editing:null};
-  // Reset all fields
   ['w-obj','w-src','w-cur','w-paytype','w-who','w-fstatus'].forEach(id=>{
     const el=document.getElementById(id);if(el)el.value=el.options?.[0]?.value||'';
   });
   ['w-guest','w-phone','w-ci','w-co','w-nights','w-comment','w-prepay-amt','w-prepay-rest',
-   'a-accommodation','a-cleaning','a-guest-fee','a-host-fee',
+   'a-accommodation','a-cleaning','a-guest-fee','a-host-fee','a-guest-total',
    'bk-total','bk-cleaning','bk-commission','bk-vat',
    's-accommodation','s-cleaning',
    'd-total','d-cleaning','w-pet-fee','w-cleaner-cost'].forEach(id=>{
@@ -2913,7 +2922,7 @@ function resetWizard(){
   document.getElementById('wiz-prepay-block').style.display='none';
   document.getElementById('w-booking-ref').textContent='';
   document.getElementById('w-nights-lbl').textContent='';
-  onSrcChange();
+  onSrcChange();toggleWhoField();
   goStep(1);
 }
 
@@ -2949,8 +2958,7 @@ function editB(id){
       document.getElementById('w-prepay-rest').value=b.prepayRest||0;
     }
     calcWizNights();
-    onSrcChange();
-    // Restore cleaning button state
+    onSrcChange();setCleanerCost('default');toggleWhoField();goStep(1);
     const cl=b.cleaning||0;
     if(cl===0) setWizClean(0, b.source==='airbnb'?'a':b.source==='booking'?'bk':b.source==='sutochno'?'s':'d');
     else if(cl===20||cl===25){
