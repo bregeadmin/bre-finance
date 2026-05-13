@@ -1686,9 +1686,30 @@ popSels();popMons();togC();renderDash();
 // ============================================================
 // НАСТРОЙКИ — измените здесь
 // ============================================================
-const APP_PASSWORD = 'brege2024';           // ← ваш пароль
+const APP_PASSWORD = 'brege2024';
 const SHEETS_URL   = 'https://script.google.com/macros/s/AKfycbw6IGkXcRPTkwsDsbyvTlv1Ty_x5gd5TI-EHHgVu1sJKHEwdNkcYWNcbP9h144C9ZQ-/exec';
 const CLAUDE_API_KEY = '';
+const SUPA_URL = 'https://qkzinjawtumhjbezlyog.supabase.co';
+const SUPA_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFremluamF3dHVtaGpiZXpseW9nIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg2NTE3NDgsImV4cCI6MjA5NDIyNzc0OH0.u_BEKndkTR-SNRl0GSn9i4PTU3Jlrq2dKbD_Dw4l3bQ';
+
+// Supabase helpers
+const SB_HEADERS = {'Content-Type':'application/json','apikey':SUPA_KEY,'Authorization':'Bearer '+SUPA_KEY,'Prefer':'return=representation'};
+
+async function sbGet(table, filter=''){
+  const r = await fetch(`${SUPA_URL}/rest/v1/${table}?${filter}&limit=10000`, {headers:SB_HEADERS});
+  return r.json();
+}
+async function sbUpsert(table, data){
+  const r = await fetch(`${SUPA_URL}/rest/v1/${table}`, {
+    method:'POST',
+    headers:{...SB_HEADERS,'Prefer':'resolution=merge-duplicates,return=minimal'},
+    body: JSON.stringify(Array.isArray(data)?data:[data])
+  });
+  return r;
+}
+async function sbDelete(table, id){
+  return fetch(`${SUPA_URL}/rest/v1/${table}?id=eq.${id}`, {method:'DELETE', headers:SB_HEADERS});
+}
 // ============================================================
 // AUTH
 function checkPwd() {
@@ -1724,77 +1745,117 @@ if (val === APP_PASSWORD) {
 
 // Auto-login if already authenticated this session
 if (sessionStorage.getItem('bre_auth') === '1') {
-  // Load saved API key
   const savedKey = localStorage.getItem('bre_api_key');
   if (savedKey) window.CLAUDE_API_KEY = savedKey;
   document.getElementById('login-screen').style.display = 'none';
   document.getElementById('app').style.display = '';
-  if (SHEETS_URL) loadFromSheets();
+  loadFromSupabase();
 } else {
-  // Pre-fill API key field if saved
   const savedKey = localStorage.getItem('bre_api_key');
-  if (savedKey) {
-    const el = document.getElementById('api-key-input');
-    if (el) el.value = savedKey;
+  if (savedKey) { const el = document.getElementById('api-key-input'); if (el) el.value = savedKey; }
+}
+
+// SYNC
+function setSyncStatus(msg, color) {
+  const el = document.getElementById('sync-status');
+  el.style.display = msg ? '' : 'none';
+  el.textContent = msg;
+  el.style.color = color || 'var(--t3)';
+}
+
+// Map JS booking to DB row
+function bToDb(b){ return {
+  id:b.id, obj:b.obj, guest:b.guest||'', ci:b.ci, co:b.co, nights:b.nights||0,
+  amount:b.amount||0, currency:b.currency||'usd', source:b.source||'direct',
+  commission_pct:b.commissionPct||0, cleaning:b.cleaning||0, cleaning_who:b.cleaningWho||'client',
+  amount_usd:b.amountUsd||0, pay_type:b.payType||'cash', entered_by:b.enteredBy||'olya',
+  fin_status:b.finStatus||'full', prepay_amt:b.prepayAmt||0, prepay_type:b.prepayType||'',
+  prepay_rest:b.prepayRest||0, prepay_when:b.prepayWhen||'', comment:b.comment||''
+};}
+function dbToB(r){ return {
+  id:r.id, obj:r.obj, guest:r.guest, ci:r.ci, co:r.co, nights:r.nights,
+  amount:r.amount, currency:r.currency, source:r.source, commissionPct:r.commission_pct,
+  cleaning:r.cleaning, cleaningWho:r.cleaning_who, amountUsd:r.amount_usd,
+  payType:r.pay_type, enteredBy:r.entered_by, finStatus:r.fin_status,
+  prepayAmt:r.prepay_amt, prepayType:r.prepay_type, prepayRest:r.prepay_rest,
+  prepayWhen:r.prepay_when, comment:r.comment
+};}
+
+// Map JS expense to DB row
+function eToDb(e){ return {
+  id:e.id, obj:e.obj, cat:e.cat, free_cat:e.freeCat||'', amount:e.amount||0,
+  currency:e.currency||'usd', date:e.date, comment:e.comment||'',
+  paid_by:e.paidBy||'company', pay_type:e.payType||'cash', entered_by:e.enteredBy||'olya',
+  amount_usd:e.amountUsd||0, who:e.who||'us'
+};}
+function dbToE(r){ return {
+  id:r.id, obj:r.obj, cat:r.cat, freeCat:r.free_cat, amount:r.amount,
+  currency:r.currency, date:r.date, comment:r.comment, paidBy:r.paid_by,
+  payType:r.pay_type, enteredBy:r.entered_by, amountUsd:r.amount_usd, who:r.who
+};}
+
+async function loadFromSupabase(){
+  setSyncStatus('Загрузка...','var(--t3)');
+  try{
+    const [bks, exps, sets] = await Promise.all([
+      sbGet('bookings','order=ci.desc'),
+      sbGet('expenses','order=date.desc'),
+      sbGet('settings')
+    ]);
+    if(Array.isArray(bks)) S.bookings = bks.map(dbToB);
+    if(Array.isArray(exps)) S.expenses = exps.map(dbToE);
+    if(Array.isArray(sets)){
+      const gelRow = sets.find(s=>s.key==='gel_rate');
+      const ownRow = sets.find(s=>s.key==='owners');
+      if(gelRow) S.gelRate = parseFloat(gelRow.value)||2.65;
+      if(ownRow) try{ const o=JSON.parse(ownRow.value); if(Object.keys(o).length) S.owners=o; }catch(e){}
+    }
+    save();
+    renderDash();
+    setSyncStatus('Синхронизировано ✓','var(--sage)');
+    setTimeout(()=>setSyncStatus(''),3000);
+  }catch(e){
+    setSyncStatus('Ошибка загрузки','var(--pink-d)');
+    console.error(e);
   }
 }
-// GOOGLE SHEETS SYNC
-function setSyncStatus(msg, color) {
-const el = document.getElementById('sync-status');
-el.style.display = msg ? '' : 'none';
-el.textContent = msg;
-el.style.color = color || 'var(--t3)';
+
+async function syncToSheets(){
+  setSyncStatus('Сохранение...','var(--t3)');
+  try{
+    await Promise.all([
+      sbUpsert('bookings', S.bookings.map(bToDb)),
+      sbUpsert('expenses', S.expenses.map(eToDb)),
+      sbUpsert('settings', [
+        {key:'gel_rate', value:String(S.gelRate||2.65)},
+        {key:'owners', value:JSON.stringify(S.owners)}
+      ])
+    ]);
+    setSyncStatus('Сохранено ✓','var(--sage)');
+    setTimeout(()=>setSyncStatus(''),3000);
+  }catch(e){
+    setSyncStatus('Ошибка сохранения','var(--pink-d)');
+    console.error(e);
+  }
 }
-function loadFromSheets() {
-if (!SHEETS_URL) return;
-setSyncStatus('Загрузка...', 'var(--t3)');
-fetch(SHEETS_URL + '?action=load')
-.then(r => r.json())
-.then(data => {
-if (data.bookings) {
-S.bookings = data.bookings;
-S.expenses = data.expenses || [];
-if (data.owners && Object.keys(data.owners).length) S.owners = data.owners;
-if (data.gelRate) S.gelRate = data.gelRate;
-save();
-renderDash();
-setSyncStatus('Синхронизировано ✓', 'var(--sage)');
-setTimeout(() => setSyncStatus(''), 3000);
+
+// Override save functions to also sync to Supabase
+const _origSubB = subB;
+async function subBWithSync(){
+  const prevLen = S.bookings.length;
+  subB();
+  if(S.bookings.length !== prevLen || S.bookings.length > 0){
+    const latest = S.bookings[S.bookings.length-1];
+    if(latest) await sbUpsert('bookings',[bToDb(latest)]);
+  }
 }
-})
-.catch(() => setSyncStatus('Ошибка загрузки', 'var(--pink-d)'));
-}
-function syncToSheets() {
-if (!SHEETS_URL) {
-alert('Вставьте URL Google Apps Script в переменную SHEETS_URL в коде');
-return;
-}
-setSyncStatus('Сохранение...', 'var(--t3)');
-fetch(SHEETS_URL, {
-method: 'POST',
-body: JSON.stringify({
-action: 'save',
-bookings: S.bookings,
-expenses: S.expenses,
-owners: S.owners,
-gelRate: S.gelRate
-})
-})
-.then(r => r.json())
-.then(() => {
-setSyncStatus('Сохранено в Sheets ✓', 'var(--sage)');
-setTimeout(() => setSyncStatus(''), 3000);
-})
-.catch(() => setSyncStatus('Ошибка сохранения', 'var(--pink-d)'));
-}
-// Show sync button when sheets url is set
-if (SHEETS_URL) {
+
+// Auto-reload from Supabase every 30 seconds (so Olya and Artem see same data)
+setInterval(()=>{ if(sessionStorage.getItem('bre_auth')==='1') loadFromSupabase(); }, 30000);
+
+// Show sync button
 document.getElementById('sync-btn').style.display = 'flex';
-}
-// Auto-save to Sheets every 5 minutes if URL is set
-if (SHEETS_URL) {
-setInterval(() => syncToSheets(), 5 * 60 * 1000);
-}
+document.getElementById('sync-btn').innerHTML = '<i class="ti ti-cloud-upload" aria-hidden="true"></i> Сохранить';
 </script>
 </body>
 </html>
