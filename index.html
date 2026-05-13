@@ -382,36 +382,23 @@ input[type=date]{max-width:100%;font-size:13px}
     </div>
   </div>
 
-  <!-- STEP 3: Review (was step 4) -->
+  <!-- STEP 3: Review -->
   <div class="wiz-step" id="wiz-step-3" style="display:none">
-    <div class="card-b">
+    <div class="card-b" style="padding:0">
       <div id="wiz-review"></div>
-      <!-- Auto expenses note -->
-      <div style="margin-top:12px;background:var(--bg3);border-radius:var(--r8);padding:12px">
-        <div style="font-size:11px;font-weight:600;color:var(--t3);text-transform:uppercase;margin-bottom:8px">📋 Создадутся автоматически в расходах</div>
-        <div style="display:flex;flex-direction:column;gap:6px">
-          <div style="display:flex;justify-content:space-between;font-size:12px;padding:6px 8px;background:var(--bg2);border-radius:6px">
-            <span>🧹 Клинер · дата выезда</span>
-            <span id="review-cleaner-cost" style="font-weight:600">₾50</span>
-          </div>
-          <div style="display:flex;justify-content:space-between;font-size:12px;padding:6px 8px;background:var(--beige-l);border-radius:6px">
-            <span>🧺 Прачечная · дата выезда</span>
-            <span style="color:var(--t3)">⏳ заполнить позже</span>
-          </div>
-        </div>
-      </div>
     </div>
     <div style="padding:12px 18px;border-top:1px solid var(--bdr);display:flex;justify-content:space-between">
       <button class="btn btn-gh" onclick="goStep(2)">← Назад</button>
       <div style="display:flex;gap:8px">
-        <button class="btn btn-gh" id="wiz-cancel-btn" onclick="resetWizard()"><i class="ti ti-x" aria-hidden="true"></i> Отмена</button>
-        <button class="btn btn-pk" id="wiz-submit-btn" onclick="submitWizard()"><i class="ti ti-check" aria-hidden="true"></i> Добавить бронирование</button>
+        <button class="btn btn-gh" onclick="resetWizard()"><i class="ti ti-x" aria-hidden="true"></i> Отмена</button>
+        <button class="btn btn-pk" id="wiz-submit-btn" onclick="submitWizard()"><i class="ti ti-check" aria-hidden="true"></i> Подтвердить и сохранить</button>
       </div>
     </div>
   </div>
 
   <!-- Hidden step 4 for compatibility -->
   <div id="wiz-step-4" style="display:none"></div>
+</div>
   <div class="wiz-step" id="wiz-step-3" style="display:none">
     <div class="card-b">
 
@@ -500,19 +487,8 @@ input[type=date]{max-width:100%;font-size:13px}
     </div>
   </div>
 
-  <!-- STEP 4: Review -->
-  <div class="wiz-step" id="wiz-step-4" style="display:none">
-    <div class="card-b">
-      <div id="wiz-review"></div>
-    </div>
-    <div style="padding:12px 18px;border-top:1px solid var(--bdr);display:flex;justify-content:space-between">
-      <button class="btn btn-gh" onclick="goStep(3)">← Назад</button>
-      <div style="display:flex;gap:8px">
-        <button class="btn btn-gh" id="wiz-cancel-btn" onclick="resetWizard()"><i class="ti ti-x" aria-hidden="true"></i> Отмена</button>
-        <button class="btn btn-pk" id="wiz-submit-btn" onclick="submitWizard()"><i class="ti ti-check" aria-hidden="true"></i> Добавить бронирование</button>
-      </div>
-    </div>
-  </div>
+  <!-- Hidden step 4 for compatibility -->
+  <div id="wiz-step-4" style="display:none"></div>
 </div>
 
 <!-- Bookings list -->
@@ -774,6 +750,14 @@ input[type=date]{max-width:100%;font-size:13px}
 <input type="number" id="rate" value="2.65" step="0.01" style="width:80px" oninput="saveRate()">
 <span style="color:var(--t2)">GEL</span>
 </div>
+</div>
+</div>
+
+<div class="card">
+<div class="card-h"><div class="card-t"><i class="ti ti-refresh" aria-hidden="true"></i> Данные</div></div>
+<div class="card-b" style="display:flex;gap:10px;flex-wrap:wrap">
+<button class="btn btn-gh" onclick="loadFromSupabase()"><i class="ti ti-cloud-download" aria-hidden="true"></i> Загрузить из Supabase</button>
+<button class="btn btn-gh" onclick="if(confirm('Очистить локальный кэш и перезагрузить?')){localStorage.removeItem('bre_data');location.reload();}"><i class="ti ti-trash" aria-hidden="true"></i> Очистить кэш</button>
 </div>
 </div>
 
@@ -2692,98 +2676,124 @@ function buildReview(){
   const apt=getWizApt();
   const nights=parseInt(document.getElementById('w-nights').value)||0;
   const obj=document.getElementById('w-obj').value;
+  const guest=document.getElementById('w-guest').value||'Гость';
+  const ci=document.getElementById('w-ci').value;
+  const co=document.getElementById('w-co').value;
   const opPct=opct(obj,nights);
   const sym=cur==='gel'?'₾':'$';
+  const pet=getPetFee();
+  const cleanerCostGel=parseFloat(document.getElementById('w-cleaner-cost').value)||0;
 
-  let lines=[];
-  let payout=0,totalGuest=0,accommodation=0,cleaning=0,platformFees=0,pet=getPetFee();
+  let payout=0,totalGuest=0,accommodation=0,cleaning=0,platformFees=0;
+  let platformLabel='';
 
   if(src==='airbnb'){
     accommodation=parseFloat(document.getElementById('a-accommodation').value)||0;
     cleaning=parseFloat(document.getElementById('a-cleaning').value)||0;
-    const gFee=parseFloat(document.getElementById('a-guest-fee').value)||0;
     const hFee=parseFloat(document.getElementById('a-host-fee').value)||0;
-    totalGuest=accommodation+cleaning+gFee+pet;
+    const gTotal=parseFloat(document.getElementById('a-guest-total').value)||0;
     payout=accommodation+cleaning+pet-hFee;
+    totalGuest=gTotal>0?gTotal:payout+hFee;
     platformFees=hFee;
-    lines=[
-      {l:'Проживание',v:fu2(accommodation,cur)},
-      {l:'Уборка (включена)',v:fu2(cleaning,cur)},
-      {l:'Сбор с гостя (Airbnb)',v:fu2(gFee,cur),dim:true},
-      {l:'Сбор с хозяина (Airbnb)',v:'-'+fu2(hFee,cur),red:true},
-      pet?{l:'Доп. сбор (животные)',v:fu2(pet,cur)}:null,
-    ].filter(Boolean);
+    platformLabel='Сбор Airbnb с хозяина';
   } else if(src==='booking'){
     const total=parseFloat(document.getElementById('bk-total').value)||0;
     cleaning=parseFloat(document.getElementById('bk-cleaning').value)||0;
     const comm=parseFloat(document.getElementById('bk-commission').value)||0;
     const vat=Math.round(comm*0.18*100)/100;
     accommodation=total-cleaning-pet;
-    totalGuest=total;
-    platformFees=comm+vat;
-    payout=total-platformFees;
-    lines=[
-      {l:'Итого с гостя',v:fu2(total,cur)},
-      {l:'Уборка (вычтена)',v:'-'+fu2(cleaning,cur),dim:true},
-      {l:'Комиссия Booking',v:'-'+fu2(comm,cur),red:true},
-      {l:'НДС на комиссию (18%)',v:'-'+fu2(vat,cur),red:true},
-      pet?{l:'Доп. сбор (животные)',v:fu2(pet,cur)}:null,
-    ].filter(Boolean);
+    totalGuest=total;platformFees=comm+vat;payout=total-platformFees;
+    platformLabel='Комиссия Booking + НДС';
   } else if(src==='sutochno'){
     accommodation=parseFloat(document.getElementById('s-accommodation').value)||0;
     cleaning=parseFloat(document.getElementById('s-cleaning').value)||0;
     totalGuest=accommodation+cleaning+pet;
     const prepay=Math.round(totalGuest*0.20*100)/100;
-    payout=totalGuest-prepay;
-    platformFees=prepay;
-    lines=[
-      {l:'Проживание',v:fu2(accommodation,cur)},
-      {l:'Уборка',v:fu2(cleaning,cur)},
-      {l:'Предоплата 20% (комиссия)',v:'-'+fu2(prepay,cur),red:true},
-      pet?{l:'Доп. сбор (животные)',v:fu2(pet,cur)}:null,
-    ].filter(Boolean);
+    payout=totalGuest-prepay;platformFees=prepay;
+    platformLabel='Предоплата Суточно (20%)';
   } else {
     const total=parseFloat(document.getElementById('d-total').value)||0;
     cleaning=parseFloat(document.getElementById('d-cleaning').value)||0;
     accommodation=total-cleaning-pet;
     totalGuest=total;payout=total;platformFees=0;
-    lines=[
-      {l:'Итого от гостя',v:fu2(total,cur)},
-      cleaning?{l:'Уборка',v:fu2(cleaning,cur)}:null,
-    ].filter(Boolean);
+    platformLabel='';
   }
 
   const payoutUsd=cur==='gel'?payout/rate:payout;
-  const cleanerCostGel=parseFloat(document.getElementById('w-cleaner-cost').value)||0;
-  const cleanerCostUsd=cleanerCostGel/rate;
   const cleaningUsd=cur==='gel'?cleaning/rate:cleaning;
+  const cleanerCostUsd=cleanerCostGel/rate;
   const margin=cleaningUsd-cleanerCostUsd;
-  const ownerAmt=payoutUsd*opPct;
-  const ourAmt=payoutUsd*(1-opPct);
+  const ownerBase=payoutUsd-cleaningUsd;
+  const ownerAmt=ownerBase*opPct;
+  const ourAmt=ownerBase*(1-opPct);
+  const srcLabel=SRCLBL[src]||src;
+  const fstLabel={full:'Оплачено полностью',prepay:'Предоплата',platform:'На платформе',pending:'Ожидает'}[document.getElementById('w-fstatus').value]||'';
+  const whoLabel=document.getElementById('w-paytype').value==='platform'?'Платформа':(document.getElementById('w-who').value==='olya'?'Оля':'Артём');
 
-  let html=`
-  <div style="font-size:13px;font-weight:600;margin-bottom:12px">
-    ${apt} · ${document.getElementById('w-guest').value||'Гость'} · 
-    ${document.getElementById('w-ci').value} → ${document.getElementById('w-co').value} (${nights}н)
-  </div>
-  <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px">
-    <div style="background:var(--bg3);border-radius:var(--r8);padding:12px">
-      <div style="font-size:10px;font-weight:600;color:var(--t3);text-transform:uppercase;margin-bottom:8px">Разбивка платежей</div>
-      ${lines.map(l=>`<div style="display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid var(--bdr);font-size:12px">
-        <span style="color:${l.dim?'var(--t3)':'var(--t2)'}">${l.l}</span>
-        <span style="color:${l.red?'var(--pink-d)':'var(--t1)'};font-weight:500">${l.v}</span>
-      </div>`).join('')}
+  const row=(label,val,color,big)=>`
+    <div style="display:flex;justify-content:space-between;align-items:center;padding:9px 0;border-bottom:1px solid var(--bdr)">
+      <span style="font-size:12px;color:var(--t2)">${label}</span>
+      <span style="font-size:${big?'15px':'13px'};font-weight:${big?700:500};color:${color||'var(--t1)'}">${val}</span>
+    </div>`;
+
+  const html=`
+  <div style="padding:16px 18px">
+
+    <!-- Header -->
+    <div style="display:flex;align-items:center;gap:10px;padding-bottom:14px;border-bottom:2px solid var(--bdr);margin-bottom:14px">
+      <div style="width:40px;height:40px;border-radius:50%;background:var(--pink-bg);display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0">🏠</div>
+      <div>
+        <div style="font-size:15px;font-weight:700">${apt}</div>
+        <div style="font-size:12px;color:var(--t3)">${guest} · ${ci} → ${co} · ${nights} ноч. · ${srcLabel}</div>
+      </div>
+      <div style="margin-left:auto;text-align:right">
+        <div style="font-size:10px;color:var(--t3)">Статус</div>
+        <div style="font-size:12px;font-weight:600;color:var(--pink-d)">${fstLabel}</div>
+        <div style="font-size:11px;color:var(--t3)">${whoLabel}</div>
+      </div>
     </div>
-    <div style="background:var(--bg3);border-radius:var(--r8);padding:12px">
-      <div style="font-size:10px;font-weight:600;color:var(--t3);text-transform:uppercase;margin-bottom:8px">Итог</div>
-      <div style="display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid var(--bdr);font-size:12px"><span style="color:var(--t2)">Гость заплатил</span><span style="font-weight:600">${fu2(totalGuest,cur)}</span></div>
-      <div style="display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid var(--bdr);font-size:12px"><span style="color:var(--t2)">Комиссия платформы</span><span style="color:var(--pink-d);font-weight:500">-${fu2(platformFees,cur)}</span></div>
-      <div style="display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid var(--bdr);font-size:12px"><span style="color:var(--t2)">Вы получите</span><span style="color:var(--sage);font-weight:700">${fu2(payout,cur)}</span></div>
-      <div style="display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid var(--bdr);font-size:12px"><span style="color:var(--t2)">Собственнику (${(opPct*100).toFixed(0)}%)</span><span style="font-weight:500">$${ownerAmt.toFixed(2)}</span></div>
-      <div style="display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid var(--bdr);font-size:12px"><span style="color:var(--t2)">Нам</span><span style="color:var(--pink-d);font-weight:700">$${ourAmt.toFixed(2)}</span></div>
-      <div style="display:flex;justify-content:space-between;padding:4px 0;font-size:12px"><span style="color:var(--t2)">Маржа уборки</span><span style="color:${margin>=0?'var(--sage)':'var(--pink-d)'};font-weight:500">${margin>=0?'+':''}$${margin.toFixed(2)}</span></div>
+
+    <!-- Finance summary -->
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px">
+
+      <!-- Left: flow -->
+      <div style="background:var(--bg3);border-radius:var(--r8);padding:12px">
+        <div style="font-size:10px;font-weight:700;color:var(--t3);text-transform:uppercase;margin-bottom:8px">Деньги</div>
+        ${row('Гость заплатил',fu2(totalGuest,cur),'var(--t1)',false)}
+        ${platformFees>0?row(platformLabel,'-'+fu2(platformFees,cur),'var(--pink-d)',false):''}
+        ${cleaning>0?row('Уборка с гостя',fu2(cleaning,cur),'var(--t2)',false):''}
+        ${pet>0?row('Доп. сбор (животные)',fu2(pet,cur),'var(--t2)',false):''}
+        ${row('Вы получите',fu2(payout,cur),'var(--sage)',true)}
+      </div>
+
+      <!-- Right: distribution -->
+      <div style="background:var(--bg3);border-radius:var(--r8);padding:12px">
+        <div style="font-size:10px;font-weight:700;color:var(--t3);text-transform:uppercase;margin-bottom:8px">Распределение</div>
+        ${row('База (без уборки)',fu2(payoutUsd-cleaningUsd,'usd'),'var(--t1)',false)}
+        ${row(`Собственнику ${(opPct*100).toFixed(0)}%`,fu2(ownerAmt,'usd'),'var(--beige-d)',false)}
+        ${row('Нам',fu2(ourAmt,'usd'),'var(--pink-d)',true)}
+        <div style="margin-top:6px;padding-top:6px;border-top:1px dashed var(--bdr)">
+          ${row('Маржа уборки',(margin>=0?'+':'')+fu2(Math.abs(margin),'usd'),margin>=0?'var(--sage)':'var(--pink-d)',false)}
+        </div>
+      </div>
+    </div>
+
+    <!-- Auto expenses -->
+    <div style="background:var(--bg3);border-radius:var(--r8);padding:12px;margin-bottom:4px">
+      <div style="font-size:10px;font-weight:700;color:var(--t3);text-transform:uppercase;margin-bottom:8px">📋 Создадутся в расходах</div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <div style="flex:1;min-width:120px;background:var(--bg2);border-radius:6px;padding:8px 10px;display:flex;align-items:center;gap:8px">
+          <span style="font-size:16px">🧹</span>
+          <div><div style="font-size:11px;font-weight:600">Клинер</div><div style="font-size:12px;color:var(--pink-d);font-weight:700">₾${cleanerCostGel}</div><div style="font-size:10px;color:var(--t3)">${co}</div></div>
+        </div>
+        <div style="flex:1;min-width:120px;background:var(--beige-l);border-radius:6px;padding:8px 10px;display:flex;align-items:center;gap:8px">
+          <span style="font-size:16px">🧺</span>
+          <div><div style="font-size:11px;font-weight:600">Прачечная</div><div style="font-size:12px;color:var(--t3)">⏳ заполнить позже</div><div style="font-size:10px;color:var(--t3)">${co}</div></div>
+        </div>
+      </div>
     </div>
   </div>`;
+
   document.getElementById('wiz-review').innerHTML=html;
 }
 
@@ -3052,7 +3062,7 @@ if (val === APP_PASSWORD) {
     document.getElementById('app').style.display = '';
   }, 300);
   sessionStorage.setItem('bre_auth', '1');
-  if (SHEETS_URL) loadFromSheets();
+  loadFromSupabase();
 } else {
   err.style.display = 'block';
   document.getElementById('pwd-input').style.borderColor = 'var(--pink-d)';
