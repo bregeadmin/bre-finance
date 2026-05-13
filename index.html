@@ -148,29 +148,40 @@ input[type=date]{max-width:100%;font-size:13px}
 <div class="fg"><label>Источник</label><select id="b-src" onchange="togC();calcP()"><option value="airbnb">Airbnb</option><option value="booking">Booking</option><option value="sutochno">Суточно</option><option value="direct">Прямое</option><option value="other">Другое</option></select></div>
 <div class="fg"><label>Валюта</label><select id="b-cur" onchange="calcP()"><option value="usd">USD</option><option value="gel">GEL</option></select></div>
 </div>
-<!-- Amount block - changes based on source -->
+<!-- Amount block -->
 <div style="background:var(--bg3);border-radius:var(--r8);padding:12px;margin-bottom:12px">
-  <div style="font-size:11px;font-weight:600;color:var(--t3);text-transform:uppercase;letter-spacing:.05em;margin-bottom:10px" id="amt-block-title">Суммы</div>
-  <div class="form-grid" style="margin-bottom:0">
+  <div style="font-size:11px;font-weight:600;color:var(--t3);text-transform:uppercase;letter-spacing:.05em;margin-bottom:10px" id="amt-block-title">Сумма</div>
+  <div class="form-grid" style="margin-bottom:8px">
     <div class="fg">
-      <label id="lbl-guest-paid">Гость заплатил</label>
-      <input type="number" id="b-guest-paid" placeholder="0.00" oninput="calcAmounts()">
+      <label id="lbl-guest-paid">Сумма от гостя</label>
+      <input type="number" id="b-guest-paid" placeholder="0.00" oninput="autoCalcAll()">
       <div style="font-size:10px;color:var(--t3);margin-top:2px" id="hint-guest-paid"></div>
     </div>
-    <div class="fg" id="cleaning-block">
-      <label>Уборка (включена в сумму гостя)</label>
-      <input type="number" id="b-cl" placeholder="0" oninput="calcAmounts()">
-    </div>
-    <div class="fg">
-      <label id="lbl-you-get">Вы получили</label>
-      <input type="number" id="b-amt" placeholder="0.00" oninput="calcCommAuto()">
-      <div style="font-size:10px;color:var(--t3);margin-top:2px" id="hint-you-get"></div>
-    </div>
-    <div class="fg">
-      <label>Комиссия платформы <span style="color:var(--pink);font-weight:600" id="comm-auto-lbl"></span></label>
-      <input type="number" id="b-cp-abs" placeholder="0.00" readonly style="background:var(--bg3);color:var(--pink-d);font-weight:600">
+    <div class="fg" id="cleaning-select-wrap">
+      <label>Уборка включена</label>
+      <div style="display:flex;gap:6px;margin-top:4px;flex-wrap:wrap">
+        <button type="button" class="btn btn-gh btn-xs" onclick="setClean(0)" id="cl-btn-0">Нет</button>
+        <button type="button" class="btn btn-gh btn-xs" onclick="setClean(20)" id="cl-btn-20">$20</button>
+        <button type="button" class="btn btn-gh btn-xs" onclick="setClean(25)" id="cl-btn-25">$25</button>
+        <button type="button" class="btn btn-gh btn-xs" onclick="setClean('custom')" id="cl-btn-c">Другая</button>
+      </div>
+      <input type="number" id="b-cl" placeholder="сумма уборки" style="display:none;margin-top:6px" oninput="autoCalcAll()">
     </div>
   </div>
+  <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
+    <input type="checkbox" id="b-extra-check" onchange="toggleExtra()" style="cursor:pointer">
+    <label style="font-size:12px;color:var(--t2);cursor:pointer" onclick="document.getElementById('b-extra-check').click()">Доп. сбор (животные и т.п.)</label>
+    <input type="number" id="b-extra" placeholder="0.00" style="display:none;width:100px" oninput="autoCalcAll()">
+  </div>
+  <div id="amt-results" style="display:none;border-top:1px solid var(--bdr);padding-top:8px">
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;font-size:12px">
+      <div><div style="color:var(--t3);font-size:10px;margin-bottom:2px">Уборка</div><div id="res-clean" style="font-weight:600">$0</div></div>
+      <div><div style="color:var(--t3);font-size:10px;margin-bottom:2px">Комиссия платформы</div><div id="res-comm" style="font-weight:600;color:var(--pink-d)">$0</div></div>
+      <div><div style="color:var(--t3);font-size:10px;margin-bottom:2px">Вы получите</div><div id="res-you" style="font-weight:600;color:var(--sage)">$0</div></div>
+    </div>
+  </div>
+  <input type="hidden" id="b-amt">
+  <input type="hidden" id="b-cp-abs">
 </div>
 <div class="form-grid">
 <div class="fg"><label>Уборка за счёт</label><select id="b-cl-who"><option value="client">Клиента</option><option value="us">Нас</option></select></div>
@@ -560,7 +571,87 @@ function toggleExpCat(){
   document.getElementById('e-free-wrap').style.display=v==='free'?'':'none';
 }
 function autoN(){const ci=document.getElementById('b-ci').value,co=document.getElementById('b-co').value;if(ci&&co){const n=nb(ci,co);document.getElementById('b-n').value=n||'';document.getElementById('n-a').textContent=n?n+'н':'';}}
+// Commission rates per platform
+const COMM_RATES={airbnb:0.0326,booking:0.177,sutochno:0.20,direct:0,other:0};
+
+function autoCalcAll(){
+  const guestPaid=parseFloat(document.getElementById('b-guest-paid').value)||0;
+  if(!guestPaid){document.getElementById('amt-results').style.display='none';document.getElementById('b-amt').value='';document.getElementById('b-cp-abs').value='';return;}
+  const src=document.getElementById('b-src').value;
+  const cl=getCleaningTotal();
+  const extra=document.getElementById('b-extra-check').checked?(parseFloat(document.getElementById('b-extra').value)||0):0;
+  const rate=COMM_RATES[src]||0;
+  let comm=0,youGet=0;
+  if(src==='airbnb'){
+    // Airbnb: commission is on (guestPaid - cleaning - extra)
+    const base=guestPaid-cl-extra;
+    comm=Math.round(base*rate*100)/100;
+    youGet=guestPaid-comm;
+  } else if(src==='booking'){
+    comm=Math.round(guestPaid*rate*100)/100;
+    youGet=guestPaid-comm;
+  } else if(src==='sutochno'){
+    comm=Math.round(guestPaid*rate*100)/100;
+    youGet=guestPaid-comm;
+  } else {
+    comm=0;youGet=guestPaid;
+  }
+  // Update hidden fields
+  document.getElementById('b-amt').value=youGet.toFixed(2);
+  document.getElementById('b-cp-abs').value=comm.toFixed(2);
+  window._bCommPct=guestPaid>0?comm/guestPaid*100:0;
+  // Show results
+  const cur=document.getElementById('b-cur').value;
+  const sym=cur==='gel'?'₾':'$';
+  document.getElementById('res-clean').textContent=cl||extra?`${sym}${(cl+extra).toFixed(2)}`:'—';
+  document.getElementById('res-comm').textContent=comm>0?`-${sym}${comm.toFixed(2)}`:'—';
+  document.getElementById('res-you').textContent=`${sym}${youGet.toFixed(2)}`;
+  document.getElementById('amt-results').style.display='block';
+  calcP();
+}
+
 function togC(){
+  const src=document.getElementById('b-src').value;
+  const showClean=['airbnb','booking','sutochno'].includes(src);
+  document.getElementById('cleaning-select-wrap').style.opacity=showClean?'1':'0.4';
+  const hints={
+    airbnb:'Итого "Уплачено гостем" из Airbnb',
+    booking:'Полная сумма с гостя из Booking',
+    sutochno:'Итого с гостя из Суточно',
+    direct:'Сумма от гостя',
+    other:'Сумма от гостя'
+  };
+  document.getElementById('hint-guest-paid').textContent=hints[src]||'';
+  const titles={airbnb:'Airbnb (комиссия ~3.26%)',booking:'Booking (комиссия ~17.7%)',sutochno:'Суточно (комиссия 20%)',direct:'Прямое бронирование',other:'Бронирование'};
+  document.getElementById('amt-block-title').textContent='Сумма · '+(titles[src]||'');
+  autoCalcAll();
+}
+function setClean(val){
+  ['0','20','25','c'].forEach(v=>{const btn=document.getElementById('cl-btn-'+v);if(btn){btn.style.background='';btn.style.color='';}});
+  const key=val==='custom'?'c':String(val);
+  const activeBtn=document.getElementById('cl-btn-'+key);
+  if(activeBtn){activeBtn.style.background='var(--pink)';activeBtn.style.color='#fff';}
+  const input=document.getElementById('b-cl');
+  if(val==='custom'){input.style.display='';input.focus();}
+  else{input.style.display='none';input.value=val;}
+  window._totalCleaning=val==='custom'?0:Number(val);
+  autoCalcAll();
+}
+function toggleExtra(){
+  const checked=document.getElementById('b-extra-check').checked;
+  const inp=document.getElementById('b-extra');
+  inp.style.display=checked?'':'none';
+  if(checked)inp.focus();
+  autoCalcAll();
+}
+function calcExtraTotal(){autoCalcAll();}
+function calcAmounts(){autoCalcAll();}
+function calcCommAuto(){autoCalcAll();}
+function getCleaningTotal(){
+  const clInput=document.getElementById('b-cl');
+  const clVal=clInput&&clInput.style.display!=='none'?parseFloat(clInput.value)||0:(window._totalCleaning||0);
+  return clVal;
+}
   const src=document.getElementById('b-src').value;
   const hints={
     airbnb:{guestPaid:'Итого "Уплачено гостем" из Airbnb',youGet:'"Вы заработаете" из Airbnb',title:'Airbnb'},
@@ -585,7 +676,6 @@ function calcAmounts(){
   const guestPaid=parseFloat(document.getElementById('b-guest-paid').value)||0;
   const youGet=parseFloat(document.getElementById('b-amt').value)||0;
   const src=document.getElementById('b-src').value;
-  // Auto-fill you-get for direct
   if((src==='direct'||src==='other')&&guestPaid&&!youGet){
     document.getElementById('b-amt').value=guestPaid;
   }
@@ -612,27 +702,23 @@ function calcCommAuto(){
   calcP();
 }
 function calcP(){
-const amt=parseFloat(document.getElementById('b-amt').value)||0;const box=document.getElementById('prevbox');
+const amt=parseFloat(document.getElementById('b-amt').value)||parseFloat(document.getElementById('b-guest-paid').value)||0;
+const box=document.getElementById('prevbox');
 if(!amt){box.style.display='none';return;}
-const cur=document.getElementById('b-cur').value,cl=parseFloat(document.getElementById('b-cl').value)||0;
-const src=document.getElementById('b-src').value;
+const cur=document.getElementById('b-cur').value;
 const ci=document.getElementById('b-ci').value,co=document.getElementById('b-co').value,obj=document.getElementById('b-obj').value;
 const nights=ci&&co?nb(ci,co):0;
-// amt = what you get, cleaning added back
-const g=toUSD(amt,cur)+toUSD(cl,'usd');
-const comm=parseFloat(document.getElementById('b-cp-abs').value)||0;
-const commUsd=toUSD(comm,cur);
-const net=toUSD(amt,cur);// net = what you received (after platform commission)
+const net=toUSD(amt,cur);
 const op=obj?opct(obj,nights):(nights>=30?0.85:0.70);
-// Prepay auto-calc
 const fst=document.getElementById('b-fstatus').value;
 if(fst==='prepay'){
   const preAmt=parseFloat(document.getElementById('b-pre-amt').value)||0;
   if(preAmt>0){const rest=Math.max(0,amt-preAmt);document.getElementById('b-pre-rest').value=rest.toFixed(2);}
 }
 box.style.display='block';
-const guestTotal=parseFloat(document.getElementById('b-guest-paid').value)||0;
-box.innerHTML=`Гость заплатил: <b>${fu(toUSD(guestTotal,cur))}</b> · Комиссия платформы: <b style="color:var(--pink)">-${fu(commUsd)}</b> · Вы получили: <b>${fu(toUSD(amt,cur))}</b><br>Схема: <b style="color:var(--pink-d)">${nights>=30?'≥30н':'&lt;30н'} → ${(op*100).toFixed(0)}% собственнику</b> · Собственнику: <b>${fu(net*op)}</b> · Нам: <b>${fu(net*(1-op))}</b>`;
+const comm=parseFloat(document.getElementById('b-cp-abs').value)||0;
+const guestTotal=parseFloat(document.getElementById('b-guest-paid').value)||amt;
+box.innerHTML=`Гость: <b>${fu(toUSD(guestTotal,cur))}</b> · Комиссия: <b style="color:var(--pink)">-${fu(toUSD(comm,cur))}</b> · Вы получите: <b style="color:var(--sage)">${fu(net)}</b><br>Схема: <b style="color:var(--pink-d)">${nights>=30?'≥30н':'&lt;30н'} → ${(op*100).toFixed(0)}% собственнику</b> · Собственнику: <b>${fu(net*op)}</b> · Нам: <b>${fu(net*(1-op))}</b>`;
 }
 function fillBF(b){
 document.getElementById('b-obj').value=b.obj;document.getElementById('b-gst').value=b.guest||'';
@@ -644,6 +730,13 @@ document.getElementById('b-cp-abs').value=b.commissionAbs||0;
 window._bCommPct=b.commissionPct||0;
 document.getElementById('comm-auto-lbl').textContent=b.commissionPct?`= ${b.commissionPct.toFixed(1)}%`:'';
 document.getElementById('b-cl').value=b.cleaning||0;document.getElementById('b-n').value=b.nights;
+// Restore cleaning button state
+const cl=b.cleaning||0;
+if(cl===0) setClean(0);
+else if(cl===20) setClean(20);
+else if(cl===25) setClean(25);
+else{setClean('custom');document.getElementById('b-cl').value=cl;}
+window._totalCleaning=cl;
 document.getElementById('n-a').textContent=b.nights+'н';
 togC();
 document.getElementById('b-cl-who').value=b.cleaningWho||'client';
@@ -657,20 +750,30 @@ if(isPre){document.getElementById('b-pre-amt').value=b.prepayAmt||0;document.get
 calcP();
 }
 function editB(id){const b=S.bookings.find(x=>x.id===id);if(!b)return;eBid=id;fillBF(b);document.getElementById('b-ftitle').textContent='Редактировать бронирование';document.getElementById('b-btn').textContent='Сохранить';document.getElementById('b-can').style.display='';go('bookings');renderB();}
-function canB(){eBid=null;['b-gst','b-amt','b-cl','b-comment','b-pre-amt','b-pre-rest','b-guest-paid','b-cp-abs'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});document.getElementById('b-obj').value='';document.getElementById('b-n').value='';document.getElementById('n-a').textContent='';document.getElementById('prevbox').style.display='none';document.getElementById('b-prepay-block').style.display='none';document.getElementById('b-fstatus').value='full';document.getElementById('comm-auto-lbl').textContent='';window._bCommPct=0;document.getElementById('b-ftitle').textContent='Новое бронирование';document.getElementById('b-btn').textContent='Добавить';document.getElementById('b-can').style.display='none';renderB();}
+function canB(){eBid=null;['b-gst','b-amt','b-cl','b-extra','b-comment','b-pre-amt','b-pre-rest','b-guest-paid','b-cp-abs'].forEach(id=>{const el=document.getElementById(id);if(el){el.value='';el.style.display='none';}});
+document.getElementById('b-cl').style.display='none';
+document.getElementById('b-extra-check').checked=false;
+['0','20','25','c'].forEach(v=>{const btn=document.getElementById('cl-btn-'+v);if(btn){btn.style.background='';btn.style.color='';}});
+window._totalCleaning=0;window._bCommPct=0;
+document.getElementById('b-obj').value='';document.getElementById('b-n').value='';document.getElementById('n-a').textContent='';document.getElementById('prevbox').style.display='none';document.getElementById('b-prepay-block').style.display='none';document.getElementById('b-fstatus').value='full';document.getElementById('comm-auto-lbl').textContent='';document.getElementById('b-ftitle').textContent='Новое бронирование';document.getElementById('b-btn').textContent='Добавить';document.getElementById('b-can').style.display='none';renderB();}
 function subB(){
 const obj=document.getElementById('b-obj').value,gst=document.getElementById('b-gst').value.trim();
 const ci=document.getElementById('b-ci').value,co=document.getElementById('b-co').value;
-const amt=parseFloat(document.getElementById('b-amt').value)||0,cur=document.getElementById('b-cur').value;
-const src=document.getElementById('b-src').value,cp=(src==='direct'||src==='other')?0:parseFloat(document.getElementById('b-cp').value)||0;
-const cl=parseFloat(document.getElementById('b-cl').value)||0;
+const guestPaidRaw=parseFloat(document.getElementById('b-guest-paid').value)||0;
+const cur=document.getElementById('b-cur').value;
+const src=document.getElementById('b-src').value;
+// Trigger auto-calc to make sure b-amt is populated
+if(guestPaidRaw) autoCalcAll();
+const amt=parseFloat(document.getElementById('b-amt').value)||guestPaidRaw;
+const cl=getCleaningTotal();
+const extraFee=document.getElementById('b-extra-check').checked?(parseFloat(document.getElementById('b-extra').value)||0):0;
 const fst=document.getElementById('b-fstatus').value;
-if(!obj||!ci||!co||!amt){alert('Заполните объект, даты и сумму');return;}
+if(!obj||!ci||!co||!guestPaidRaw){alert('Заполните объект, даты и сумму');return;}
 const data={obj,guest:gst,ci,co,nights:nb(ci,co),amount:amt,currency:cur,source:src,
   commissionPct:window._bCommPct||0,
   commissionAbs:parseFloat(document.getElementById('b-cp-abs').value)||0,
-  guestPaid:parseFloat(document.getElementById('b-guest-paid').value)||amt,
-  cleaning:cl,amountUsd:toUSD(amt,cur),
+  guestPaid:guestPaidRaw,
+  cleaning:cl,extraFee,amountUsd:toUSD(amt,cur),
   cleaningWho:document.getElementById('b-cl-who').value,
   payType:document.getElementById('b-paytype').value,
   enteredBy:document.getElementById('b-who').value,
