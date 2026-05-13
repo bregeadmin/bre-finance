@@ -97,6 +97,10 @@ input[type=date]{max-width:100%;font-size:13px}
 <span id="sync-status" style="font-size:11px;color:var(--t3);display:none"></span>
 <button id="sync-btn" onclick="syncToSheets()" title="Сохранить данные" style="display:none;padding:5px 10px;background:var(--bg3);border:1px solid var(--bdr);border-radius:var(--r8);font-size:11px;color:var(--t2);cursor:pointer;font-family:inherit;transition:all .15s;display:flex;align-items:center;gap:5px"><i class="ti ti-cloud-upload" aria-hidden="true"></i> Сохранить</button>
 <button onclick="toggleAssistant()" id="asst-btn" title="Голосовой ассистент" style="width:34px;height:34px;border-radius:50%;border:1px solid var(--bdr);background:var(--bg3);cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--t2);font-size:16px;transition:all .15s" aria-label="Ассистент"><i class="ti ti-sparkles" aria-hidden="true"></i></button>
+<div style="display:flex;border:1px solid var(--bdr);border-radius:var(--r8);overflow:hidden;font-size:11px">
+<button id="cur-usd" onclick="setCurDisplay('usd')" style="padding:4px 8px;background:var(--pink);color:#fff;border:none;cursor:pointer;font-family:inherit;font-size:11px;font-weight:600">USD</button>
+<button id="cur-gel" onclick="setCurDisplay('gel')" style="padding:4px 8px;background:transparent;color:var(--t2);border:none;cursor:pointer;font-family:inherit;font-size:11px">GEL</button>
+</div>
 <span class="tb-pill"><i class="ti ti-home-2" style="font-size:10px" aria-hidden="true"></i> Batumi</span>
 </div>
 </div>
@@ -808,13 +812,46 @@ function cmon(){return new Date().toISOString().substring(0,7);}
 function mlbl(k){if(!k)return'';const[y,m]=k.split('-');return MRU[+m-1]+' '+y;}
 function opct(obj,nights){const c=S.owners[obj]||{shortPct:70,longPct:85};return nights>=30?c.longPct/100:c.shortPct/100;}
 function cB(b){
-  const net=b.amountUsd; // what you received after platform commission
-  const cleanUsd=toUSD(b.cleaning||0,'usd');
-  const comm=b.commissionAbs?toUSD(b.commissionAbs,b.currency||'usd'):(b.commissionPct?(net+cleanUsd)*b.commissionPct/100:0);
-  const g=net+cleanUsd+comm; // total guest paid (reconstructed)
-  const netWithClean=net+cleanUsd;
-  const op=opct(b.obj,b.nights);
-  return{g,comm,net:netWithClean,ob:netWithClean*op,os:netWithClean*(1-op),op};
+  // Correct formula:
+  // totalGuestPaid = accommodation + cleaning + platformGuestFee
+  // payout = accommodation + cleaning - platformHostFee  (Airbnb)
+  //        = totalGuestPaid - platformFees               (Booking/Sutochno)
+  // ownerBase = payout - cleaning  (cleaning goes to company, not owner)
+  // ownerShare = ownerBase * ownerPct
+  // ourShare = ownerBase * (1 - ownerPct)
+  // cleaningMargin = cleaningCharged - cleanerCost
+
+  const cur = b.currency||'usd';
+  const rate = b.exchangeRate||S.gelRate||2.65;
+  const toU = (v,c) => c==='gel'?((v||0)/rate):(v||0);
+
+  const payout = toU(b.amount, cur); // what we received
+  const cleaningCharged = toU(b.cleaning||0, 'usd'); // cleaning charged to guest (always USD)
+  const cleanerCostGel = b.cleanerCostGel||0;
+  const cleanerCostUsd = cleanerCostGel/rate;
+  const commAbs = toU(b.commissionAbs||0, cur);
+  const guestPaid = toU(b.guestPaid||b.amount, cur);
+  const petFee = toU(b.extraFee||0, 'usd');
+
+  // Owner base = payout minus cleaning (cleaning is company revenue)
+  const ownerBase = Math.max(0, payout - cleaningCharged - petFee);
+  const op = opct(b.obj, b.nights);
+  const ownerAmt = ownerBase * op;
+  const ourAmt = ownerBase * (1 - op);
+  const cleaningMargin = cleaningCharged - cleanerCostUsd;
+
+  return {
+    g: guestPaid,           // total guest paid
+    comm: commAbs,          // platform commission
+    cleaning: cleaningCharged, // cleaning charged to guest
+    cleanerCost: cleanerCostUsd, // cost to cleaner
+    cleaningMargin,         // cleaning profit
+    payout,                 // what we received
+    ownerBase,              // base for owner calculation
+    ob: ownerAmt,           // owner amount
+    os: ourAmt,             // our amount
+    op                      // owner percentage
+  };
 }
 const PSUBS={dashboard:'· текущий месяц',bookings:'· все объекты',expenses:'· все объекты',owners:'· за всё время',calendar:'· все брони',reports:'· выберите объект',pnl:'· P&L анализ',split:'· Оля & Артём',object:'· история по квартире',settings:'· настройки'};
 const PTITLES={dashboard:'Дашборд',bookings:'Бронирования',expenses:'Расходы',owners:'Собственники',calendar:'Календарь',reports:'Отчёты',pnl:'P&L',split:'Раздел 50/50',object:'По объекту',settings:'Настройки'};
@@ -1069,11 +1106,32 @@ function delE(id){if(!confirm('Удалить расход?'))return;S.expenses=
 function getStats(fm){
 const bks=fm==='all'?S.bookings:S.bookings.filter(b=>mkey(b.ci)===fm);
 const exps=fm==='all'?S.expenses:S.expenses.filter(e=>mkey(e.date)===fm);
-const bo={};OBJ.forEach(o=>bo[o]={nights:0,g:0,comm:0,net:0,ob:0,os:0,ce:0,oe:0,bookings:[],communals:[]});
-bks.forEach(b=>{if(!bo[b.obj])return;const c=cB(b);bo[b.obj].nights+=b.nights;bo[b.obj].g+=c.g;bo[b.obj].comm+=c.comm;bo[b.obj].net+=c.net;bo[b.obj].ob+=c.ob;bo[b.obj].os+=c.os;bo[b.obj].bookings.push({...b,c});});
-exps.forEach(e=>{const ap=o=>{if(!bo[o])return;if(e.cat==='communal'){bo[o].ce+=e.amountUsd;bo[o].communals.push(e);}else bo[o].oe+=e.amountUsd;};e.obj==='__all'?OBJ.forEach(o=>ap(o)):ap(e.obj);});
-let tG=0,tC=0,tN=0,tOP=0,tOS=0,tOE=0;OBJ.forEach(o=>{const d=bo[o];tG+=d.g;tC+=d.comm;tN+=d.net;tOP+=(d.ob-d.ce);tOS+=d.os;tOE+=d.oe;});
-return{bo,tG,tC,tN,tOP,tOS,tOE};
+const bo={};OBJ.forEach(o=>bo[o]={nights:0,g:0,comm:0,cleaning:0,cleaningMargin:0,payout:0,ob:0,os:0,ce:0,oe:0,bookings:[],communals:[]});
+bks.forEach(b=>{
+  if(!bo[b.obj])return;
+  const c=cB(b);
+  bo[b.obj].nights+=b.nights;
+  bo[b.obj].g+=c.g;
+  bo[b.obj].comm+=c.comm;
+  bo[b.obj].cleaning+=c.cleaning;
+  bo[b.obj].cleaningMargin+=c.cleaningMargin;
+  bo[b.obj].payout+=c.payout;
+  bo[b.obj].ob+=c.ob;
+  bo[b.obj].os+=c.os;
+  bo[b.obj].bookings.push({...b,c});
+});
+exps.forEach(e=>{
+  if(e.pending&&!e.amount)return; // skip pending
+  const ap=o=>{
+    if(!bo[o])return;
+    if(e.cat==='communal'){bo[o].ce+=e.amountUsd;bo[o].communals.push(e);}
+    else bo[o].oe+=e.amountUsd;
+  };
+  e.obj==='__all'?OBJ.forEach(o=>ap(o)):ap(e.obj);
+});
+let tG=0,tC=0,tN=0,tOP=0,tOS=0,tOE=0,tCM=0;
+OBJ.forEach(o=>{const d=bo[o];tG+=d.g;tC+=d.comm;tN+=d.payout;tOP+=(d.ob-d.ce);tOS+=d.os;tOE+=d.oe;tCM+=d.cleaningMargin;});
+return{bo,tG,tC,tN,tOP,tOS,tOE,tCM};
 }
 function renderDash(){
 const{bo,tG,tC,tOS,tOE}=getStats(cmon());
@@ -1095,25 +1153,22 @@ return arr;
 function renderB(){
 const bks=sortBks(bFilt==='month'?S.bookings.filter(b=>mkey(b.ci)===cmon()):S.bookings);
 const tb=document.getElementById('btb');
-if(!bks.length){tb.innerHTML='<tr><td colspan="12"><div class="empty"><i class="ti ti-calendar-off" aria-hidden="true"></i><span>Нет бронирований</span></div></td></tr>';return;}
+if(!bks.length){tb.innerHTML='<tr><td colspan="11"><div class="empty"><i class="ti ti-calendar-off" aria-hidden="true"></i><span>Нет бронирований</span></div></td></tr>';return;}
 tb.innerHTML=bks.map(b=>{const c=cB(b);const isE=eBid===b.id;
 const fst=b.finStatus||'full';const fstCls=FSTCLS[fst]||'pg';
 const whoLabel=b.enteredBy==='artem'?'<span class="pill ps" style="font-size:9px">А</span>':'<span class="pill pp" style="font-size:9px">О</span>';
-const ptLabel=PAYTLBL[b.payType||'cash'];
-let finDetail='';
-if(fst==='prepay'&&b.prepayAmt){finDetail=`<div style="font-size:9px;color:var(--t3)">Аванс: ${fu(b.prepayAmt)}</div>`;}
+const ptLabel=PAYTLBL[b.payType||'cash']||'';
 return`<tr class="${isE?'erow':''}">
 <td class="s">${b.obj}<br><span class="pill ${b.nights>=30?'pp':'ps'}" style="font-size:9px">${b.nights>=30?'≥30н':'<30н'} ${(c.op*100).toFixed(0)}%</span></td>
 <td>${b.guest||'—'}</td>
 <td style="font-size:11px">${b.ci}<br>${b.co}<br><span style="color:var(--t3)">${b.nights}н</span></td>
 <td style="color:var(--sage)">${fu(c.g)}<br><span style="font-size:10px;color:var(--t3)">${SRCLBL[b.source]||b.source} · ${ptLabel}</span></td>
-<td style="color:var(--pink-d)">${b.source==='direct'||b.source==='other'?'—':'-'+fu(c.comm)}</td>
-<td>${fu(c.net)}</td>
+<td style="color:var(--pink-d);font-size:11px">${c.comm>0?'-'+fu(c.comm):'—'}</td>
+<td style="font-size:11px">${c.cleaning>0?fu(c.cleaning):'—'}</td>
+<td style="font-weight:600;color:var(--sage)">${fu(c.payout)}</td>
 <td style="color:var(--beige-d)">${fu(c.ob)}</td>
 <td style="font-weight:600;color:var(--pink-d)">${fu(c.os)}</td>
-<td><span class="pill ${fstCls}" style="font-size:9px">${FSTLBL[fst]}</span>${finDetail}</td>
-<td>${whoLabel}</td>
-<td style="font-size:11px;color:var(--t3);max-width:120px;overflow:hidden;text-overflow:ellipsis">${b.comment||'—'}</td>
+<td><span class="pill ${fstCls}" style="font-size:9px">${FSTLBL[fst]}</span>${whoLabel}</td>
 <td style="white-space:nowrap;display:flex;gap:3px;padding:7px 9px"><button class="btn btn-xs bxe" onclick="editB(${b.id})" aria-label="Редактировать"><i class="ti ti-edit" aria-hidden="true"></i></button><button class="btn btn-xs bxd" onclick="delB(${b.id})" aria-label="Удалить"><i class="ti ti-trash" aria-hidden="true"></i></button></td>
 </tr>`;}).join('');
 }
@@ -1141,10 +1196,12 @@ tb.innerHTML=exps.map(e=>{const isE=eEid===e.id;
 const catLbl=e.cat==='free'?(e.freeCat||'Своё'):(CATLBL[e.cat]||e.cat);
 const entWho=e.enteredBy==='artem'?'<span class="pill ps" style="font-size:9px">Артём</span>':'<span class="pill pp" style="font-size:9px">Оля</span>';
 const ptLabel=PAYTLBL[e.payType||'cash']||'';
-return`<tr class="${isE?'erow':''}">
+const isPending=e.pending&&!e.amount;
+const pendingBadge=isPending?'<span class="pill pa" style="font-size:9px">⏳ Указать сумму</span>':'';
+return`<tr class="${isE?'erow':''}" style="${isPending?'background:var(--beige-l)':''}">
 <td class="s">${e.obj==='__all'?'Общий':e.obj}</td>
-<td><span class="pill pg" style="font-size:10px">${catLbl}</span></td>
-<td>${e.amount} ${e.currency.toUpperCase()}<br><span style="font-size:10px;color:var(--t3)">${fu(e.amountUsd)}</span></td>
+<td><span class="pill pg" style="font-size:10px">${catLbl}</span>${pendingBadge}</td>
+<td>${isPending?'<span style="color:var(--t3);font-size:11px">не указана</span>':`${e.amount} ${e.currency.toUpperCase()}<br><span style="font-size:10px;color:var(--t3)">${fu(e.amountUsd)}</span>`}</td>
 <td>${e.cat==='communal'?'<span class="pill pb" style="font-size:10px">С собственника</span>':'<span class="pill ps" style="font-size:10px">С нас</span>'}</td>
 <td>${paidByLabel(e.paidBy||'company')}</td>
 <td style="font-size:11px;color:var(--t2)">${ptLabel}</td>
@@ -1164,7 +1221,17 @@ const obj=document.getElementById('r-obj').value,monK=document.getElementById('r
 if(!obj){alert('Выберите объект');return;}
 const{bo}=getStats(monK);const d=bo[obj];
 const cfg=S.owners[obj]||{name:'',shortPct:70,longPct:85};const own=d.ob-d.ce;const ml=mlbl(monK);
-const bRows=d.bookings.length?d.bookings.map(b=>{const pct=(b.c.op*100).toFixed(0)+'%';const sch=b.nights>=30?`Долгосрочное ≥30н (${pct})`:`Краткосрочное (${pct})`;return`<tr><td style="padding:10px 12px;border-bottom:1px solid #ede8e2;font-size:13px">${b.guest||'Гость'}</td><td style="padding:10px 12px;border-bottom:1px solid #ede8e2;font-size:12px;color:#9a9088">${b.ci} — ${b.co}</td><td style="padding:10px 12px;border-bottom:1px solid #ede8e2;text-align:center">${b.nights}</td><td style="padding:10px 12px;border-bottom:1px solid #ede8e2;text-align:right;font-weight:600">${fu(b.c.net)}</td><td style="padding:10px 12px;border-bottom:1px solid #ede8e2;text-align:center;font-size:11px;color:#9a9088">${sch}</td><td style="padding:10px 12px;border-bottom:1px solid #ede8e2;text-align:right;font-weight:700;color:#c97577">${fu(b.c.ob)}</td></tr>`;}  ).join(''):'<tr><td colspan="6" style="text-align:center;padding:2rem;color:#9a9088;font-size:13px">Бронирований нет</td></tr>';
+const bRows=d.bookings.length?d.bookings.map(b=>{
+  const pct=(b.c.op*100).toFixed(0)+'%';
+  const sch=b.nights>=30?`Долгосрочное ≥30н (${pct})`:`Краткосрочное (${pct})`;
+  return`<tr>
+    <td style="padding:10px 12px;border-bottom:1px solid #ede8e2;font-size:13px">${b.guest||'Гость'}</td>
+    <td style="padding:10px 12px;border-bottom:1px solid #ede8e2;font-size:12px;color:#9a9088">${b.ci} — ${b.co}</td>
+    <td style="padding:10px 12px;border-bottom:1px solid #ede8e2;text-align:center">${b.nights}</td>
+    <td style="padding:10px 12px;border-bottom:1px solid #ede8e2;text-align:right;font-weight:600">${fu(b.c.ownerBase)}</td>
+    <td style="padding:10px 12px;border-bottom:1px solid #ede8e2;text-align:center;font-size:11px;color:#9a9088">${sch}</td>
+    <td style="padding:10px 12px;border-bottom:1px solid #ede8e2;text-align:right;font-weight:700;color:#c97577">${fu(b.c.ob)}</td>
+  </tr>`;}).join(''):'<tr><td colspan="6" style="text-align:center;padding:2rem;color:#9a9088;font-size:13px">Бронирований нет</td></tr>';
 const cRows=d.communals.length?d.communals.map(e=>`<tr><td style="padding:9px 12px;border-bottom:1px solid #ede8e2;font-size:13px">${CATLBL[e.cat]}${e.comment?' — '+e.comment:''}</td><td style="padding:9px 12px;border-bottom:1px solid #ede8e2;text-align:right;color:#c97577">-${fu(e.amountUsd).slice(1)}</td></tr>`  ).join(''):'<tr><td colspan="2" style="text-align:center;padding:1rem;color:#9a9088;font-size:12px">Нет коммунальных расходов</td></tr>';
 const tB=d.bookings.length?`<tr><td colspan="3" style="padding:10px 12px;font-weight:700;border-top:2px solid #1e1e1e">Итого</td><td style="padding:10px 12px;font-weight:700;text-align:right;border-top:2px solid #1e1e1e">${fu(d.net)}</td><td style="border-top:2px solid #1e1e1e"></td><td style="padding:10px 12px;font-weight:700;text-align:right;border-top:2px solid #1e1e1e;color:#c97577">${fu(d.ob)}</td></tr>`:'';
 const tC=d.communals.length?`<tr><td style="padding:10px 12px;font-weight:700;border-top:2px solid #1e1e1e">Итого</td><td style="padding:10px 12px;font-weight:700;text-align:right;border-top:2px solid #1e1e1e;color:#c97577">-${fu(d.ce).slice(1)}</td></tr>`:'';
@@ -2147,8 +2214,26 @@ function speakText(text){
   window.speechSynthesis.speak(utt);
 }
 
-// ============================================================
-// APARTMENT SETTINGS
+// Currency display
+let displayCur='usd';
+function setCurDisplay(cur){
+  displayCur=cur;
+  document.getElementById('cur-usd').style.background=cur==='usd'?'var(--pink)':'transparent';
+  document.getElementById('cur-usd').style.color=cur==='usd'?'#fff':'var(--t2)';
+  document.getElementById('cur-gel').style.background=cur==='gel'?'var(--pink)':'transparent';
+  document.getElementById('cur-gel').style.color=cur==='gel'?'#fff':'var(--t2)';
+  // Re-render all visible data
+  const active=document.querySelector('.page.active');
+  if(active) {
+    const name=active.id.replace('page-','');
+    ({dashboard:renderDash,bookings:renderB,expenses:renderE,owners:renderOwners,pnl:renderPnl,split:renderSplit})[name]?.();
+  }
+}
+function fuD(usdAmt){
+  const rate=S.gelRate||2.65;
+  if(displayCur==='gel') return '₾'+(Math.abs(usdAmt*rate)).toFixed(2);
+  return '$'+(Math.abs(usdAmt)).toFixed(2);
+}
 // ============================================================
 const APT_SETTINGS = {
   'Красная камелия': {type:'studio', cleaning:20, cleanerCost:50},
@@ -2645,13 +2730,37 @@ function submitWizard(){
     wizState.editing=null;
   } else {
     S.bookings.push(booking);
+    // Auto-create cleaner expense
+    if(booking.cleanerCostGel>0&&booking.cleaning>0){
+      S.expenses.push({
+        id:Date.now()+1,
+        obj:booking.obj,cat:'cleaning',
+        amount:booking.cleanerCostGel,currency:'gel',
+        date:booking.co,
+        comment:`Клинер · ${booking.guest||'Гость'} · ${booking.ci}→${booking.co}`,
+        paidBy:'company',payType:'cash',
+        enteredBy:booking.enteredBy||'olya',
+        amountUsd:booking.cleanerCostGel/(booking.exchangeRate||S.gelRate||2.65),
+        who:'us',bookingId:booking.id,autoCreated:true
+      });
+    }
+    // Auto-create laundry expense (pending - no amount yet)
+    S.expenses.push({
+      id:Date.now()+2,
+      obj:booking.obj,cat:'cleaning',
+      amount:0,currency:'gel',
+      date:booking.co,
+      comment:`🧺 Прачечная · ${booking.guest||'Гость'} · ${booking.ci}→${booking.co}`,
+      paidBy:'company',payType:'cash',
+      enteredBy:booking.enteredBy||'olya',
+      amountUsd:0,who:'us',
+      bookingId:booking.id,autoCreated:true,pending:true
+    });
   }
   save();
   try{syncToSheets();}catch(e){console.warn('Sync failed:',e);}
   resetWizard();
-  renderB();
-  renderDash();
-  // Show success
+  renderB();renderE();renderDash();
   setSyncStatus('✅ Бронирование добавлено','var(--sage)');
   setTimeout(()=>setSyncStatus(''),3000);
 }
