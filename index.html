@@ -80,7 +80,7 @@ input[type=date]{max-width:100%;font-size:13px}
 <div class="ni" onclick="go('reports')" id="nav-reports"><i class="ti ti-file-analytics" aria-hidden="true"></i> Отчёты</div>
 <div class="ni" onclick="go('pnl')" id="nav-pnl"><i class="ti ti-trending-up" aria-hidden="true"></i> P&L</div>
 <div class="ni" onclick="go('monthly')" id="nav-monthly"><i class="ti ti-report-money" aria-hidden="true"></i> Финансы месяца</div>
-<div class="ni" onclick="go('split')" id="nav-split"><i class="ti ti-users-group" aria-hidden="true"></i> Раздел 50/50</div>
+
 <div class="sb-grp">Система</div>
 <div class="ni" onclick="go('object')" id="nav-object"><i class="ti ti-home-search" aria-hidden="true"></i> По объекту</div>
 <div class="ni" onclick="go('settings')" id="nav-settings"><i class="ti ti-adjustments-horizontal" aria-hidden="true"></i> Настройки</div>
@@ -491,43 +491,6 @@ input[type=date]{max-width:100%;font-size:13px}
 <div id="monthly-content"></div>
 </div>
 
-<div class="page" id="page-split">
-<div class="split-g">
-<div class="pc"><div class="pav po">О</div><div style="font-size:14px;font-weight:600;margin-bottom:6px">Оля</div><div class="p-amt" id="sp-o">$0</div><div class="p-sub">50% чистой прибыли</div></div>
-<div class="pc"><div class="pav pa">А</div><div style="font-size:14px;font-weight:600;margin-bottom:6px">Артём</div><div class="p-amt" id="sp-a">$0</div><div class="p-sub">50% чистой прибыли</div></div>
-</div>
-<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
-<div class="card">
-<div class="card-h"><div class="card-t"><i class="ti ti-calculator" aria-hidden="true"></i> Расчёт</div></div>
-<div class="card-b">
-<div class="irow"><span class="il">Собрано</span><span class="iv" id="sd-g">$0</span></div>
-<div class="irow"><span class="il">Комиссии</span><span class="iv" style="color:var(--pink-d)" id="sd-c">$0</span></div>
-<div class="irow"><span class="il">Чистая</span><span class="iv" id="sd-n">$0</span></div>
-<div class="irow"><span class="il">Выплаты собственникам</span><span class="iv" style="color:var(--beige-d)" id="sd-o">$0</span></div>
-<div class="irow"><span class="il">Наша доля</span><span class="iv" id="sd-s">$0</span></div>
-<div class="irow"><span class="il">Наши расходы</span><span class="iv" style="color:var(--pink-d)" id="sd-e">$0</span></div>
-<div class="irow" style="border-bottom:none"><span class="il" style="font-weight:600;color:var(--t1)">Чистая прибыль</span><span class="iv" style="color:var(--sage);font-size:15px" id="sd-pr">$0</span></div>
-</div>
-</div>
-<div class="card">
-<div class="card-h"><div class="card-t"><i class="ti ti-wallet" aria-hidden="true"></i> Деньги на руках</div></div>
-<div class="card-b">
-<div style="display:flex;flex-direction:column;gap:10px;margin-bottom:4px">
-<div class="fg"><label>У Оли (USD)</label><input type="number" id="co" placeholder="0" oninput="updCash()"></div>
-<div class="fg"><label>У Артёма (USD)</label><input type="number" id="ca" placeholder="0" oninput="updCash()"></div>
-</div>
-<div class="cash-ok" id="cash-r"></div>
-</div>
-</div>
-</div>
-<div class="card" style="margin-top:0">
-<div class="card-h"><div class="card-t"><i class="ti ti-arrows-exchange" aria-hidden="true"></i> Взаиморасчёты по личным тратам</div></div>
-<div class="card-b" id="sd-debts">
-<div class="empty" style="padding:14px"><i class="ti ti-check" aria-hidden="true"></i><span>Нет личных трат — всё оплачено из средств компании</span></div>
-</div>
-</div>
-</div>
-
 <div class="page" id="page-calendar">
 <div id="cal-today-panel" style="margin-bottom:14px"></div>
 <div id="cal-upcoming-panel" style="margin-bottom:14px"></div>
@@ -654,9 +617,14 @@ input[type=date]{max-width:100%;font-size:13px}
 </div>
 </div>
 
+
 <!-- ADD NEW APARTMENT -->
 <div class="card">
-<div class="card-h"><div class="card-t"><i class="ti ti-building-plus" aria-hidden="true"></i> Добавить объект</div></div>
+<div class="card-h">
+  <div class="card-t"><i class="ti ti-building-plus" aria-hidden="true"></i> Добавить объект</div>
+  <button class="btn btn-pk btn-xs" onclick="toggleNewObjForm()"><i class="ti ti-plus" aria-hidden="true"></i> Новый объект</button>
+</div>
+<div id="new-obj-form" style="display:none">
 <div class="card-b">
 <div class="form-grid">
   <div class="fg"><label>Название</label><input type="text" id="new-obj-name" placeholder="Например: Синяя камелия"></div>
@@ -674,7 +642,11 @@ input[type=date]{max-width:100%;font-size:13px}
   <div class="fg"><label>Долгосрочные ≥30н (%)</label><input type="number" id="new-obj-long" value="85" min="0" max="100"></div>
   <div class="fg"><label>Комментарий</label><input type="text" id="new-obj-note" placeholder="Адрес, особенности..."></div>
 </div>
-<button class="btn btn-pk" onclick="addNewObj()"><i class="ti ti-plus" aria-hidden="true"></i> Добавить объект</button>
+<div style="display:flex;gap:8px">
+  <button class="btn btn-pk" onclick="addNewObj()"><i class="ti ti-check" aria-hidden="true"></i> Сохранить</button>
+  <button class="btn btn-gh" onclick="toggleNewObjForm()">Отмена</button>
+</div>
+</div>
 </div>
 </div>
 
@@ -723,6 +695,26 @@ function initApartments(){
   });
 }
 
+function renameObj(oldName, newName){
+  newName = newName.trim();
+  if(!newName || newName === oldName) return;
+  if(OBJ.includes(newName)){ alert('Объект с таким названием уже есть'); return; }
+  // Rename in owners
+  S.owners[newName] = S.owners[oldName];
+  delete S.owners[oldName];
+  // Rename in bookings and expenses
+  S.bookings.forEach(b=>{ if(b.obj===oldName) b.obj=newName; });
+  S.expenses.forEach(e=>{ if(e.obj===oldName) e.obj=newName; });
+  initApartments();
+  save();
+  popSels();
+  renderSettings();
+}
+
+function toggleNewObjForm(){
+  const f=document.getElementById('new-obj-form');
+  f.style.display=f.style.display==='none'?'block':'none';
+}
 function addNewObj(){
   const name=document.getElementById('new-obj-name').value.trim();
   if(!name){alert('Введите название');return;}
@@ -740,12 +732,13 @@ function addNewObj(){
   save();
   popSels();
   renderSettings();
-  // Clear form
+  // Clear and close form
   ['new-obj-name','new-obj-owner','new-obj-note'].forEach(id=>document.getElementById(id).value='');
   document.getElementById('new-obj-cleaning').value=20;
   document.getElementById('new-obj-cleaner').value=50;
   document.getElementById('new-obj-short').value=70;
   document.getElementById('new-obj-long').value=85;
+  document.getElementById('new-obj-form').style.display='none';
 }
 
 function deleteObj(name){
@@ -828,8 +821,8 @@ function cB(b){
     op                      // owner percentage
   };
 }
-const PSUBS={dashboard:'· текущий месяц',bookings:'· все объекты',expenses:'· все объекты',owners:'· за всё время',calendar:'· все брони',reports:'· выберите объект',pnl:'· P&L анализ',monthly:'· доходы и расходы',split:'· Оля & Артём',object:'· история по квартире',settings:'· настройки'};
-const PTITLES={dashboard:'Дашборд',bookings:'Бронирования',expenses:'Расходы',owners:'Собственники',calendar:'Календарь',reports:'Отчёты',pnl:'P&L',monthly:'Финансы месяца',split:'Раздел 50/50',object:'По объекту',settings:'Настройки'};
+const PSUBS={dashboard:'· текущий месяц',bookings:'· все объекты',expenses:'· все объекты',owners:'· за всё время',calendar:'· все брони',reports:'· выберите объект',pnl:'· P&L анализ',monthly:'· доходы и расходы',object:'· история по квартире',settings:'· настройки'};
+const PTITLES={dashboard:'Дашборд',bookings:'Бронирования',expenses:'Расходы',owners:'Собственники',calendar:'Календарь',reports:'Отчёты',pnl:'P&L',monthly:'Финансы месяца',object:'По объекту',settings:'Настройки'};
 function openSb(){document.getElementById('sidebar').classList.add('open');document.getElementById('sb-overlay').classList.add('open');}
 function closeSb(){document.getElementById('sidebar').classList.remove('open');document.getElementById('sb-overlay').classList.remove('open');}
 function go(name){
@@ -1595,27 +1588,47 @@ function renderSettings(){
   const ist='background:var(--bg3);border:1px solid var(--bdr);border-radius:var(--r8);padding:6px 9px;font-size:12px;color:var(--t1);font-family:inherit;outline:none';
   const canDelete=n=>!OBJ_DEFAULT.includes(n);
   const typeBadge=t=>t==='one_bedroom'?'pp':t==='special'?'pb':'ps';
-  document.getElementById('obj-cards-settings').innerHTML=OBJ.map(o=>{
+  const typeLabel=t=>APT_TYPES[t]||'Студия';
+  document.getElementById('obj-cards-settings').innerHTML=OBJ.map((o,i)=>{
     const cfg=S.owners[o]||{name:'',shortPct:70,longPct:85,type:'studio',cleaning:20,cleanerCost:50,note:''};
-    return`<div style="border-bottom:1px solid var(--bdr);padding:14px 18px">
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
-        <div style="display:flex;align-items:center;gap:8px">
-          <span style="font-size:13px;font-weight:600">${o}</span>
-          <span class="pill ${typeBadge(cfg.type)}" style="font-size:10px">${APT_TYPES[cfg.type]||'Студия'}</span>
+    const aid=`acc-${i}`;
+    return`<div style="border-bottom:1px solid var(--bdr)">
+      <!-- Header row - always visible -->
+      <div onclick="toggleAcc('${aid}')" style="display:flex;align-items:center;justify-content:space-between;padding:11px 18px;cursor:pointer;transition:background .12s" onmouseover="this.style.background='var(--bg3)'" onmouseout="this.style.background=''">
+        <div style="display:flex;align-items:center;gap:8px;flex:1">
+          <span style="font-size:13px;font-weight:500">${o}</span>
+          <span class="pill ${typeBadge(cfg.type)}" style="font-size:9px">${typeLabel(cfg.type)}</span>
+          ${cfg.name?`<span style="font-size:11px;color:var(--t3)">${cfg.name}</span>`:''}
         </div>
-        ${canDelete(o)?`<button class="btn btn-xs bxd" onclick="deleteObj('${o}')" title="Удалить"><i class="ti ti-trash" aria-hidden="true"></i></button>`:''}
+        <div style="display:flex;align-items:center;gap:10px">
+          <span style="font-size:11px;color:var(--t3)">${cfg.shortPct||70}% / ${cfg.longPct||85}%</span>
+          <i class="ti ti-chevron-down" id="${aid}-icon" style="font-size:13px;color:var(--t3);transition:transform .2s" aria-hidden="true"></i>
+        </div>
       </div>
-      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:8px">
-        <div class="fg"><label>Собственник</label><input type="text" value="${cfg.name||''}" placeholder="Имя" style="${ist};width:100%" onchange="saveObjField('${o}','name',this.value)"></div>
-        <div class="fg"><label>Тип</label><select style="${ist};width:100%" onchange="saveObjField('${o}','type',this.value)"><option value="studio" ${cfg.type==='studio'?'selected':''}>Студия</option><option value="one_bedroom" ${cfg.type==='one_bedroom'?'selected':''}>1 спальня</option><option value="special" ${cfg.type==='special'?'selected':''}>Особый</option></select></div>
-        <div class="fg"><label>Уборка с гостя ($)</label><input type="number" value="${cfg.cleaning||20}" style="${ist};width:100%" onchange="saveObjField('${o}','cleaning',+this.value)"></div>
-        <div class="fg"><label>Клинер (₾)</label><input type="number" value="${cfg.cleanerCost||50}" style="${ist};width:100%" onchange="saveObjField('${o}','cleanerCost',+this.value)"></div>
-        <div class="fg"><label>Кратко &lt;30н %</label><input type="number" value="${cfg.shortPct||70}" min="0" max="100" style="${ist};width:100%" onchange="saveObjField('${o}','shortPct',+this.value)"></div>
-        <div class="fg"><label>Долго ≥30н %</label><input type="number" value="${cfg.longPct||85}" min="0" max="100" style="${ist};width:100%" onchange="saveObjField('${o}','longPct',+this.value)"></div>
-        <div class="fg" style="grid-column:span 2"><label>Заметки</label><input type="text" value="${cfg.note||''}" placeholder="Адрес, особенности..." style="${ist};width:100%" onchange="saveObjField('${o}','note',this.value)"></div>
+      <!-- Expandable fields -->
+      <div id="${aid}" style="display:none;padding:12px 18px 16px;border-top:1px solid var(--bdr);background:var(--bg3)">
+        <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:8px">
+          ${canDelete(o)?`<div class="fg"><label>Название</label><input type="text" value="${o}" style="${ist};width:100%" onblur="renameObj('${o}',this.value)"></div>`:''}
+          <div class="fg"><label>Собственник</label><input type="text" value="${cfg.name||''}" placeholder="Имя" style="${ist};width:100%" onchange="saveObjField('${o}','name',this.value)"></div>
+          <div class="fg"><label>Тип</label><select style="${ist};width:100%" onchange="saveObjField('${o}','type',this.value)"><option value="studio" ${cfg.type==='studio'?'selected':''}>Студия</option><option value="one_bedroom" ${cfg.type==='one_bedroom'?'selected':''}>1 спальня</option><option value="special" ${cfg.type==='special'?'selected':''}>Особый</option></select></div>
+          <div class="fg"><label>Уборка ($)</label><input type="number" value="${cfg.cleaning||20}" style="${ist};width:100%" onchange="saveObjField('${o}','cleaning',+this.value)"></div>
+          <div class="fg"><label>Клинер (₾)</label><input type="number" value="${cfg.cleanerCost||50}" style="${ist};width:100%" onchange="saveObjField('${o}','cleanerCost',+this.value)"></div>
+          <div class="fg"><label>Кратко %</label><input type="number" value="${cfg.shortPct||70}" min="0" max="100" style="${ist};width:100%" onchange="saveObjField('${o}','shortPct',+this.value)"></div>
+          <div class="fg"><label>Долго %</label><input type="number" value="${cfg.longPct||85}" min="0" max="100" style="${ist};width:100%" onchange="saveObjField('${o}','longPct',+this.value)"></div>
+          <div class="fg" style="grid-column:span 2"><label>Заметки</label><input type="text" value="${cfg.note||''}" placeholder="Адрес..." style="${ist};width:100%" onchange="saveObjField('${o}','note',this.value)"></div>
+        </div>
+        ${canDelete(o)?`<button class="btn btn-xs bxd" style="margin-top:10px" onclick="deleteObj('${o}')"><i class="ti ti-trash" aria-hidden="true"></i> Удалить объект</button>`:''}
       </div>
     </div>`;
   }).join('');
+}
+
+function toggleAcc(id){
+  const el=document.getElementById(id);
+  const icon=document.getElementById(id+'-icon');
+  const open=el.style.display==='none';
+  el.style.display=open?'block':'none';
+  if(icon) icon.style.transform=open?'rotate(180deg)':'';
 }
 function initObjDetail(){
 // set default period label
@@ -2404,7 +2417,7 @@ async function sendToAssistant(){
 
 async function executeAsstCommand(cmd,originalText){
   if(cmd.action==='navigate'){
-    const names={dashboard:'Дашборд',bookings:'Бронирования',expenses:'Расходы',calendar:'Календарь',pnl:'P&L',split:'Раздел 50/50',reports:'Отчёты',owners:'Собственники',settings:'Настройки',object:'По объекту'};
+    const names={dashboard:'Дашборд',bookings:'Бронирования',expenses:'Расходы',calendar:'Календарь',pnl:'P&L',reports:'Отчёты',owners:'Собственники',settings:'Настройки',object:'По объекту'};
     go(cmd.page);
     addAsstMsg('assistant',`✅ Открываю: ${names[cmd.page]||cmd.page}`);
   }
