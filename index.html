@@ -224,6 +224,21 @@ input[type=date]{max-width:100%;font-size:13px}
 <table><thead><tr id="dash-thead"><th>Объект</th><th>Гость</th><th>Период</th><th>Ночей</th><th>Собрано</th><th>Собственнику</th><th>Нам</th></tr></thead><tbody id="dash-tb"></tbody></table>
 </div>
 </div>
+<!-- Expense detail modal -->
+<div id="expense-modal" style="display:none;position:fixed;inset:0;z-index:1000;background:rgba(0,0,0,.45);backdrop-filter:blur(4px)" onclick="if(event.target===this)closeExpenseModal()">
+  <div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:min(480px,95vw);background:var(--bg2);border-radius:18px;box-shadow:0 24px 60px rgba(0,0,0,.3)">
+    <div style="padding:18px 20px;border-bottom:1px solid var(--bdr);display:flex;align-items:center;justify-content:space-between">
+      <div style="font-size:15px;font-weight:700" id="em-title">Расход</div>
+      <button onclick="closeExpenseModal()" style="width:30px;height:30px;border:none;background:var(--bg3);border-radius:50%;cursor:pointer;font-size:16px;color:var(--t2)">×</button>
+    </div>
+    <div id="em-content" style="padding:18px 20px"></div>
+    <div style="padding:14px 20px;border-top:1px solid var(--bdr);display:flex;gap:8px;justify-content:flex-end">
+      <button class="btn btn-gh" onclick="closeExpenseModal()">Закрыть</button>
+      <button class="btn btn-pk" onclick="closeExpenseModal();editE(window._emId)"><i class="ti ti-edit"></i> Изменить</button>
+    </div>
+  </div>
+</div>
+
 <!-- Booking detail modal -->
 <div id="booking-modal" style="display:none;position:fixed;inset:0;z-index:1000;background:rgba(0,0,0,.45);backdrop-filter:blur(4px)" onclick="if(event.target===this)closeBookingModal()">
   <div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:min(560px,95vw);max-height:88vh;overflow-y:auto;background:var(--bg2);border-radius:18px;box-shadow:0 24px 60px rgba(0,0,0,.3)">
@@ -1538,7 +1553,7 @@ const entWho=e.enteredBy==='artem'?'<span class="pill ps" style="font-size:9px">
 const ptLabel=PAYTLBL[e.payType||'cash']||'';
 const isPending=e.pending&&(!e.amount||e.amount===0);
 const pendingBadge=isPending?`<button class="btn btn-xs" style="background:var(--pink);color:#fff;font-size:10px;padding:3px 10px;border-radius:6px;margin-left:6px" onclick="event.stopPropagation();editE(${e.id})">Заполнить →</button>`:'';
-return`<tr class="${isE?'erow':''}" style="${isPending?'background:var(--beige-l)':''}">
+return`<tr class="${isE?'erow':''}" style="${isPending?'background:var(--beige-l)':''};cursor:pointer" onclick="openExpenseModal(${e.id})">
 <td class="s">${e.obj==='__all'?'Общий':e.obj}</td>
 <td><span class="pill pg" style="font-size:10px">${catLbl}</span>${pendingBadge}</td>
 <td>${isPending?'<span style="color:var(--t3);font-size:11px">не указана</span>':`${e.amount} ${e.currency.toUpperCase()}<br><span style="font-size:10px;color:var(--t3)">${fu(e.amountUsd)}</span>`}</td>
@@ -2943,6 +2958,34 @@ BOOKING - детали бронирования:
     dropArea.style.opacity='1';
   }
 }
+function closeExpenseModal(){
+  document.getElementById('expense-modal').style.display='none';
+  window._emId=null;
+}
+
+function openExpenseModal(id){
+  const e=S.expenses.find(x=>x.id===id);
+  if(!e) return;
+  window._emId=id;
+  const isPending=e.pending&&(!e.amount||e.amount===0);
+  const catLabel=CATLBL[e.cat]||e.cat;
+  const row=(l,v,color='var(--t1)')=>`<div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--bdr);font-size:13px"><span style="color:var(--t3)">${l}</span><span style="font-weight:500;color:${color}">${v}</span></div>`;
+  document.getElementById('em-title').textContent=`${catLabel} · ${e.obj==='__all'?'Общий':e.obj}`;
+  document.getElementById('em-content').innerHTML=`
+    <div style="background:var(--bg3);border-radius:10px;padding:14px">
+      ${isPending?`<div style="background:var(--pink-bg);border-radius:8px;padding:10px;margin-bottom:10px;font-size:12px;color:var(--pink-d);font-weight:500">⏳ Сумма не указана</div>`:''}
+      ${row('Объект',e.obj==='__all'?'Общий':e.obj)}
+      ${row('Категория',catLabel)}
+      ${row('Сумма',isPending?'не указана':`${e.amount} ${(e.currency||'gel').toUpperCase()}`,isPending?'var(--t3)':'var(--pink-d)')}
+      ${row('USD',fu(e.amountUsd||0))}
+      ${row('Дата',e.date||'—')}
+      ${e.comment?row('Комментарий',e.comment):''}
+      ${row('Кто платит',e.paidBy==='owner'?'Собственник':'Компания')}
+      ${row('Внёс',e.enteredBy==='olya'?'Оля':'Артём')}
+    </div>`;
+  document.getElementById('expense-modal').style.display='block';
+}
+
 function closeBookingModal(){
   document.getElementById('booking-modal').style.display='none';
   window._bmId=null;
