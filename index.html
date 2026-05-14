@@ -3272,15 +3272,15 @@ function wizNext1(){
   // Sync currency to step 2 displays
   const cur=document.getElementById('w-cur').value;
   const sym=cur==='gel'?'₾':'$';
-  ['a-acc-calc','bk-total-calc','s-acc-calc','d-total-calc'].forEach(id=>{
-    const el=document.getElementById(id);
-    if(el && el.textContent==='$0') el.textContent=sym+'0';
-  });
   // Update nights count in all platform hints
   const nights=parseInt(document.getElementById('w-nights').value)||0;
   ['a-nights-count','bk-nights-count','s-nights-count','d-nights-count'].forEach(id=>{
     const el=document.getElementById(id);
     if(el) el.textContent=nights;
+  });
+  ['a-acc-calc','bk-total-calc','s-acc-calc','d-total-calc'].forEach(id=>{
+    const el=document.getElementById(id);
+    if(el && (el.textContent==='$0'||el.textContent==='₾0'||el.textContent==='0')) el.textContent=sym+'0';
   });
   togglePayFields();
   wizShowStep(2);
@@ -3298,6 +3298,16 @@ function calcWizNights(){
     const n = Math.max(0, Math.round((new Date(co)-new Date(ci))/86400000));
     document.getElementById('w-nights').value = n;
     document.getElementById('w-nights-lbl').textContent = n ? n+'н' : '';
+    // Update night count hints on step 2
+    ['a-nights-count','bk-nights-count','s-nights-count','d-nights-count'].forEach(id=>{
+      const el=document.getElementById(id); if(el) el.textContent=n;
+    });
+    // Recalc if price already entered
+    ['calcAirbnbFromNight','calcBookingFromNight','calcSutochnoFromNight','calcDirectFromNight'].forEach(fn=>{
+      const fields={'calcAirbnbFromNight':'a-night-price','calcBookingFromNight':'bk-night-price','calcSutochnoFromNight':'s-night-price','calcDirectFromNight':'d-night-price'};
+      const el=document.getElementById(fields[fn]);
+      if(el && el.value) window[fn]();
+    });
     onObjChange();
   }
 }
