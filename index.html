@@ -2924,9 +2924,11 @@ function wizNext1(){
   const ci = document.getElementById('w-ci').value;
   const co = document.getElementById('w-co').value;
   if(!obj || !ci || !co){ alert('Заполните объект и даты'); return; }
-  onSrcChange();
-  setCleanerDefault();
-  // Set today as default received date
+  // Only reset financial fields when creating new booking, not editing
+  if(!wizState.editing){
+    onSrcChange();
+    setCleanerDefault();
+  }
   const rd = document.getElementById('w-received-date');
   if(rd && !rd.value) rd.value = new Date().toISOString().split('T')[0];
   togglePayFields();
@@ -3378,30 +3380,37 @@ function editB(id){
     document.getElementById('w-fstatus').value = b.finStatus||'full';
     document.getElementById('w-comment').value = b.comment||'';
     document.getElementById('w-rate').value = b.exchangeRate||2.65;
-    calcWizNights();
+    // First switch source to show correct fields, then fill them
     onSrcChange();
+    calcWizNights();
+    togglePayFields();
     const cl = b.cleaning||0;
-    if(b.source==='airbnb'){
-      document.getElementById('a-acc').value = b.accommodationAmount||0;
-      setAirbnbCleaning(cl===20?20:cl===25?25:cl>0?-1:0);
-      if(cl!==20&&cl!==25&&cl>0) document.getElementById('a-clean').value=cl;
-      calcAirbnb();
-    } else if(b.source==='booking'){
-      document.getElementById('bk-total').value = b.guestPaid||0;
-      setBookingCleaning(cl===20?20:cl===25?25:cl>0?-1:0);
-      if(cl!==20&&cl!==25&&cl>0) document.getElementById('bk-clean').value=cl;
-      const commBase = b.commissionAbs ? b.commissionAbs/1.18 : 0;
-      document.getElementById('bk-comm').value = commBase.toFixed(2);
-      calcBooking();
-    } else if(b.source==='sutochno'){
-      document.getElementById('s-acc').value = b.accommodationAmount||0;
-      setSutochnoCleaning(cl===20?20:cl===25?25:cl>0?-1:0);
-      if(cl!==20&&cl!==25&&cl>0) document.getElementById('s-clean').value=cl;
-      calcSutochno();
-    } else {
-      document.getElementById('d-total').value = b.guestPaid||0;
-    }
-    wizShowStep(1);
+    setTimeout(()=>{
+      if(b.source==='airbnb'||!b.source){
+        const acc = b.accommodationAmount || (b.amount + (b.platformHostFee||0) - cl - (b.extraFee||0));
+        document.getElementById('a-acc').value = acc||0;
+        setAirbnbCleaning(cl===20?20:cl===25?25:cl>0?-1:0);
+        if(cl&&cl!==20&&cl!==25) document.getElementById('a-clean').value=cl;
+        if(b.guestPaid) document.getElementById('a-guest-total').value=b.guestPaid;
+        calcAirbnb();
+      } else if(b.source==='booking'){
+        document.getElementById('bk-total').value = b.guestPaid||b.amount||0;
+        setBookingCleaning(cl===20?20:cl===25?25:cl>0?-1:0);
+        if(cl&&cl!==20&&cl!==25) document.getElementById('bk-clean').value=cl;
+        const commBase = b.commissionAbs ? b.commissionAbs/1.18 : 0;
+        document.getElementById('bk-comm').value = commBase.toFixed(2);
+        calcBooking();
+      } else if(b.source==='sutochno'){
+        document.getElementById('s-acc').value = b.accommodationAmount||b.amount||0;
+        setSutochnoCleaning(cl===20?20:cl===25?25:cl>0?-1:0);
+        if(cl&&cl!==20&&cl!==25) document.getElementById('s-clean').value=cl;
+        calcSutochno();
+      } else {
+        document.getElementById('d-total').value = b.guestPaid||b.amount||0;
+        if(cl){ setDirectCleaning(cl===20?20:cl===25?25:-1); if(cl!==20&&cl!==25) document.getElementById('d-clean').value=cl; }
+      }
+      wizShowStep(1);
+    },150);
   },100);
 }
 
