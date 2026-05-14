@@ -1393,7 +1393,8 @@ const REP_I18N = {
     communal: 'Коммунальные платежи', item: 'Статья', amount: 'Сумма', noComm: 'Нет коммунальных расходов',
     yourShare: 'Ваша доля от бронирований', commPayments: 'Коммунальные платежи', toPay: 'К выплате',
     short: (p)=>`Краткосрочное (${p}%)`, long: (p)=>`Долгосрочное ≥30н (${p}%)`,
-    partial: (n,t)=>`(${n} из ${t}н)`, dir: 'ltr'
+    partial: (n,t)=>`(${n} из ${t}н)`, dir: 'ltr',
+    months: ['Январь','Февраль','Март','Апрель','Май','Июнь','Июль','Август','Сентябрь','Октябрь','Ноябрь','Декабрь']
   },
   en: {
     title: 'Owner Report',
@@ -1404,7 +1405,8 @@ const REP_I18N = {
     communal: 'Utility Payments', item: 'Item', amount: 'Amount', noComm: 'No utility expenses',
     yourShare: 'Your share from bookings', commPayments: 'Utility payments', toPay: 'To Pay',
     short: (p)=>`Short-term (${p}%)`, long: (p)=>`Long-term ≥30n (${p}%)`,
-    partial: (n,t)=>`(${n} of ${t}n)`, dir: 'ltr'
+    partial: (n,t)=>`(${n} of ${t}n)`, dir: 'ltr',
+    months: ['January','February','March','April','May','June','July','August','September','October','November','December']
   },
   he: {
     title: 'דוח בעלים',
@@ -1412,18 +1414,26 @@ const REP_I18N = {
     bookings: 'הזמנות',
     guest: 'אורח', dates: 'תאריכים', nights: 'לילות', base: 'בסיס', terms: 'תנאים', share: 'חלקך',
     total: 'סה"כ',
-    communal: 'תשלומי ארנונה/ועד', item: 'פריט', amount: 'סכום', noComm: 'אין הוצאות שירות',
+    communal: 'תשלומי ועד/ארנונה', item: 'פריט', amount: 'סכום', noComm: 'אין הוצאות שירות',
     yourShare: 'חלקך מהזמנות', commPayments: 'תשלומי שירות', toPay: 'לתשלום',
     short: (p)=>`קצר טווח (${p}%)`, long: (p)=>`ארוך טווח ≥30ל (${p}%)`,
-    partial: (n,t)=>`(${n} מתוך ${t}ל)`, dir: 'rtl'
+    partial: (n,t)=>`(${n} מתוך ${t}ל)`, dir: 'rtl',
+    months: ['ינואר','פברואר','מרץ','אפריל','מאי','יוני','יולי','אוגוסט','ספטמבר','אוקטובר','נובמבר','דצמבר']
   }
 };
+
+function mlblLang(monK, t){
+  if(!monK||monK==='all') return t.period;
+  const[y,m]=monK.split('-');
+  return `${t.months[parseInt(m)-1]} ${y}`;
+}
 function genRep(){
 const t = REP_I18N[repLang] || REP_I18N.ru;
 const obj=document.getElementById('r-obj').value,monK=document.getElementById('r-mon').value;
 if(!obj){alert('Выберите объект');return;}
 const{bo}=getStats(monK);const d=bo[obj];
-const cfg=S.owners[obj]||{name:'',shortPct:70,longPct:85};const ml=mlbl(monK);
+const cfg=S.owners[obj]||{name:'',shortPct:70,longPct:85};
+const ml=mlblLang(monK, t);
 
 const bRows=d.bookings.length?d.bookings.map(b=>{
   const frac=b._frac||1;
