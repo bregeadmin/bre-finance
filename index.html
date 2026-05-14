@@ -224,6 +224,21 @@ input[type=date]{max-width:100%;font-size:13px}
 <table><thead><tr id="dash-thead"><th>Объект</th><th>Гость</th><th>Период</th><th>Ночей</th><th>Собрано</th><th>Собственнику</th><th>Нам</th></tr></thead><tbody id="dash-tb"></tbody></table>
 </div>
 </div>
+<!-- Booking detail modal -->
+<div id="booking-modal" style="display:none;position:fixed;inset:0;z-index:1000;background:rgba(0,0,0,.45);backdrop-filter:blur(4px)" onclick="if(event.target===this)closeBookingModal()">
+  <div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:min(560px,95vw);max-height:88vh;overflow-y:auto;background:var(--bg2);border-radius:18px;box-shadow:0 24px 60px rgba(0,0,0,.3)">
+    <div style="padding:18px 20px;border-bottom:1px solid var(--bdr);display:flex;align-items:center;justify-content:space-between">
+      <div style="font-size:15px;font-weight:700" id="bm-title">Бронирование</div>
+      <button onclick="closeBookingModal()" style="width:30px;height:30px;border:none;background:var(--bg3);border-radius:50%;cursor:pointer;font-size:16px;color:var(--t2)">×</button>
+    </div>
+    <div id="bm-content" style="padding:18px 20px"></div>
+    <div style="padding:14px 20px;border-top:1px solid var(--bdr);display:flex;gap:8px;justify-content:flex-end">
+      <button class="btn btn-gh" onclick="closeBookingModal()">Закрыть</button>
+      <button class="btn btn-pk" id="bm-edit-btn" onclick="closeBookingModal();editB(window._bmId)"><i class="ti ti-edit"></i> Изменить</button>
+    </div>
+  </div>
+</div>
+
 <div class="page" id="page-bookings">
 
 <!-- WIZARD collapsed by default -->
@@ -1453,7 +1468,7 @@ if(!monthBks.length){tb.innerHTML='<tr><td colspan="7"><div class="empty"><i cla
 tb.innerHTML=monthBks.map(({b,c,frac,isPartial,nights})=>{
   const partialBadge=isPartial?`<span class="pill pb" style="font-size:9px;margin-left:4px">частичное</span>`:'';
   const srcLabel=SRCLBL[b.source]||b.source;
-  return`<tr style="cursor:pointer" onclick="go('bookings');setTimeout(()=>{const el=document.querySelector('[data-bid=\'${b.id}\']');if(el){el.scrollIntoView({behavior:'smooth'});el.style.background='var(--pink-bg)';setTimeout(()=>el.style.background='',2000);}},300)">
+  return`<tr style="cursor:pointer" onclick="openBookingModal(${b.id})">
     <td class="s">${b.obj}</td>
     <td>${b.guest||'—'}${partialBadge}<br><span style="font-size:10px;color:var(--t3)">${srcLabel}</span></td>
     <td style="font-size:11px">${b.ci} → ${b.co}</td>
@@ -1483,7 +1498,7 @@ const ptLabel=PAYTLBL[b.payType||'cash']||'';
 // Check for pending laundry expense
 const pendingLaundry=S.expenses.find(e=>e.bookingId===b.id&&(e.cat==='laundry'||e.cat==='cleaning')&&e.pending&&(!e.amount||e.amount===0));
 const laundryBadge=pendingLaundry?`<br><button class="btn btn-xs" style="margin-top:3px;background:var(--pink);color:#fff;font-size:9px;padding:2px 6px" onclick="event.stopPropagation();editE(${pendingLaundry.id})">🧺 Заполни прачку</button>`:'';
-return`<tr class="${isE?'erow':''}" data-bid="${b.id}">
+return`<tr class="${isE?'erow':''}" data-bid="${b.id}" onclick="openBookingModal(${b.id})" style="cursor:pointer">
 <td class="s">${b.obj}<br><span class="pill ${b.nights>=30?'pp':'ps'}" style="font-size:9px">${b.nights>=30?'≥30н':'<30н'} ${(c.op*100).toFixed(0)}%</span></td>
 <td>${b.guest||'—'}</td>
 <td style="font-size:11px">${b.ci}<br>${b.co}<br><span style="color:var(--t3)">${b.nights}н</span></td>
@@ -2928,7 +2943,67 @@ BOOKING - детали бронирования:
     dropArea.style.opacity='1';
   }
 }
+function closeBookingModal(){
+  document.getElementById('booking-modal').style.display='none';
+  window._bmId=null;
+}
+
+// openBookingModal defined above
 function toggleWizard(forceOpen){
+  const b=S.bookings.find(x=>x.id===id);
+  if(!b) return;
+  window._bmId=id;
+  const c=cB(b);
+  const srcLabel=SRCLBL[b.source]||b.source;
+  const fstLabel=FSTLBL[b.finStatus||'full']||'';
+  const rate=b.exchangeRate||2.65;
+
+  const row=(l,v,color='var(--t1)')=>`<div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--bdr);font-size:13px"><span style="color:var(--t3)">${l}</span><span style="font-weight:500;color:${color}">${v}</span></div>`;
+
+  document.getElementById('bm-title').textContent=`${b.obj} · ${b.guest||'Гость'}`;
+  document.getElementById('bm-content').innerHTML=`
+    <!-- Header info -->
+    <div style="background:var(--bg3);border-radius:10px;padding:12px;margin-bottom:14px;display:flex;gap:12px;flex-wrap:wrap">
+      <div><div style="font-size:10px;color:var(--t3)">Заезд</div><div style="font-weight:600">${b.ci}</div></div>
+      <div><div style="font-size:10px;color:var(--t3)">Выезд</div><div style="font-weight:600">${b.co}</div></div>
+      <div><div style="font-size:10px;color:var(--t3)">Ночей</div><div style="font-weight:600">${b.nights}</div></div>
+      <div><div style="font-size:10px;color:var(--t3)">Источник</div><div style="font-weight:600">${srcLabel}</div></div>
+      <div><div style="font-size:10px;color:var(--t3)">Статус</div><div style="font-weight:600;color:var(--pink-d)">${fstLabel}</div></div>
+      ${b.adults?`<div><div style="font-size:10px;color:var(--t3)">Гостей</div><div style="font-weight:600">${b.adults}👤${b.children?' +'+b.children+'дет':''}</div></div>`:''}
+      ${b.pets?`<div><div style="font-size:10px;color:var(--t3)">Животные</div><div style="font-weight:600">🐾 да</div></div>`:''}
+    </div>
+
+    <!-- Money -->
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px">
+      <div style="background:var(--bg3);border-radius:10px;padding:12px">
+        <div style="font-size:10px;font-weight:700;color:var(--t3);text-transform:uppercase;margin-bottom:8px">Деньги</div>
+        ${row('Гость заплатил',fu(c.g))}
+        ${c.comm>0?row('Ком. платформы','-'+fu(c.comm),'var(--pink-d)'):''}
+        ${c.cleaning>0?row('Уборка',fu(c.cleaning)):''}
+        ${row('Вы получили',fu(c.payout),'var(--sage)')}
+      </div>
+      <div style="background:var(--bg3);border-radius:10px;padding:12px">
+        <div style="font-size:10px;font-weight:700;color:var(--t3);text-transform:uppercase;margin-bottom:8px">Распределение</div>
+        ${row('База',fu(c.ownerBase))}
+        ${row(`Собственнику ${(c.op*100).toFixed(0)}%`,fu(c.ob),'var(--beige-d)')}
+        ${row('Нам',fu(c.os),'var(--pink-d)')}
+        ${row('Маржа уборки',(c.cleaningMargin>=0?'+':'')+fu(Math.abs(c.cleaningMargin)),c.cleaningMargin>=0?'var(--sage)':'var(--pink-d)')}
+      </div>
+    </div>
+
+    <!-- Details -->
+    <div style="font-size:12px;color:var(--t3);display:flex;gap:12px;flex-wrap:wrap">
+      ${b.payType?`<span>💳 ${PAYTLBL[b.payType]||b.payType}</span>`:''}
+      ${b.enteredBy?`<span>👤 ${b.enteredBy==='olya'?'Оля':'Артём'}</span>`:''}
+      ${b.exchangeRate?`<span>💱 ${b.exchangeRate} GEL</span>`:''}
+      ${b.comment?`<span>💬 ${b.comment}</span>`:''}
+    </div>
+  `;
+
+  document.getElementById('booking-modal').style.display='block';
+}
+
+function openBookingModal(id){
   const exp=document.getElementById('wiz-expanded');
   const col=document.getElementById('wiz-collapsed');
   const open=forceOpen!==undefined?forceOpen:exp.style.display==='none';
