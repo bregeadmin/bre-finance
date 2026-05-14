@@ -149,8 +149,15 @@ input[type=date]{max-width:100%;font-size:13px}
 </div>
 <div class="page" id="page-bookings">
 
-<!-- WIZARD -->
-<div class="card" id="booking-wizard">
+<!-- WIZARD collapsed by default -->
+<div class="card" id="booking-wizard" style="margin-bottom:12px">
+  <!-- Collapsed header - always visible -->
+  <div id="wiz-collapsed" style="padding:12px 18px;display:flex;align-items:center;justify-content:space-between">
+    <span style="font-size:13px;font-weight:600;color:var(--t2)">Бронирования</span>
+    <button class="btn btn-pk btn-xs" onclick="toggleWizard()"><i class="ti ti-plus" aria-hidden="true"></i> Новое бронирование</button>
+  </div>
+  <!-- Expanded wizard content -->
+  <div id="wiz-expanded" style="display:none;border-top:1px solid var(--bdr)">
   <div style="padding:14px 18px;border-bottom:1px solid var(--bdr);display:flex;align-items:center;gap:0">
     <div class="step-ind active" id="step-ind-1"><span class="step-num">1</span><span class="step-lbl">Детали</span></div>
     <div class="step-line"></div>
@@ -348,7 +355,8 @@ input[type=date]{max-width:100%;font-size:13px}
       </div>
     </div>
   </div>
-</div>
+  </div><!-- end wiz-expanded -->
+</div><!-- end booking-wizard -->
 
 
 <!-- Bookings list -->
@@ -699,12 +707,13 @@ function renameObj(oldName, newName){
   newName = newName.trim();
   if(!newName || newName === oldName) return;
   if(OBJ.includes(newName)){ alert('Объект с таким названием уже есть'); return; }
-  // Rename in owners
   S.owners[newName] = S.owners[oldName];
   delete S.owners[oldName];
-  // Rename in bookings and expenses
   S.bookings.forEach(b=>{ if(b.obj===oldName) b.obj=newName; });
   S.expenses.forEach(e=>{ if(e.obj===oldName) e.obj=newName; });
+  // Update OBJ_DEFAULT if needed
+  const di = OBJ_DEFAULT.indexOf(oldName);
+  if(di!==-1) OBJ_DEFAULT[di]=newName;
   initApartments();
   save();
   popSels();
@@ -1608,7 +1617,8 @@ function renderSettings(){
       <!-- Expandable fields -->
       <div id="${aid}" style="display:none;padding:12px 18px 16px;border-top:1px solid var(--bdr);background:var(--bg3)">
         <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:8px">
-          ${canDelete(o)?`<div class="fg"><label>Название</label><input type="text" value="${o}" style="${ist};width:100%" onblur="renameObj('${o}',this.value)"></div>`:''}
+          ${canDelete(o)?`<div class="fg"><label>Название</label><input type="text" value="${o}" style="${ist};width:100%" onblur="renameObj('${o}',this.value)"></div>`:
+          `<div class="fg"><label>Название</label><input type="text" value="${o}" style="${ist};width:100%;opacity:.6" onblur="renameObj('${o}',this.value)" title="Переименовать"></div>`}
           <div class="fg"><label>Собственник</label><input type="text" value="${cfg.name||''}" placeholder="Имя" style="${ist};width:100%" onchange="saveObjField('${o}','name',this.value)"></div>
           <div class="fg"><label>Тип</label><select style="${ist};width:100%" onchange="saveObjField('${o}','type',this.value)"><option value="studio" ${cfg.type==='studio'?'selected':''}>Студия</option><option value="one_bedroom" ${cfg.type==='one_bedroom'?'selected':''}>1 спальня</option><option value="special" ${cfg.type==='special'?'selected':''}>Особый</option></select></div>
           <div class="fg"><label>Уборка ($)</label><input type="number" value="${cfg.cleaning||20}" style="${ist};width:100%" onchange="saveObjField('${o}','cleaning',+this.value)"></div>
@@ -2544,6 +2554,17 @@ function wizShowStep(n){
   });
 }
 
+function toggleWizard(forceOpen){
+  const exp=document.getElementById('wiz-expanded');
+  const col=document.getElementById('wiz-collapsed');
+  const open=forceOpen!==undefined?forceOpen:exp.style.display==='none';
+  exp.style.display=open?'block':'none';
+  col.querySelector('button').innerHTML=open?
+    '<i class="ti ti-x" aria-hidden="true"></i> Закрыть':
+    '<i class="ti ti-plus" aria-hidden="true"></i> Новое бронирование';
+  if(open) exp.scrollIntoView({behavior:'smooth',block:'nearest'});
+}
+
 function wizNext1(){
   const obj = document.getElementById('w-obj').value;
   const ci = document.getElementById('w-ci').value;
@@ -2977,6 +2998,7 @@ function resetWizard(){
   document.getElementById('wiz-review').innerHTML='';
   onSrcChange();
   setCleanerDefault();
+  toggleWizard(false);
   wizShowStep(1);
 }
 
@@ -2985,6 +3007,7 @@ function editB(id){
   if(!b) return;
   wizState.editing = id;
   go('bookings');
+  toggleWizard(true);
   setTimeout(()=>{
     document.getElementById('w-obj').value = b.obj||'';
     document.getElementById('w-src').value = b.source||'airbnb';
