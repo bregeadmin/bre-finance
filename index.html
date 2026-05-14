@@ -2624,23 +2624,72 @@ async function processScreenshot(file){
     }
 
     const objList=OBJ.join(', ');
-    const prompt=`Это скриншот бронирования с платформы (Airbnb, Booking или Суточно).
-Извлеки данные и верни ТОЛЬКО JSON без пояснений:
+    const prompt=`Ты анализируешь скриншот из приложения для аренды квартир. Определи платформу и тип экрана, затем извлеки данные.
+
+ПЛАТФОРМЫ И ЭК РАНЫ:
+
+AIRBNB - экран "Вы заработаете":
+- Есть переключатель "Вы заработаете / Уплачено гостем", активна левая кнопка
+- Показывает: "Стоимость проживания за N ночей $X", "Плата за уборку $X", "Сбор за услуги с хозяина (3.0% + НДС) -$X", "Итого (USD) $X"
+- accommodation = стоимость проживания, cleaning = плата за уборку, host_fee = абсолютное значение сбора с хозяина (без минуса), payout = итого
+- nights = число из "за N ночей"
+
+AIRBNB - экран "Уплачено гостем":
+- Есть переключатель, активна правая кнопка "Уплачено гостем"
+- Показывает: "$X x N ночей $Y", "Плата за уборку $X", "Сбор за услуги с гостей $X", "Итого (USD) $X"
+- accommodation = $X x N ночей (только стоимость ночей), cleaning = плата за уборку, guest_fee = сбор с гостей, total_guest = итого
+- nights = число ночей из формулы
+
+AIRBNB - детали бронирования (карточка гостя):
+- Показывает имя гостя крупно, даты заезда/выезда, название объекта вверху
+- Формат дат: "пн, 13 мая" или "ср, 13 мая 2026" — конвертируй в YYYY-MM-DD
+- Объект = название в заголовке страницы (например "Red Camelia Apartment by brege" = "Красная камелия")
+- nights = число ночей если указано
+
+BOOKING - инвойс/счёт:
+- Таблица: Описание / Продажи номеров / Комиссия
+- "Бронирования GEL X" = total в GEL, "Комиссия GEL X" = комиссия, "НДС 18% GEL X" = НДС
+- currency = "gel"
+
+BOOKING - детали бронирования:
+- Имя гостя вверху, название объекта под именем
+- Даты заезда/выезда в формате "пн, 10 авг. 2026"
+- "Разбивка цены": Общая стоимость GEL X, Комиссия GEL X, N х GEL Y (ночи)
+
+СУТОЧНО - подробный расчёт:
+- "Основной расчёт": даты по дням с ценами, "Плата за финальную уборку $X"
+- "Итого за N суток $X", "Предоплата 20% $X", "При заселении $X"
+- accommodation = сумма цен по дням (без уборки), cleaning = плата за уборку
+- nights = число из "Итого за N суток"
+
+ОПРЕДЕЛЕНИЕ ОБЪЕКТА:
+Список объектов в системе: ${objList}
+- "Red Camelia" или "Red Camelia Apartment" = "Красная камелия"
+- "White Camelia" = "Белая камелия"  
+- "Granat Apartment" = "Гранат"
+- Ищи похожие названия, игнорируй "by brege", "Apartment" и т.п.
+
+Верни ТОЛЬКО JSON без пояснений и без markdown:
 {
   "source": "airbnb" | "booking" | "sutochno" | "direct",
-  "guest": "имя гостя",
-  "ci": "YYYY-MM-DD",
-  "co": "YYYY-MM-DD",
-  "nights": число,
-  "accommodation": число (стоимость ночей без уборки),
-  "cleaning": число (уборка, 0 если нет),
-  "host_fee": число (сбор с хозяина у Airbnb, 0 если нет),
-  "total_guest": число (итого уплачено гостем, 0 если нет),
-  "commission": число (комиссия Booking, 0 если нет),
+  "screen_type": "earnings" | "guest_paid" | "guest_details" | "invoice" | "price_breakdown" | "calculation",
+  "guest": "имя гостя или пусто",
+  "ci": "YYYY-MM-DD или пусто",
+  "co": "YYYY-MM-DD или пусто",
+  "nights": число или 0,
+  "accommodation": число или 0,
+  "cleaning": число или 0,
+  "host_fee": число или 0,
+  "guest_fee": число или 0,
+  "total_guest": число или 0,
+  "payout": число или 0,
+  "commission": число или 0,
+  "commission_vat": число или 0,
   "currency": "usd" | "gel",
-  "obj_guess": "предполагаемый объект если видно название, иначе пусто"
+  "obj_guess": "название объекта из списка или пусто"
 }
-Объекты в системе: ${objList}`;
+
+Важно: все числа без знака минус, только абсолютные значения.`;
 
     const resp=await fetch('https://api.anthropic.com/v1/messages',{
       method:'POST',
@@ -2664,57 +2713,72 @@ async function processScreenshot(file){
     const text=data.content?.[0]?.text||'';
     const json=JSON.parse(text.replace(/```json|```/g,'').trim());
 
-    // Fill wizard fields
+    // Merge with existing wizard state (support multiple screenshots)
+    const existing = window._scrData || {};
+    const merged = Object.assign({}, existing);
+    // Only overwrite non-zero/non-empty values
+    for(const k of Object.keys(json)){
+      if(json[k] !== 0 && json[k] !== '' && json[k] !== null) merged[k] = json[k];
+    }
+    window._scrData = merged;
+    const d = merged;
+
+    // Fill wizard
     toggleWizard(true);
-    document.getElementById('screenshot-zone').style.display='none';
 
     setTimeout(()=>{
-      // Source
-      document.getElementById('w-src').value=json.source||'airbnb';
-      // Guest
-      if(json.guest) document.getElementById('w-guest').value=json.guest;
-      // Dates
-      if(json.ci) document.getElementById('w-ci').value=json.ci;
-      if(json.co) document.getElementById('w-co').value=json.co;
-      // Currency
-      if(json.currency) document.getElementById('w-cur').value=json.currency;
-      // Object guess
-      if(json.obj_guess && OBJ.includes(json.obj_guess)){
-        document.getElementById('w-obj').value=json.obj_guess;
-      }
+      if(d.source) document.getElementById('w-src').value=d.source;
+      if(d.guest) document.getElementById('w-guest').value=d.guest;
+      if(d.ci) document.getElementById('w-ci').value=d.ci;
+      if(d.co) document.getElementById('w-co').value=d.co;
+      if(d.currency) document.getElementById('w-cur').value=d.currency;
+      if(d.obj_guess && OBJ.includes(d.obj_guess)) document.getElementById('w-obj').value=d.obj_guess;
+
       calcWizNights();
       onSrcChange();
       setCleanerDefault();
 
-      // Fill financial fields based on source
-      if(json.source==='airbnb'||!json.source){
-        if(json.accommodation) document.getElementById('a-acc').value=json.accommodation;
-        if(json.cleaning) setAirbnbCleaning(json.cleaning===20?20:json.cleaning===25?25:-1);
-        if(json.cleaning&&json.cleaning!==20&&json.cleaning!==25) document.getElementById('a-clean').value=json.cleaning;
-        if(json.total_guest) document.getElementById('a-guest-total').value=json.total_guest;
+      const src = d.source || 'airbnb';
+      if(src==='airbnb'){
+        if(d.accommodation) document.getElementById('a-acc').value=d.accommodation;
+        const cl=d.cleaning||0;
+        if(cl) setAirbnbCleaning(cl===20?20:cl===25?25:-1);
+        if(cl&&cl!==20&&cl!==25) document.getElementById('a-clean').value=cl;
+        if(d.total_guest) document.getElementById('a-guest-total').value=d.total_guest;
         calcAirbnb();
-      } else if(json.source==='booking'){
-        if(json.accommodation) document.getElementById('bk-total').value=json.accommodation+(json.cleaning||0);
-        if(json.cleaning) setBookingCleaning(json.cleaning===20?20:json.cleaning===25?25:-1);
-        if(json.commission) document.getElementById('bk-comm').value=json.commission;
+      } else if(src==='booking'){
+        const total=(d.accommodation||0)+(d.cleaning||0);
+        if(total) document.getElementById('bk-total').value=total;
+        const cl=d.cleaning||0;
+        if(cl) setBookingCleaning(cl===20?20:cl===25?25:-1);
+        if(d.commission) document.getElementById('bk-comm').value=d.commission;
         calcBooking();
-      } else if(json.source==='sutochno'){
-        if(json.accommodation) document.getElementById('s-acc').value=json.accommodation;
-        if(json.cleaning) setSutochnoCleaning(json.cleaning===20?20:json.cleaning===25?25:-1);
+      } else if(src==='sutochno'){
+        if(d.accommodation) document.getElementById('s-acc').value=d.accommodation;
+        const cl=d.cleaning||0;
+        if(cl) setSutochnoCleaning(cl===20?20:cl===25?25:-1);
         calcSutochno();
+      } else {
+        const total=(d.accommodation||0)+(d.cleaning||0)||d.total_guest||d.payout;
+        if(total) document.getElementById('d-total').value=total;
       }
 
-      wizShowStep(1);
-      status.style.display='none';
-      dropArea.style.opacity='1';
-
-      // Show success with what was found
+      // Show what was found and allow another screenshot
       const found=[];
-      if(json.guest) found.push('гость: '+json.guest);
-      if(json.ci) found.push('заезд: '+json.ci);
-      if(json.co) found.push('выезд: '+json.co);
-      if(json.accommodation) found.push('сумма: '+json.accommodation);
-      alert('✅ Распознано: '+found.join(' · ')+'\n\nПроверьте данные и при необходимости скорректируйте.');
+      if(d.guest) found.push('👤 '+d.guest);
+      if(d.ci) found.push('📅 '+d.ci+' → '+(d.co||'?'));
+      if(d.accommodation) found.push('💰 '+d.accommodation+' '+(d.currency||'usd').toUpperCase());
+      if(d.cleaning) found.push('🧹 уборка '+d.cleaning);
+
+      status.style.display='block';
+      status.innerHTML=`<div style="background:var(--sage-bg);border-radius:8px;padding:10px 12px;text-align:left">
+        <div style="font-size:12px;font-weight:600;color:var(--sage);margin-bottom:6px">✅ Распознано</div>
+        <div style="font-size:11px;color:var(--t2)">${found.join(' · ')}</div>
+        <div style="margin-top:8px;font-size:11px;color:var(--t3)">Загрузи ещё скриншот чтобы дополнить, или закрой и проверь форму</div>
+        <button class="btn btn-gh btn-xs" style="margin-top:8px" onclick="document.getElementById('scr-file').click()">📸 Ещё скриншот</button>
+        <button class="btn btn-pk btn-xs" style="margin-top:8px;margin-left:6px" onclick="document.getElementById('screenshot-zone').style.display='none';window._scrData={}">✓ Готово</button>
+      </div>`;
+      dropArea.style.opacity='1';
     },300);
 
   }catch(e){
@@ -3168,6 +3232,7 @@ function resetWizard(){
   onSrcChange();
   setCleanerDefault();
   toggleWizard(false);
+  window._scrData={};
   wizShowStep(1);
 }
 
