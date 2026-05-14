@@ -2948,21 +2948,21 @@ function closeBookingModal(){
   window._bmId=null;
 }
 
-// openBookingModal defined above
-function toggleWizard(forceOpen){
+function closeBookingModal(){
+  document.getElementById('booking-modal').style.display='none';
+  window._bmId=null;
+}
+
+function openBookingModal(id){
   const b=S.bookings.find(x=>x.id===id);
   if(!b) return;
   window._bmId=id;
   const c=cB(b);
   const srcLabel=SRCLBL[b.source]||b.source;
   const fstLabel=FSTLBL[b.finStatus||'full']||'';
-  const rate=b.exchangeRate||2.65;
-
   const row=(l,v,color='var(--t1)')=>`<div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--bdr);font-size:13px"><span style="color:var(--t3)">${l}</span><span style="font-weight:500;color:${color}">${v}</span></div>`;
-
   document.getElementById('bm-title').textContent=`${b.obj} · ${b.guest||'Гость'}`;
   document.getElementById('bm-content').innerHTML=`
-    <!-- Header info -->
     <div style="background:var(--bg3);border-radius:10px;padding:12px;margin-bottom:14px;display:flex;gap:12px;flex-wrap:wrap">
       <div><div style="font-size:10px;color:var(--t3)">Заезд</div><div style="font-weight:600">${b.ci}</div></div>
       <div><div style="font-size:10px;color:var(--t3)">Выезд</div><div style="font-weight:600">${b.co}</div></div>
@@ -2970,10 +2970,8 @@ function toggleWizard(forceOpen){
       <div><div style="font-size:10px;color:var(--t3)">Источник</div><div style="font-weight:600">${srcLabel}</div></div>
       <div><div style="font-size:10px;color:var(--t3)">Статус</div><div style="font-weight:600;color:var(--pink-d)">${fstLabel}</div></div>
       ${b.adults?`<div><div style="font-size:10px;color:var(--t3)">Гостей</div><div style="font-weight:600">${b.adults}👤${b.children?' +'+b.children+'дет':''}</div></div>`:''}
-      ${b.pets?`<div><div style="font-size:10px;color:var(--t3)">Животные</div><div style="font-weight:600">🐾 да</div></div>`:''}
+      ${b.pets?`<div><div style="font-size:10px;color:var(--t3)">🐾 Животные</div></div>`:''}
     </div>
-
-    <!-- Money -->
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px">
       <div style="background:var(--bg3);border-radius:10px;padding:12px">
         <div style="font-size:10px;font-weight:700;color:var(--t3);text-transform:uppercase;margin-bottom:8px">Деньги</div>
@@ -2985,25 +2983,21 @@ function toggleWizard(forceOpen){
       <div style="background:var(--bg3);border-radius:10px;padding:12px">
         <div style="font-size:10px;font-weight:700;color:var(--t3);text-transform:uppercase;margin-bottom:8px">Распределение</div>
         ${row('База',fu(c.ownerBase))}
-        ${row(`Собственнику ${(c.op*100).toFixed(0)}%`,fu(c.ob),'var(--beige-d)')}
+        ${row('Собственнику '+Math.round(c.op*100)+'%',fu(c.ob),'var(--beige-d)')}
         ${row('Нам',fu(c.os),'var(--pink-d)')}
         ${row('Маржа уборки',(c.cleaningMargin>=0?'+':'')+fu(Math.abs(c.cleaningMargin)),c.cleaningMargin>=0?'var(--sage)':'var(--pink-d)')}
       </div>
     </div>
-
-    <!-- Details -->
     <div style="font-size:12px;color:var(--t3);display:flex;gap:12px;flex-wrap:wrap">
       ${b.payType?`<span>💳 ${PAYTLBL[b.payType]||b.payType}</span>`:''}
       ${b.enteredBy?`<span>👤 ${b.enteredBy==='olya'?'Оля':'Артём'}</span>`:''}
       ${b.exchangeRate?`<span>💱 ${b.exchangeRate} GEL</span>`:''}
       ${b.comment?`<span>💬 ${b.comment}</span>`:''}
-    </div>
-  `;
-
+    </div>`;
   document.getElementById('booking-modal').style.display='block';
 }
 
-function openBookingModal(id){
+function toggleWizard(forceOpen){
   const exp=document.getElementById('wiz-expanded');
   const col=document.getElementById('wiz-collapsed');
   const open=forceOpen!==undefined?forceOpen:exp.style.display==='none';
