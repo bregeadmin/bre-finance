@@ -448,26 +448,29 @@ input[type=date]{max-width:100%;font-size:13px}
 <div id="rep-prev"></div>
 </div>
 <div class="page" id="page-pnl">
-<div class="card" style="margin-bottom:12px"><div class="card-b" style="padding:10px 16px">
-<select class="si" id="pnl-mon" onchange="renderPnl()" style="width:180px">
-<option value="all">Все месяцы</option>
-</select>
+<div class="card" style="margin-bottom:12px"><div class="card-b" style="padding:10px 16px;display:flex;align-items:center;gap:10px">
+<select class="si" id="pnl-mon" onchange="renderPnl()" style="width:180px"><option value="all">Все месяцы</option></select>
+<span style="font-size:11px;color:var(--t3)" id="pnl-subtitle"></span>
 </div></div>
 <div class="card">
 <div class="card-h"><div class="card-t"><i class="ti ti-table" aria-hidden="true"></i> P&L по объектам</div></div>
-<table style="table-layout:fixed;width:100%">
-<thead><tr>
-<th style="width:160px">Объект</th>
-<th style="width:60px">Ночей</th>
-<th style="width:90px">Собрано</th>
-<th style="width:80px">Ком.</th>
-<th style="width:90px">Чистая</th>
-<th style="width:90px">Собств.</th>
-<th style="width:90px">Наша доля</th>
-<th style="width:80px">Расходы</th>
-<th style="width:90px">Прибыль</th>
-</tr></thead><tbody id="pnl-tb"></tbody></table>
-<div style="border-top:1px solid var(--bdr)"><table><tbody id="pnl-tot"></tbody></table></div>
+<div style="overflow-x:auto">
+<table style="width:100%;border-collapse:collapse;min-width:700px">
+<thead><tr style="background:var(--bg3)">
+<th style="padding:9px 12px;text-align:left;font-size:10px;font-weight:600;color:var(--t3);text-transform:uppercase;letter-spacing:.05em;border-bottom:2px solid var(--bdr)">Объект</th>
+<th style="padding:9px 8px;text-align:right;font-size:10px;font-weight:600;color:var(--t3);text-transform:uppercase;letter-spacing:.05em;border-bottom:2px solid var(--bdr)">Ночей</th>
+<th style="padding:9px 8px;text-align:right;font-size:10px;font-weight:600;color:var(--t3);text-transform:uppercase;letter-spacing:.05em;border-bottom:2px solid var(--bdr)">Собрано</th>
+<th style="padding:9px 8px;text-align:right;font-size:10px;font-weight:600;color:var(--t3);text-transform:uppercase;letter-spacing:.05em;border-bottom:2px solid var(--bdr)">Ком.</th>
+<th style="padding:9px 8px;text-align:right;font-size:10px;font-weight:600;color:var(--t3);text-transform:uppercase;letter-spacing:.05em;border-bottom:2px solid var(--bdr)">Чистая</th>
+<th style="padding:9px 8px;text-align:right;font-size:10px;font-weight:600;color:var(--t3);text-transform:uppercase;letter-spacing:.05em;border-bottom:2px solid var(--bdr)">Собств.</th>
+<th style="padding:9px 8px;text-align:right;font-size:10px;font-weight:600;color:var(--t3);text-transform:uppercase;letter-spacing:.05em;border-bottom:2px solid var(--bdr)">Наша доля</th>
+<th style="padding:9px 8px;text-align:right;font-size:10px;font-weight:600;color:var(--t3);text-transform:uppercase;letter-spacing:.05em;border-bottom:2px solid var(--bdr)">Расходы</th>
+<th style="padding:9px 8px;text-align:right;font-size:10px;font-weight:600;color:var(--t3);text-transform:uppercase;letter-spacing:.05em;border-bottom:2px solid var(--bdr)">Прибыль</th>
+</tr></thead>
+<tbody id="pnl-tb"></tbody>
+<tfoot id="pnl-tot"></tfoot>
+</table>
+</div>
 </div>
 </div>
 <div class="page" id="page-monthly">
