@@ -439,6 +439,14 @@ input[type=date]{max-width:100%;font-size:13px}
 <div class="fg"><label>Объект</label><select id="r-obj"><option value="">Выбрать...</option></select></div>
 <div class="fg"><label>Месяц</label><select id="r-mon"></select></div>
 </div>
+<div class="fg" style="margin-bottom:12px">
+  <label>Язык отчёта</label>
+  <div style="display:flex;gap:6px;margin-top:4px">
+    <button type="button" class="btn btn-gh btn-xs" id="lang-ru" onclick="setRepLang('ru')" style="background:var(--pink);color:#fff">🇷🇺 Русский</button>
+    <button type="button" class="btn btn-gh btn-xs" id="lang-en" onclick="setRepLang('en')">🇬🇧 English</button>
+    <button type="button" class="btn btn-gh btn-xs" id="lang-he" onclick="setRepLang('he')">🇮🇱 עברית</button>
+  </div>
+</div>
 <div style="display:flex;gap:8px;flex-wrap:wrap">
 <button class="btn btn-pk" onclick="genRep()"><i class="ti ti-eye" aria-hidden="true"></i> Сформировать</button>
 <button class="btn btn-gh" id="r-pdf" onclick="dlPDF()" style="display:none"><i class="ti ti-download" aria-hidden="true"></i> Скачать PDF</button>
@@ -1366,7 +1374,52 @@ const{bo}=getStats('all');
 document.getElementById('obj-cards').innerHTML=OBJ.map(o=>{const d=bo[o];const cfg=S.owners[o]||{};return`<div class="oc"><div class="oc-name">${o}</div><div class="oc-own">${cfg.name||'Собственник'}</div><div class="oc-val">${fu(d.ob-d.ce)}</div><div class="oc-n">${d.nights} ночей</div></div>`;}  ).join('');
 document.getElementById('own-tb').innerHTML=OBJ.map(o=>{const d=bo[o];const cfg=S.owners[o]||{shortPct:70,longPct:85};return`<tr><td class="s">${o}</td><td style="color:var(--t3);font-size:12px">${cfg.name||'—'}</td><td style="font-size:12px;color:var(--t2);white-space:nowrap">${cfg.shortPct}% / ${cfg.longPct}%</td><td>${fu(d.payout)}</td><td style="color:var(--beige-d)">${fu(d.ob)}</td><td style="color:var(--pink-d)">-${fu(d.ce).slice(1)}</td><td style="color:var(--pink-d);font-weight:600">${fu(d.ob-d.ce)}</td></tr>`;}  ).join('');
 }
+let repLang = 'ru';
+function setRepLang(l){
+  repLang = l;
+  ['ru','en','he'].forEach(lang=>{
+    const btn = document.getElementById('lang-'+lang);
+    if(btn){ btn.style.background = lang===l?'var(--pink)':''; btn.style.color = lang===l?'#fff':''; }
+  });
+}
+
+const REP_I18N = {
+  ru: {
+    title: 'Отчёт собственника',
+    date: 'Дата', period: 'Период', obj: 'Объект',
+    bookings: 'Бронирования',
+    guest: 'Гость', dates: 'Период', nights: 'Ночей', base: 'База', terms: 'Условия', share: 'Ваша доля',
+    total: 'Итого',
+    communal: 'Коммунальные платежи', item: 'Статья', amount: 'Сумма', noComm: 'Нет коммунальных расходов',
+    yourShare: 'Ваша доля от бронирований', commPayments: 'Коммунальные платежи', toPay: 'К выплате',
+    short: (p)=>`Краткосрочное (${p}%)`, long: (p)=>`Долгосрочное ≥30н (${p}%)`,
+    partial: (n,t)=>`(${n} из ${t}н)`, dir: 'ltr'
+  },
+  en: {
+    title: 'Owner Report',
+    date: 'Date', period: 'Period', obj: 'Property',
+    bookings: 'Bookings',
+    guest: 'Guest', dates: 'Period', nights: 'Nights', base: 'Base', terms: 'Terms', share: 'Your Share',
+    total: 'Total',
+    communal: 'Utility Payments', item: 'Item', amount: 'Amount', noComm: 'No utility expenses',
+    yourShare: 'Your share from bookings', commPayments: 'Utility payments', toPay: 'To Pay',
+    short: (p)=>`Short-term (${p}%)`, long: (p)=>`Long-term ≥30n (${p}%)`,
+    partial: (n,t)=>`(${n} of ${t}n)`, dir: 'ltr'
+  },
+  he: {
+    title: 'דוח בעלים',
+    date: 'תאריך', period: 'תקופה', obj: 'נכס',
+    bookings: 'הזמנות',
+    guest: 'אורח', dates: 'תאריכים', nights: 'לילות', base: 'בסיס', terms: 'תנאים', share: 'חלקך',
+    total: 'סה"כ',
+    communal: 'תשלומי ארנונה/ועד', item: 'פריט', amount: 'סכום', noComm: 'אין הוצאות שירות',
+    yourShare: 'חלקך מהזמנות', commPayments: 'תשלומי שירות', toPay: 'לתשלום',
+    short: (p)=>`קצר טווח (${p}%)`, long: (p)=>`ארוך טווח ≥30ל (${p}%)`,
+    partial: (n,t)=>`(${n} מתוך ${t}ל)`, dir: 'rtl'
+  }
+};
 function genRep(){
+const t = REP_I18N[repLang] || REP_I18N.ru;
 const obj=document.getElementById('r-obj').value,monK=document.getElementById('r-mon').value;
 if(!obj){alert('Выберите объект');return;}
 const{bo}=getStats(monK);const d=bo[obj];
@@ -1375,50 +1428,60 @@ const cfg=S.owners[obj]||{name:'',shortPct:70,longPct:85};const ml=mlbl(monK);
 const bRows=d.bookings.length?d.bookings.map(b=>{
   const frac=b._frac||1;
   const nights=Math.round(b.nights*frac);
-  const pct=(b.c.op*100).toFixed(0)+'%';
-  const sch=b.nights>=30?`Долгосрочное ≥30н (${pct})`:`Краткосрочное (${pct})`;
+  const pct=(b.c.op*100).toFixed(0);
+  const sch=b.nights>=30?t.long(pct):t.short(pct);
   const isPartial=frac<0.99;
-  const partialNote=isPartial?` <span style="font-size:10px;color:#9a9088">(${nights} из ${b.nights}н)</span>`:'';
+  const partialNote=isPartial?` <span style="font-size:10px;color:#9a9088">${t.partial(nights,b.nights)}</span>`:'';
   return`<tr>
-    <td style="padding:10px 12px;border-bottom:1px solid #ede8e2;font-size:13px">${b.guest||'Гость'}</td>
+    <td style="padding:10px 12px;border-bottom:1px solid #ede8e2;font-size:13px">${b.guest||'—'}</td>
     <td style="padding:10px 12px;border-bottom:1px solid #ede8e2;font-size:12px;color:#9a9088">${b.ci} — ${b.co}${partialNote}</td>
     <td style="padding:10px 12px;border-bottom:1px solid #ede8e2;text-align:center">${nights}</td>
     <td style="padding:10px 12px;border-bottom:1px solid #ede8e2;text-align:right;font-weight:600">${fu(b.c.ownerBase*frac)}</td>
     <td style="padding:10px 12px;border-bottom:1px solid #ede8e2;text-align:center;font-size:11px;color:#9a9088">${sch}</td>
     <td style="padding:10px 12px;border-bottom:1px solid #ede8e2;text-align:right;font-weight:700;color:#c97577">${fu(b.c.ob*frac)}</td>
-  </tr>`;}).join(''):'<tr><td colspan="6" style="text-align:center;padding:2rem;color:#9a9088;font-size:13px">Бронирований нет</td></tr>';
+  </tr>`;}).join(''):`<tr><td colspan="6" style="text-align:center;padding:2rem;color:#9a9088;font-size:13px">—</td></tr>`;
 
-const cRows=d.communals.length?d.communals.map(e=>`<tr><td style="padding:9px 12px;border-bottom:1px solid #ede8e2;font-size:13px">${CATLBL[e.cat]}${e.comment?' — '+e.comment:''}</td><td style="padding:9px 12px;border-bottom:1px solid #ede8e2;text-align:right;color:#c97577">-${fu(e.amountUsd)}</td></tr>`).join(''):'<tr><td colspan="2" style="text-align:center;padding:1rem;color:#9a9088;font-size:12px">Нет коммунальных расходов</td></tr>';
-
-const tB=d.bookings.length?`<tr><td colspan="3" style="padding:10px 12px;font-weight:700;border-top:2px solid #1e1e1e">Итого</td><td style="padding:10px 12px;font-weight:700;text-align:right;border-top:2px solid #1e1e1e">${fu(d.payout)}</td><td style="border-top:2px solid #1e1e1e"></td><td style="padding:10px 12px;font-weight:700;text-align:right;border-top:2px solid #1e1e1e;color:#c97577">${fu(d.ob)}</td></tr>`:'';
-const tC=d.communals.length?`<tr><td style="padding:10px 12px;font-weight:700;border-top:2px solid #1e1e1e">Итого</td><td style="padding:10px 12px;font-weight:700;text-align:right;border-top:2px solid #1e1e1e;color:#c97577">-${fu(d.ce)}</td></tr>`:'';
+const cRows=d.communals.length?d.communals.map(e=>`<tr><td style="padding:9px 12px;border-bottom:1px solid #ede8e2;font-size:13px">${CATLBL[e.cat]}${e.comment?' — '+e.comment:''}</td><td style="padding:9px 12px;border-bottom:1px solid #ede8e2;text-align:right;color:#c97577">-${fu(e.amountUsd)}</td></tr>`).join(''):`<tr><td colspan="2" style="text-align:center;padding:1rem;color:#9a9088;font-size:12px">${t.noComm}</td></tr>`;
+const tB=d.bookings.length?`<tr><td colspan="3" style="padding:10px 12px;font-weight:700;border-top:2px solid #1e1e1e">${t.total}</td><td style="padding:10px 12px;font-weight:700;text-align:right;border-top:2px solid #1e1e1e">${fu(d.payout)}</td><td style="border-top:2px solid #1e1e1e"></td><td style="padding:10px 12px;font-weight:700;text-align:right;border-top:2px solid #1e1e1e;color:#c97577">${fu(d.ob)}</td></tr>`:'';
+const tC=d.communals.length?`<tr><td style="padding:10px 12px;font-weight:700;border-top:2px solid #1e1e1e">${t.total}</td><td style="padding:10px 12px;font-weight:700;text-align:right;border-top:2px solid #1e1e1e;color:#c97577">-${fu(d.ce)}</td></tr>`:'';
 const own=d.ob-d.ce;
-const html=`<div id="rpt" style="background:#fff;color:#1e1e1e;font-family:-apple-system,BlinkMacSystemFont,'DM Sans',sans-serif;padding:40px;max-width:760px">
+const dir=t.dir;
+const html=`<div id="rpt" dir="${dir}" style="background:#fff;color:#1e1e1e;font-family:-apple-system,BlinkMacSystemFont,'DM Sans',sans-serif;padding:40px;max-width:760px">
 <table style="width:100%;border-collapse:collapse;margin-bottom:28px;border-bottom:2px solid #e2d0c4;padding-bottom:20px">
 <tr><td style="vertical-align:middle;padding-bottom:20px"><img src="https://static.tildacdn.one/tild6630-3733-4862-b664-376562656131/___9.png" alt="bre.ge club" style="height:40px;object-fit:contain"></td>
-<td style="text-align:right;vertical-align:top;font-size:12px;color:#9a9088;line-height:1.9;padding-bottom:20px">
-<div>Дата: <b style="color:#1e1e1e">${new Date().toLocaleDateString('ru-RU')}</b></div>
-<div>Период: <b style="color:#1e1e1e">${ml}</b></div>
-<div>Объект: <b style="color:#1e1e1e">${obj}</b></div>
+<td style="text-align:${dir==='rtl'?'left':'right'};vertical-align:top;font-size:12px;color:#9a9088;line-height:1.9;padding-bottom:20px">
+<div>${t.date}: <b style="color:#1e1e1e">${new Date().toLocaleDateString('ru-RU')}</b></div>
+<div>${t.period}: <b style="color:#1e1e1e">${ml}</b></div>
+<div>${t.obj}: <b style="color:#1e1e1e">${obj}</b></div>
 </td></tr></table>
-<div style="font-size:22px;font-weight:700;margin-bottom:4px">Отчёт собственника</div>
+<div style="font-size:22px;font-weight:700;margin-bottom:4px">${t.title}</div>
 <div style="font-size:13px;color:#9a9088;margin-bottom:24px">${cfg.name||obj} · ${obj} · ${ml}</div>
-<div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:#9a9088;margin-bottom:10px;padding-bottom:8px;border-bottom:1px solid #e2d0c4">Бронирования</div>
+<div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:#9a9088;margin-bottom:10px;padding-bottom:8px;border-bottom:1px solid #e2d0c4">${t.bookings}</div>
 <table style="width:100%;border-collapse:collapse;font-size:13px">
-<thead><tr style="background:#f7f4f1"><th style="text-align:left;padding:9px 12px;font-size:10px;color:#9a9088;text-transform:uppercase;border-bottom:1px solid #e2d0c4">Гость</th><th style="text-align:left;padding:9px 12px;font-size:10px;color:#9a9088;text-transform:uppercase;border-bottom:1px solid #e2d0c4">Период</th><th style="text-align:center;padding:9px 12px;font-size:10px;color:#9a9088;text-transform:uppercase;border-bottom:1px solid #e2d0c4">Ночей</th><th style="text-align:right;padding:9px 12px;font-size:10px;color:#9a9088;text-transform:uppercase;border-bottom:1px solid #e2d0c4">База</th><th style="text-align:center;padding:9px 12px;font-size:10px;color:#9a9088;text-transform:uppercase;border-bottom:1px solid #e2d0c4">Условия</th><th style="text-align:right;padding:9px 12px;font-size:10px;color:#9a9088;text-transform:uppercase;border-bottom:1px solid #e2d0c4">Ваша доля</th></tr></thead>
+<thead><tr style="background:#f7f4f1">
+<th style="text-align:left;padding:9px 12px;font-size:10px;color:#9a9088;text-transform:uppercase;border-bottom:1px solid #e2d0c4">${t.guest}</th>
+<th style="text-align:left;padding:9px 12px;font-size:10px;color:#9a9088;text-transform:uppercase;border-bottom:1px solid #e2d0c4">${t.dates}</th>
+<th style="text-align:center;padding:9px 12px;font-size:10px;color:#9a9088;text-transform:uppercase;border-bottom:1px solid #e2d0c4">${t.nights}</th>
+<th style="text-align:right;padding:9px 12px;font-size:10px;color:#9a9088;text-transform:uppercase;border-bottom:1px solid #e2d0c4">${t.base}</th>
+<th style="text-align:center;padding:9px 12px;font-size:10px;color:#9a9088;text-transform:uppercase;border-bottom:1px solid #e2d0c4">${t.terms}</th>
+<th style="text-align:right;padding:9px 12px;font-size:10px;color:#9a9088;text-transform:uppercase;border-bottom:1px solid #e2d0c4">${t.share}</th>
+</tr></thead>
 <tbody>${bRows}</tbody>${tB?`<tfoot>${tB}</tfoot>`:''}
 </table>
 <div style="height:18px"></div>
-<div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:#9a9088;margin-bottom:10px;padding-bottom:8px;border-bottom:1px solid #e2d0c4">Коммунальные платежи</div>
+<div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:#9a9088;margin-bottom:10px;padding-bottom:8px;border-bottom:1px solid #e2d0c4">${t.communal}</div>
 <table style="width:100%;border-collapse:collapse;font-size:13px">
-<thead><tr style="background:#f7f4f1"><th style="text-align:left;padding:9px 12px;font-size:10px;color:#9a9088;text-transform:uppercase;border-bottom:1px solid #e2d0c4">Статья</th><th style="text-align:right;padding:9px 12px;font-size:10px;color:#9a9088;text-transform:uppercase;border-bottom:1px solid #e2d0c4">Сумма</th></tr></thead>
+<thead><tr style="background:#f7f4f1">
+<th style="text-align:left;padding:9px 12px;font-size:10px;color:#9a9088;text-transform:uppercase;border-bottom:1px solid #e2d0c4">${t.item}</th>
+<th style="text-align:right;padding:9px 12px;font-size:10px;color:#9a9088;text-transform:uppercase;border-bottom:1px solid #e2d0c4">${t.amount}</th>
+</tr></thead>
 <tbody>${cRows}</tbody>${tC?`<tfoot>${tC}</tfoot>`:''}
 </table>
 <div style="height:18px"></div>
 <div style="background:#fef5f5;border:1px solid #f5d5d6;border-radius:10px;padding:20px">
-<div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid #e2d0c4;font-size:13px"><span style="color:#5a5248">Ваша доля от бронирований</span><span style="font-weight:500">${fu(d.ob)}</span></div>
-<div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid #e2d0c4;font-size:13px;color:#c97577"><span>Коммунальные платежи</span><span>-${fu(d.ce)}</span></div>
-<div style="display:flex;justify-content:space-between;padding:12px 0 0;font-size:18px;font-weight:700"><span>К выплате</span><span style="color:#c97577">${fu(own)}</span></div>
+<div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid #e2d0c4;font-size:13px"><span style="color:#5a5248">${t.yourShare}</span><span style="font-weight:500">${fu(d.ob)}</span></div>
+<div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid #e2d0c4;font-size:13px;color:#c97577"><span>${t.commPayments}</span><span>-${fu(d.ce)}</span></div>
+<div style="display:flex;justify-content:space-between;padding:12px 0 0;font-size:18px;font-weight:700"><span>${t.toPay}</span><span style="color:#c97577">${fu(own)}</span></div>
 </div>
 <div style="margin-top:28px;padding-top:14px;border-top:1px solid #e2d0c4;font-size:11px;color:#b0a8a0;text-align:center">bre.ge club — Real Estate & Lifestyle in Batumi · +995 585 889 601 · www.bre.ge</div>
 </div>`;
