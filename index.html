@@ -1022,7 +1022,6 @@ function renderMonthly(){
   const fm = sel ? sel.value : cmon();
   const {bo,tG,tC,tN,tOP,tOS,tOE,tCM} = getStats(fm);
 
-  // Gather all expenses for month
   const exps = S.expenses.filter(e=>mkey(e.date)===fm && !e.pending);
   const companyExps = exps.filter(e=>e.cat==='company');
   const cleaningExps = exps.filter(e=>e.cat==='cleaning' && e.amount>0);
@@ -1033,93 +1032,75 @@ function renderMonthly(){
   const totalOtherExps = otherExps.reduce((s,e)=>s+e.amountUsd,0);
   const totalCommunalExps = communalExps.reduce((s,e)=>s+e.amountUsd,0);
 
-  // P&L
-  const grossRevenue = tN; // total payout received
-  const totalOurShare = tOS; // our share after owner split
-  const cleaningRevenue = Object.values(bo).reduce((s,d)=>s+d.cleaning,0);
-  const cleaningMargin = tCM;
-  const profitBeforeCompany = totalOurShare + cleaningMargin - totalOtherExps - totalCleaningExps;
-  const netProfit = profitBeforeCompany - totalCompanyExps;
+  // ПРАВИЛЬНАЯ ЛОГИКА:
+  // payout (tN) = то что получили от гостей (уже включает уборку минус комиссию платформы)
+  // tOP = выплачено собственникам (их доля от базы без уборки)
+  // tOS = наша доля от бронирований (до расходов)
+  // tCM = маржа уборки (уборка с гостей - расходы на клинеров)
+  // Чистая прибыль = tOS - totalOtherExps - totalCompanyExps - totalCleaningExps
+
+  const ourShareFromBookings = tOS; // наша доля 30%
+  const cleaningMargin = tCM; // маржа уборки = уборка с гостя - клинер
+  const grossProfit = ourShareFromBookings; // наша доля уже без уборки собственника
+  const netProfit = grossProfit - totalOtherExps - totalCompanyExps;
   const olyaShare = netProfit / 2;
   const artemShare = netProfit / 2;
 
-  const sec = (title,color='var(--t1)')=>`<div style="font-size:11px;font-weight:700;color:${color};text-transform:uppercase;letter-spacing:.05em;padding:10px 0 6px;border-bottom:2px solid var(--bdr);margin-bottom:8px">${title}</div>`;
   const row = (l,v,color='var(--t1)',bold=false)=>`<div style="display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid var(--bdr);font-size:13px"><span style="color:var(--t2)">${l}</span><span style="font-weight:${bold?700:500};color:${color}">${v}</span></div>`;
-  const expRows = arr => arr.map(e=>`<div style="display:flex;justify-content:space-between;padding:5px 8px;font-size:11px;color:var(--t3)"><span>${e.comment||e.cat} ${e.obj!=='__all'?'· '+e.obj:''}</span><span style="color:var(--pink-d)">-${fu(e.amountUsd)}</span></div>`).join('');
+  const expRows = arr => arr.map(e=>`<div style="display:flex;justify-content:space-between;padding:4px 8px;font-size:11px;color:var(--t3)"><span>${e.comment||e.cat}${e.obj&&e.obj!=='__all'?' · '+e.obj:''}</span><span style="color:var(--pink-d)">-${fu(e.amountUsd)}</span></div>`).join('');
 
   document.getElementById('monthly-content').innerHTML = `
   <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px">
 
-    <!-- ДОХОДЫ -->
-    <div class="card" style="margin:0">
-      <div class="card-b">
-        ${sec('💰 Доходы','var(--sage)')}
-        ${row('Выручка (payout от гостей)',fu(grossRevenue),'var(--sage)')}
-        ${row('Уборка с гостей',fu(cleaningRevenue),'var(--t2)')}
-        ${row('Маржа уборки (уборка − клинеры)',fu(cleaningMargin),cleaningMargin>=0?'var(--sage)':'var(--pink-d)')}
-        <div style="display:flex;justify-content:space-between;padding:8px 0;font-size:14px;font-weight:700;margin-top:4px">
-          <span>Итого поступило</span><span style="color:var(--sage)">${fu(grossRevenue+cleaningRevenue)}</span>
-        </div>
-
-        ${sec('👥 Выплаты собственникам','var(--beige-d)')}
-        ${OBJ.filter(o=>bo[o].ob>0).map(o=>{
-          const cfg=S.owners[o]||{name:''};
-          return row((cfg.name||o)+` (${Math.round(bo[o].bookings[0]?.c?.op*100||70)}%)`, fu(bo[o].ob-bo[o].ce), 'var(--beige-d)');
-        }).join('')}
-        ${row('Коммунальные с собственников',fu(totalCommunalExps),'var(--t3)')}
-        <div style="display:flex;justify-content:space-between;padding:8px 0;font-size:13px;font-weight:600;margin-top:4px">
-          <span>Итого собственникам</span><span style="color:var(--beige-d)">${fu(tOP)}</span>
-        </div>
+    <div class="card" style="margin:0"><div class="card-b">
+      <div style="font-size:10px;font-weight:700;color:var(--t3);text-transform:uppercase;margin-bottom:10px;padding-bottom:8px;border-bottom:1px solid var(--bdr)">💰 Доходы и распределение</div>
+      ${row('Получено от гостей (payout)',fu(tN),'var(--sage)')}
+      ${row('Комиссии платформ',tC>0?'-'+fu(tC):'—','var(--pink-d)')}
+      ${row('Выплачено собственникам','-'+fu(tOP),'var(--beige-d)')}
+      ${row('Маржа уборки',fu(tCM),tCM>=0?'var(--sage)':'var(--pink-d)')}
+      <div style="display:flex;justify-content:space-between;padding:9px 0;font-size:14px;font-weight:700;margin-top:4px">
+        <span>Наша доля</span><span style="color:var(--sage)">${fu(ourShareFromBookings)}</span>
       </div>
-    </div>
+    </div></div>
 
-    <!-- РАСХОДЫ И ПРИБЫЛЬ -->
-    <div class="card" style="margin:0">
-      <div class="card-b">
-        ${sec('📋 Расходы компании','var(--pink-d)')}
-        ${row('Клинеры и уборка',fu(totalCleaningExps),'var(--pink-d)')}
-        ${expRows(cleaningExps)}
-        ${row('Прочие расходы',fu(totalOtherExps),'var(--pink-d)')}
-        ${expRows(otherExps)}
-        <div style="display:flex;justify-content:space-between;padding:8px 0;font-size:13px;font-weight:600">
-          <span>Прибыль до общих расходов</span><span style="color:${profitBeforeCompany>=0?'var(--sage)':'var(--pink-d)'}">${fu(profitBeforeCompany)}</span>
-        </div>
-
-        ${totalCompanyExps>0?`
-        ${sec('🏢 Общие расходы компании','var(--t2)')}
-        ${expRows(companyExps)}
-        ${row('Итого общих расходов',fu(totalCompanyExps),'var(--pink-d)')}
-        `:''}
-
-        <div style="background:var(--sage-bg);border-radius:8px;padding:12px;margin-top:10px">
-          <div style="font-size:10px;color:var(--t3);text-transform:uppercase;font-weight:600;margin-bottom:8px">Чистая прибыль компании</div>
-          <div style="font-size:24px;font-weight:700;color:var(--sage);margin-bottom:8px">${fu(netProfit)}</div>
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
-            <div style="background:var(--bg2);border-radius:6px;padding:10px;text-align:center">
-              <div style="font-size:10px;color:var(--t3);margin-bottom:4px">🌸 Оля (50%)</div>
-              <div style="font-size:17px;font-weight:700;color:var(--pink-d)">${fu(olyaShare)}</div>
-            </div>
-            <div style="background:var(--bg2);border-radius:6px;padding:10px;text-align:center">
-              <div style="font-size:10px;color:var(--t3);margin-bottom:4px">💼 Артём (50%)</div>
-              <div style="font-size:17px;font-weight:700;color:var(--beige-d)">${fu(artemShare)}</div>
-            </div>
+    <div class="card" style="margin:0"><div class="card-b">
+      <div style="font-size:10px;font-weight:700;color:var(--t3);text-transform:uppercase;margin-bottom:10px;padding-bottom:8px;border-bottom:1px solid var(--bdr)">📋 Расходы компании</div>
+      ${row('Клинеры и уборка',totalCleaningExps>0?'-'+fu(totalCleaningExps):'—','var(--pink-d)')}
+      ${expRows(cleaningExps)}
+      ${row('Прочие расходы',totalOtherExps>0?'-'+fu(totalOtherExps):'—','var(--pink-d)')}
+      ${expRows(otherExps)}
+      ${totalCompanyExps>0?`
+      <div style="font-size:10px;font-weight:700;color:var(--t3);text-transform:uppercase;margin:10px 0 6px">🏢 Общие расходы</div>
+      ${expRows(companyExps)}
+      ${row('Итого общих','-'+fu(totalCompanyExps),'var(--pink-d)')}
+      `:''}
+      <div style="background:var(--sage-bg);border-radius:10px;padding:14px;margin-top:12px;text-align:center">
+        <div style="font-size:10px;color:var(--t3);text-transform:uppercase;font-weight:600;margin-bottom:6px">Чистая прибыль</div>
+        <div style="font-size:26px;font-weight:700;color:var(--sage)">${fu(netProfit)}</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px">
+          <div style="background:var(--bg2);border-radius:8px;padding:10px">
+            <div style="font-size:10px;color:var(--t3);margin-bottom:4px">🌸 Оля</div>
+            <div style="font-size:18px;font-weight:700;color:var(--pink-d)">${fu(olyaShare)}</div>
+          </div>
+          <div style="background:var(--bg2);border-radius:8px;padding:10px">
+            <div style="font-size:10px;color:var(--t3);margin-bottom:4px">💼 Артём</div>
+            <div style="font-size:18px;font-weight:700;color:var(--beige-d)">${fu(artemShare)}</div>
           </div>
         </div>
       </div>
-    </div>
+    </div></div>
   </div>
 
-  <!-- Детали расходов -->
   <div class="card">
-    <div class="card-h"><div class="card-t"><i class="ti ti-list" aria-hidden="true"></i> Все расходы месяца</div></div>
+    <div class="card-h"><div class="card-t"><i class="ti ti-list"></i> Все расходы месяца</div></div>
     <table>
       <thead><tr><th>Объект</th><th>Категория</th><th>Сумма</th><th>Комментарий</th><th>Дата</th></tr></thead>
       <tbody>${exps.length?exps.map(e=>`<tr>
-        <td class="s">${e.obj==='__all'?'Общий':e.obj}</td>
+        <td class="s">${e.obj==='__all'?'Общий':e.obj||'—'}</td>
         <td><span class="pill ${e.cat==='company'?'pb':e.cat==='communal'?'pp':'pg'}" style="font-size:10px">${CATLBL[e.cat]||e.cat}</span></td>
-        <td style="color:var(--pink-d);font-weight:600">${e.amount} ${e.currency.toUpperCase()}</td>
+        <td style="color:var(--pink-d);font-weight:600">${e.amount||0} ${(e.currency||'gel').toUpperCase()}</td>
         <td style="color:var(--t3)">${e.comment||'—'}</td>
-        <td style="color:var(--t3)">${e.date}</td>
+        <td style="color:var(--t3)">${e.date||'—'}</td>
       </tr>`).join(''):'<tr><td colspan="5"><div class="empty"><i class="ti ti-receipt-off"></i><span>Нет расходов</span></div></td></tr>'}
       </tbody>
     </table>
@@ -3431,7 +3412,7 @@ popMons();initApartments();popSels();onSrcChange();setCleanerDefault();renderDas
 // НАСТРОЙКИ — измените здесь
 // ============================================================
 const APP_PASSWORD = 'brege2024';
-const SHEETS_URL   = 'https://script.google.com/macros/s/AKfycbw6IGkXcRPTkwsDsbyvTlv1Ty_x5gd5TI-EHHgVu1sJKHEwdNkcYWNcbP9h144C9ZQ-/exec';
+const SHEETS_URL = '';
 const CLAUDE_API_KEY = '';
 const SUPA_URL = 'https://qkzinjawtumhjbezlyog.supabase.co';
 const SUPA_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFremluamF3dHVtaGpiZXpseW9nIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg2NTE3NDgsImV4cCI6MjA5NDIyNzc0OH0.u_BEKndkTR-SNRl0GSn9i4PTU3Jlrq2dKbD_Dw4l3bQ';
