@@ -155,24 +155,12 @@ input[type=date]{max-width:100%;font-size:13px}
   <div id="wiz-collapsed" style="padding:14px 18px;display:flex;align-items:center;justify-content:space-between">
     <span style="font-size:14px;font-weight:600;color:var(--t1)">Бронирования</span>
     <div style="display:flex;gap:8px">
-      <button class="btn btn-gh" onclick="toggleScreenshot()" style="font-size:12px"><i class="ti ti-camera" aria-hidden="true"></i> Из скриншота</button>
       <button class="btn btn-pk" onclick="toggleWizard()" style="font-size:12px"><i class="ti ti-plus" aria-hidden="true"></i> Новое бронирование</button>
     </div>
   </div>
 
-  <!-- Screenshot drop zone -->
-  <div id="screenshot-zone" style="display:none;border-top:1px solid var(--bdr);padding:20px 18px">
-    <div id="drop-area" onclick="document.getElementById('scr-file').click()"
-      ondrop="handleScreenDrop(event)" ondragover="event.preventDefault();this.style.borderColor='var(--pink)'" ondragleave="this.style.borderColor='var(--bdr)'"
-      style="border:2px dashed var(--bdr);border-radius:14px;padding:32px 20px;text-align:center;cursor:pointer;transition:all .2s;background:var(--bg3)">
-      <div style="font-size:28px;margin-bottom:8px">📸</div>
-      <div style="font-size:14px;font-weight:600;color:var(--t1);margin-bottom:4px">Перетяни скриншот сюда</div>
-      <div style="font-size:12px;color:var(--t3)">или нажми чтобы выбрать файл</div>
-      <div style="font-size:11px;color:var(--t3);margin-top:8px">Airbnb · Booking · Суточно</div>
-    </div>
-    <input type="file" id="scr-file" accept="image/*" style="display:none" onchange="handleScreenFile(event)">
-    <div id="scr-status" style="margin-top:12px;text-align:center;font-size:13px;color:var(--t3);display:none"></div>
-  </div>
+  <!-- Screenshot drop zone (hidden) -->
+  <div id="screenshot-zone" style="display:none"></div>
   <!-- Expanded wizard content -->
   <div id="wiz-expanded" style="display:none;border-top:1px solid var(--bdr)">
   <div style="padding:14px 18px;border-bottom:1px solid var(--bdr);display:flex;align-items:center;gap:0">
@@ -639,7 +627,7 @@ input[type=date]{max-width:100%;font-size:13px}
 <div class="card-b" style="display:flex;gap:10px;flex-wrap:wrap">
 <button class="btn btn-gh" onclick="loadFromSupabase()"><i class="ti ti-cloud-download" aria-hidden="true"></i> Загрузить из Supabase</button>
 <button class="btn btn-gh" onclick="if(confirm('Очистить локальный кэш и перезагрузить?')){localStorage.removeItem('bre_data');location.reload();}"><i class="ti ti-trash" aria-hidden="true"></i> Очистить кэш</button>
-<button class="btn btn-gh" onclick="cleanupDuplicateObjs()" style="color:var(--pink-d);border-color:var(--pink-l)"><i class="ti ti-git-merge" aria-hidden="true"></i> Удалить дубли объектов</button>
+<button class="btn btn-gh" onclick="resetAllData()" style="color:var(--pink-d);border-color:var(--pink-l)"><i class="ti ti-database-off" aria-hidden="true"></i> Очистить все данные</button>
 </div>
 </div>
 
@@ -733,15 +721,43 @@ function renameObj(oldName, newName){
   S.bookings.forEach(b=>{ if(b.obj===oldName) b.obj=newName; });
   S.expenses.forEach(e=>{ if(e.obj===oldName) e.obj=newName; });
   // Track renamed defaults
-  if(!S.renamedDefaults) S.renamedDefaults = OBJ_DEFAULT.slice();
-  const di = S.renamedDefaults.indexOf(oldName);
-  if(di!==-1) S.renamedDefaults[di]=newName;
+  if(S.renamedDefaults){
+    const di = S.renamedDefaults.indexOf(oldName);
+    if(di!==-1) S.renamedDefaults[di]=newName;
+  }
   initApartments();
   save();
+  sbUpsert('bookings', S.bookings).catch(e=>console.warn(e));
+  sbUpsert('expenses', S.expenses).catch(e=>console.warn(e));
   popSels();
   renderSettings();
+  renderB();
+  renderDash();
 }
 
+async function resetAllData(){
+  if(!confirm('Удалить ВСЕ бронирования и расходы?\n\nОбъекты и настройки останутся.\nЭто действие необратимо.')) return;
+  if(!confirm('Вы уверены? Все тестовые данные будут удалены из базы.')) return;
+
+  // Clear locally
+  S.bookings = [];
+  S.expenses = [];
+  save();
+
+  // Clear from Supabase
+  try {
+    const headers = {'Content-Type':'application/json','apikey':SUPA_KEY,'Authorization':'Bearer '+SUPA_KEY};
+    await fetch(`${SUPA_URL}/rest/v1/bookings?id=gt.0`, {method:'DELETE', headers});
+    await fetch(`${SUPA_URL}/rest/v1/expenses?id=gt.0`, {method:'DELETE', headers});
+    setSyncStatus('✅ Все данные очищены','var(--sage)');
+  } catch(e) {
+    console.warn(e);
+    setSyncStatus('⚠️ Локально очищено, проверьте Supabase','orange');
+  }
+
+  renderB(); renderE(); renderDash();
+  setTimeout(()=>setSyncStatus(''),3000);
+}
 function cleanupDuplicateObjs(){
   // Find objects that are in S.owners but NOT in OBJ (i.e. duplicates from bad renames)
   // Also remove English duplicates of Russian names
@@ -1684,8 +1700,7 @@ function renderSettings(){
       <!-- Expandable fields -->
       <div id="${aid}" style="display:none;padding:12px 18px 16px;border-top:1px solid var(--bdr);background:var(--bg3)">
         <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:8px">
-          ${canDelete(o)?`<div class="fg"><label>Название</label><input type="text" value="${o}" style="${ist};width:100%" onblur="renameObj('${o}',this.value)"></div>`:
-          `<div class="fg"><label>Название</label><input type="text" value="${o}" style="${ist};width:100%;opacity:.6" onblur="renameObj('${o}',this.value)" title="Переименовать"></div>`}
+          ${`<div class="fg"><label>Название</label><input type="text" value="${o}" data-oldname="${o}" style="${ist};width:100%" onblur="renameObj(this.dataset.oldname,this.value)" onkeydown="if(event.key==='Enter')this.blur()"></div>`}
           <div class="fg"><label>Собственник</label><input type="text" value="${cfg.name||''}" placeholder="Имя" style="${ist};width:100%" onchange="saveObjField('${o}','name',this.value)"></div>
           <div class="fg"><label>Тип</label><select style="${ist};width:100%" onchange="saveObjField('${o}','type',this.value)"><option value="studio" ${cfg.type==='studio'?'selected':''}>Студия</option><option value="one_bedroom" ${cfg.type==='one_bedroom'?'selected':''}>1 спальня</option><option value="special" ${cfg.type==='special'?'selected':''}>Особый</option></select></div>
           <div class="fg"><label>Уборка ($)</label><input type="number" value="${cfg.cleaning||20}" style="${ist};width:100%" onchange="saveObjField('${o}','cleaning',+this.value)"></div>
