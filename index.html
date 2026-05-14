@@ -152,11 +152,11 @@ input[type=date]{max-width:100%;font-size:13px}
 <!-- WIZARD collapsed by default -->
 <div class="card" id="booking-wizard" style="margin-bottom:12px">
   <!-- Collapsed header - always visible -->
-  <div id="wiz-collapsed" style="padding:12px 18px;display:flex;align-items:center;justify-content:space-between">
-    <span style="font-size:13px;font-weight:600;color:var(--t2)">Бронирования</span>
+  <div id="wiz-collapsed" style="padding:14px 18px;display:flex;align-items:center;justify-content:space-between">
+    <span style="font-size:14px;font-weight:600;color:var(--t1)">Бронирования</span>
     <div style="display:flex;gap:8px">
-      <button class="btn btn-gh btn-xs" onclick="toggleScreenshot()"><i class="ti ti-camera" aria-hidden="true"></i> Из скриншота</button>
-      <button class="btn btn-pk btn-xs" onclick="toggleWizard()"><i class="ti ti-plus" aria-hidden="true"></i> Новое бронирование</button>
+      <button class="btn btn-gh" onclick="toggleScreenshot()" style="font-size:12px"><i class="ti ti-camera" aria-hidden="true"></i> Из скриншота</button>
+      <button class="btn btn-pk" onclick="toggleWizard()" style="font-size:12px"><i class="ti ti-plus" aria-hidden="true"></i> Новое бронирование</button>
     </div>
   </div>
 
@@ -799,7 +799,14 @@ applyTheme();
 function toggleTheme(){S.theme=S.theme==='dark'?'light':'dark';applyTheme();save();}
 function save(){try{localStorage.setItem('breclub_v3',JSON.stringify(S));}catch(e){}}
 function toUSD(a,c){return c==='usd'?+a:(+a)/(S.gelRate||2.65);}
-function fu(n){return '$'+(+n||0).toFixed(2);}
+function fu(n){
+  const v=+n||0;
+  if(typeof displayCur!=='undefined'&&displayCur==='gel'){
+    const rate=S?.gelRate||2.65;
+    return '₾'+(Math.abs(v)*rate).toFixed(2);
+  }
+  return '$'+Math.abs(v).toFixed(2);
+}
 function nb(a,b){return Math.max(0,Math.round((new Date(b)-new Date(a))/86400000));}
 function mkey(d){return d?d.substring(0,7):'';}
 function cmon(){return new Date().toISOString().substring(0,7);}
@@ -2528,7 +2535,7 @@ function setCurDisplay(cur){
   const active=document.querySelector('.page.active');
   if(active) {
     const name=active.id.replace('page-','');
-    ({dashboard:renderDash,bookings:renderB,expenses:renderE,owners:renderOwners,pnl:renderPnl,split:renderSplit})[name]?.();
+    ({dashboard:renderDash,bookings:renderB,expenses:renderE,owners:renderOwners,pnl:renderPnl,monthly:renderMonthly})[name]?.();
   }
 }
 function fuD(usdAmt){
