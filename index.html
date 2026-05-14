@@ -145,260 +145,198 @@ input[type=date]{max-width:100%;font-size:13px}
 
 <!-- WIZARD -->
 <div class="card" id="booking-wizard">
-  <!-- Step indicator -->
   <div style="padding:14px 18px;border-bottom:1px solid var(--bdr);display:flex;align-items:center;gap:0">
-    <div class="step-ind active" id="step-ind-1" onclick="goStep(1)">
-      <span class="step-num">1</span><span class="step-lbl">Детали</span>
-    </div>
+    <div class="step-ind active" id="step-ind-1"><span class="step-num">1</span><span class="step-lbl">Детали</span></div>
     <div class="step-line"></div>
-    <div class="step-ind" id="step-ind-2" onclick="goStep(2)">
-      <span class="step-num">2</span><span class="step-lbl">Финансы</span>
-    </div>
+    <div class="step-ind" id="step-ind-2"><span class="step-num">2</span><span class="step-lbl">Финансы</span></div>
     <div class="step-line"></div>
-    <div class="step-ind" id="step-ind-3" onclick="goStep(3)">
-      <span class="step-num">3</span><span class="step-lbl">Итог</span>
-    </div>
-    <div style="display:none" id="step-ind-4"></div>
+    <div class="step-ind" id="step-ind-3"><span class="step-num">3</span><span class="step-lbl">Итог</span></div>
   </div>
 
-  <!-- STEP 1: Booking details -->
-  <div class="wiz-step" id="wiz-step-1">
+  <!-- STEP 1 -->
+  <div id="wiz-step-1">
     <div class="card-b">
       <div class="form-grid">
-        <div class="fg"><label>Объект</label>
-          <select id="w-obj" onchange="onObjChange()"><option value="">Выбрать...</option></select>
-        </div>
-        <div class="fg"><label>Источник</label>
-          <select id="w-src" onchange="onSrcChange()">
-            <option value="airbnb">Airbnb</option>
-            <option value="booking">Booking.com</option>
-            <option value="sutochno">Суточно</option>
-            <option value="direct">Прямое</option>
-            <option value="other">Другое</option>
-          </select>
-        </div>
+        <div class="fg"><label>Объект</label><select id="w-obj" onchange="onObjChange()"><option value="">Выбрать...</option></select></div>
+        <div class="fg"><label>Источник</label><select id="w-src" onchange="onSrcChange()"><option value="airbnb">Airbnb</option><option value="booking">Booking.com</option><option value="sutochno">Суточно</option><option value="direct">Прямое</option></select></div>
         <div class="fg"><label>Гость</label><input type="text" id="w-guest" placeholder="Имя гостя"></div>
         <div class="fg"><label>Телефон</label><input type="text" id="w-phone" placeholder="+995..."></div>
         <div class="fg"><label>Заезд</label><input type="date" id="w-ci" oninput="calcWizNights()"></div>
         <div class="fg"><label>Выезд</label><input type="date" id="w-co" oninput="calcWizNights()"></div>
-        <div class="fg"><label>Ночей <span id="w-nights-lbl" style="color:var(--pink);font-weight:600"></span></label>
-          <input type="number" id="w-nights" readonly style="background:var(--bg3);color:var(--t3)">
-        </div>
-        <div class="fg"><label>Валюта</label>
-          <select id="w-cur">
-            <option value="usd">USD</option>
-            <option value="gel">GEL</option>
-          </select>
-        </div>
+        <div class="fg"><label>Ночей <span id="w-nights-lbl" style="color:var(--pink);font-weight:600"></span></label><input type="number" id="w-nights" readonly style="background:var(--bg3)"></div>
+        <div class="fg"><label>Валюта</label><select id="w-cur"><option value="usd">USD</option><option value="gel">GEL</option></select></div>
         <div class="fg"><label>Взрослых</label><input type="number" id="w-adults" value="2" min="1"></div>
         <div class="fg"><label>Детей</label><input type="number" id="w-children" value="0" min="0"></div>
       </div>
-      <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px">
-        <input type="checkbox" id="w-pets" onchange="onPetsChange()" style="cursor:pointer">
-        <label style="font-size:13px;cursor:pointer" onclick="document.getElementById('w-pets').click()">🐾 Животные</label>
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
+        <input type="checkbox" id="w-pets" onchange="document.getElementById('pet-fee-block').style.display=this.checked?'flex':'none'">
+        <label style="font-size:13px;cursor:pointer" for="w-pets">🐾 Животные</label>
       </div>
-      <div style="font-size:12px;color:var(--t3);background:var(--bg3);padding:8px 12px;border-radius:var(--r8)" id="w-booking-ref"></div>
+      <div id="pet-fee-block" style="display:none;align-items:center;gap:8px;margin-bottom:8px">
+        <label style="font-size:12px;color:var(--t3)">Доп. сбор за уборку:</label>
+        <input type="number" id="w-pet-fee" placeholder="0" style="width:80px">
+        <span style="font-size:12px;color:var(--t3)">USD</span>
+      </div>
+      <div style="font-size:11px;color:var(--t3);background:var(--bg3);padding:7px 10px;border-radius:6px" id="w-booking-ref"></div>
     </div>
     <div style="padding:12px 18px;border-top:1px solid var(--bdr);display:flex;justify-content:flex-end">
-      <button class="btn btn-pk" onclick="goStep(2)">Далее → Финансы</button>
+      <button class="btn btn-pk" onclick="wizNext1()">Далее → Финансы</button>
     </div>
   </div>
 
-  <!-- STEP 2: Platform financials -->
-  <div class="wiz-step" id="wiz-step-2" style="display:none">
+  <!-- STEP 2 -->
+  <div id="wiz-step-2" style="display:none">
     <div class="card-b">
 
       <!-- AIRBNB -->
       <div id="fin-airbnb">
-        <div style="font-size:12px;color:var(--t3);background:var(--pink-bg);padding:8px 12px;border-radius:var(--r8);margin-bottom:14px;border-left:3px solid var(--pink)">
-          ℹ️ Введите стоимость проживания — сбор с хозяина (3%+НДС) считается автоматически
-        </div>
+        <div style="font-size:12px;color:var(--t2);background:var(--pink-bg);padding:8px 12px;border-radius:6px;margin-bottom:12px;border-left:3px solid var(--pink)">Введите стоимость ночей — сбор с хозяина 3.54% считается автоматически</div>
         <div class="form-grid">
-          <div class="fg"><label>Стоимость ночей</label>
-            <input type="number" id="a-accommodation" placeholder="0.00" oninput="calcAirbnbTotals()">
-            <div style="font-size:10px;color:var(--t3);margin-top:2px">Цена ночи × количество ночей, без уборки</div>
+          <div class="fg">
+            <label>Стоимость ночей</label>
+            <input type="number" id="a-acc" placeholder="напр. 70" oninput="calcAirbnb()">
+            <div style="font-size:10px;color:var(--t3);margin-top:2px">Цена ночи × кол-во ночей, без уборки</div>
           </div>
-          <div class="fg"><label>Уборка (включена гостем)</label>
-            <div style="display:flex;gap:6px;margin-top:4px" id="airbnb-clean-btns">
-              <button type="button" class="btn btn-gh btn-xs" onclick="setWizClean(0)" id="wc-0">Нет</button>
-              <button type="button" class="btn btn-gh btn-xs" onclick="setWizClean(20)" id="wc-20">$20</button>
-              <button type="button" class="btn btn-gh btn-xs" onclick="setWizClean(25)" id="wc-25">$25</button>
-              <button type="button" class="btn btn-gh btn-xs" onclick="setWizClean('custom')" id="wc-c">Другая</button>
+          <div class="fg">
+            <label>Уборка (включена в сумму)</label>
+            <div style="display:flex;gap:6px;margin-top:4px">
+              <button type="button" class="btn btn-gh btn-xs" id="ac-0" onclick="setAirbnbCleaning(0)">Нет</button>
+              <button type="button" class="btn btn-gh btn-xs" id="ac-20" onclick="setAirbnbCleaning(20)">$20</button>
+              <button type="button" class="btn btn-gh btn-xs" id="ac-25" onclick="setAirbnbCleaning(25)">$25</button>
+              <button type="button" class="btn btn-gh btn-xs" id="ac-x" onclick="setAirbnbCleaning(-1)">Другая</button>
             </div>
-            <input type="number" id="a-cleaning" placeholder="0.00" oninput="calcAirbnbTotals()" style="margin-top:6px;display:none">
+            <input type="number" id="a-clean" placeholder="сумма" style="margin-top:6px;display:none" oninput="calcAirbnb()">
           </div>
-          <div class="fg"><label>Гость заплатил итого <span style="color:var(--t3);font-size:10px">(необязательно, для аналитики)</span></label>
-            <input type="number" id="a-guest-total" placeholder="напр. 105.00" oninput="calcAirbnbTotals()">
+          <div class="fg">
+            <label>Гость заплатил итого <span style="color:var(--t3);font-weight:400">(необязательно)</span></label>
+            <input type="number" id="a-guest-total" placeholder="напр. 105">
             <div style="font-size:10px;color:var(--t3);margin-top:2px">Из экрана "Уплачено гостем" в Airbnb</div>
           </div>
         </div>
-        <div style="background:var(--bg3);border-radius:var(--r8);padding:12px;margin-top:4px">
-          <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;font-size:12px">
-            <div><div style="color:var(--t3);font-size:10px;margin-bottom:2px">Сбор с хозяина</div><div id="a-host-fee-lbl" style="font-weight:600;color:var(--pink-d)">$0</div><div style="font-size:9px;color:var(--t3)">(проживание+уборка) × 3.54%</div></div>
-            <div><div style="color:var(--t3);font-size:10px;margin-bottom:2px">Вы получите</div><div id="a-payout" style="font-weight:700;font-size:15px;color:var(--sage)">$0</div></div>
-            <div><div style="color:var(--t3);font-size:10px;margin-bottom:2px">База собственника</div><div id="a-owner-base-lbl" style="font-weight:600">$0</div><div style="font-size:9px;color:var(--t3)">без уборки</div></div>
-            <div><div style="color:var(--t3);font-size:10px;margin-bottom:2px">Сбор с гостя</div><div id="a-total-guest" style="font-weight:600;color:var(--t2)">—</div><div style="font-size:9px;color:var(--t3)">если указали выше</div></div>
-          </div>
+        <div style="background:var(--bg3);border-radius:8px;padding:12px;display:grid;grid-template-columns:repeat(3,1fr);gap:10px">
+          <div><div style="font-size:10px;color:var(--t3)">Сбор с хозяина</div><div id="a-host-lbl" style="font-weight:700;color:var(--pink-d)">$0</div><div style="font-size:9px;color:var(--t3)">(ночи+уборка)×3.54%</div></div>
+          <div><div style="font-size:10px;color:var(--t3)">Вы получите</div><div id="a-payout-lbl" style="font-weight:700;font-size:15px;color:var(--sage)">$0</div></div>
+          <div><div style="font-size:10px;color:var(--t3)">База собственника</div><div id="a-base-lbl" style="font-weight:700">$0</div><div style="font-size:9px;color:var(--t3)">без уборки</div></div>
         </div>
-        <input type="hidden" id="a-guest-fee" value="0">
-        <input type="hidden" id="a-host-fee" value="0">
+      </div>
 
       <!-- BOOKING -->
       <div id="fin-booking" style="display:none">
-        <div style="font-size:12px;color:var(--t3);background:var(--pink-bg);padding:8px 12px;border-radius:var(--r8);margin-bottom:14px;border-left:3px solid var(--pink)">
-          ℹ️ Уборка не разделена в Booking — система вычтет её из общей суммы для аналитики
-        </div>
+        <div style="font-size:12px;color:var(--t2);background:var(--pink-bg);padding:8px 12px;border-radius:6px;margin-bottom:12px;border-left:3px solid var(--pink)">Уборка не выделена в Booking — система вычтет её сама для аналитики</div>
         <div class="form-grid">
-          <div class="fg"><label>Итого с гостя</label>
-            <input type="number" id="bk-total" placeholder="0.00" oninput="calcBookingTotals()">
-          </div>
-          <div class="fg"><label>Уборка (вычесть из суммы)</label>
+          <div class="fg"><label>Итого с гостя</label><input type="number" id="bk-total" placeholder="0" oninput="calcBooking()"></div>
+          <div class="fg">
+            <label>Уборка (вычесть)</label>
             <div style="display:flex;gap:6px;margin-top:4px">
-              <button type="button" class="btn btn-gh btn-xs" onclick="setWizClean(0,'bk')" id="wc-bk-0">Нет</button>
-              <button type="button" class="btn btn-gh btn-xs" onclick="setWizClean('default','bk')" id="wc-bk-d">По объекту</button>
-              <button type="button" class="btn btn-gh btn-xs" onclick="setWizClean('custom','bk')" id="wc-bk-c">Другая</button>
+              <button type="button" class="btn btn-gh btn-xs" id="bc-0" onclick="setBookingCleaning(0)">Нет</button>
+              <button type="button" class="btn btn-gh btn-xs" id="bc-20" onclick="setBookingCleaning(20)">$20</button>
+              <button type="button" class="btn btn-gh btn-xs" id="bc-25" onclick="setBookingCleaning(25)">$25</button>
+              <button type="button" class="btn btn-gh btn-xs" id="bc-x" onclick="setBookingCleaning(-1)">Другая</button>
             </div>
-            <input type="number" id="bk-cleaning" placeholder="0.00" oninput="calcBookingTotals()" style="margin-top:6px">
+            <input type="number" id="bk-clean" placeholder="сумма" style="margin-top:6px;display:none" oninput="calcBooking()">
           </div>
-          <div class="fg"><label>Комиссия Booking</label>
-            <input type="number" id="bk-commission" placeholder="0.00" oninput="calcBookingTotals()">
-          </div>
-          <div class="fg"><label>НДС на комиссию (18%)</label>
-            <input type="number" id="bk-vat" placeholder="0.00" readonly style="background:var(--bg3);color:var(--t3)">
-          </div>
+          <div class="fg"><label>Комиссия Booking</label><input type="number" id="bk-comm" placeholder="0" oninput="calcBooking()"></div>
+          <div class="fg"><label>НДС на комиссию (18%)</label><input type="number" id="bk-vat" readonly style="background:var(--bg3)"></div>
         </div>
-        <div style="background:var(--bg3);border-radius:var(--r8);padding:12px;margin-top:4px">
-          <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;font-size:12px">
-            <div><div style="color:var(--t3);font-size:10px;margin-bottom:2px">Проживание</div><div id="bk-accommodation" style="font-weight:700">0</div></div>
-            <div><div style="color:var(--t3);font-size:10px;margin-bottom:2px">Комиссия итого</div><div id="bk-total-fees" style="font-weight:700;color:var(--pink-d)">0</div></div>
-            <div><div style="color:var(--t3);font-size:10px;margin-bottom:2px">Вы получите</div><div id="bk-net" style="font-weight:700;color:var(--sage)">0</div></div>
-          </div>
+        <div style="background:var(--bg3);border-radius:8px;padding:12px;display:grid;grid-template-columns:repeat(3,1fr);gap:10px">
+          <div><div style="font-size:10px;color:var(--t3)">Комиссия итого</div><div id="bk-fees-lbl" style="font-weight:700;color:var(--pink-d)">0</div></div>
+          <div><div style="font-size:10px;color:var(--t3)">Вы получите</div><div id="bk-net-lbl" style="font-weight:700;font-size:15px;color:var(--sage)">0</div></div>
+          <div><div style="font-size:10px;color:var(--t3)">База собственника</div><div id="bk-base-lbl" style="font-weight:700">0</div></div>
         </div>
       </div>
 
       <!-- SUTOCHNO -->
       <div id="fin-sutochno" style="display:none">
-        <div style="font-size:12px;color:var(--t3);background:var(--pink-bg);padding:8px 12px;border-radius:var(--r8);margin-bottom:14px;border-left:3px solid var(--pink)">
-          ℹ️ Предоплата 20% = комиссия Суточно. Остаток получите при заезде
-        </div>
+        <div style="font-size:12px;color:var(--t2);background:var(--pink-bg);padding:8px 12px;border-radius:6px;margin-bottom:12px;border-left:3px solid var(--pink)">Предоплата 20% = комиссия Суточно. Остаток получите при заезде наличными</div>
         <div class="form-grid">
-          <div class="fg"><label>Стоимость проживания</label>
-            <input type="number" id="s-accommodation" placeholder="0.00" oninput="calcSutochnoTotals()">
-          </div>
-          <div class="fg"><label>Уборка</label>
+          <div class="fg"><label>Стоимость ночей</label><input type="number" id="s-acc" placeholder="напр. 90" oninput="calcSutochno()"></div>
+          <div class="fg">
+            <label>Уборка</label>
             <div style="display:flex;gap:6px;margin-top:4px">
-              <button type="button" class="btn btn-gh btn-xs" onclick="setWizClean(0,'s')" id="wc-s-0">Нет</button>
-              <button type="button" class="btn btn-gh btn-xs" onclick="setWizClean('default','s')" id="wc-s-d">По объекту</button>
-              <button type="button" class="btn btn-gh btn-xs" onclick="setWizClean('custom','s')" id="wc-s-c">Другая</button>
+              <button type="button" class="btn btn-gh btn-xs" id="sc-0" onclick="setSutochnoCleaning(0)">Нет</button>
+              <button type="button" class="btn btn-gh btn-xs" id="sc-20" onclick="setSutochnoCleaning(20)">$20</button>
+              <button type="button" class="btn btn-gh btn-xs" id="sc-25" onclick="setSutochnoCleaning(25)">$25</button>
+              <button type="button" class="btn btn-gh btn-xs" id="sc-x" onclick="setSutochnoCleaning(-1)">Другая</button>
             </div>
-            <input type="number" id="s-cleaning" placeholder="0.00" oninput="calcSutochnoTotals()" style="margin-top:6px">
+            <input type="number" id="s-clean" placeholder="сумма" style="margin-top:6px;display:none" oninput="calcSutochno()">
           </div>
         </div>
-        <div style="background:var(--bg3);border-radius:var(--r8);padding:12px;margin-top:4px">
-          <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;font-size:12px">
-            <div><div style="color:var(--t3);font-size:10px;margin-bottom:2px">Итого с гостя</div><div id="s-total" style="font-weight:700;font-size:15px">$0</div></div>
-            <div><div style="color:var(--t3);font-size:10px;margin-bottom:2px">Предоплата (20%)</div><div id="s-prepay" style="font-weight:700;color:var(--pink-d)">$0</div></div>
-            <div><div style="color:var(--t3);font-size:10px;margin-bottom:2px">При заезде</div><div id="s-balance" style="font-weight:700;color:var(--sage)">$0</div></div>
-          </div>
+        <div style="background:var(--bg3);border-radius:8px;padding:12px;display:grid;grid-template-columns:repeat(3,1fr);gap:10px">
+          <div><div style="font-size:10px;color:var(--t3)">Итого с гостя</div><div id="s-total-lbl" style="font-weight:700;font-size:15px">$0</div></div>
+          <div><div style="font-size:10px;color:var(--t3)">Предоплата (20%)</div><div id="s-prepay-lbl" style="font-weight:700;color:var(--pink-d)">$0</div></div>
+          <div><div style="font-size:10px;color:var(--t3)">При заезде</div><div id="s-balance-lbl" style="font-weight:700;color:var(--sage)">$0</div></div>
         </div>
       </div>
 
       <!-- DIRECT -->
       <div id="fin-direct" style="display:none">
         <div class="form-grid">
-          <div class="fg"><label>Сумма от гостя</label>
-            <input type="number" id="d-total" placeholder="0.00" oninput="calcDirectTotals()">
-          </div>
-          <div class="fg"><label>Уборка (если взяли)</label>
+          <div class="fg"><label>Сумма от гостя</label><input type="number" id="d-total" placeholder="0"></div>
+          <div class="fg">
+            <label>Уборка (если взяли)</label>
             <div style="display:flex;gap:6px;margin-top:4px">
-              <button type="button" class="btn btn-gh btn-xs" onclick="setWizClean(0,'d')" id="wc-d-0">Нет</button>
-              <button type="button" class="btn btn-gh btn-xs" onclick="setWizClean('default','d')" id="wc-d-d">По объекту</button>
-              <button type="button" class="btn btn-gh btn-xs" onclick="setWizClean('custom','d')" id="wc-d-c">Другая</button>
+              <button type="button" class="btn btn-gh btn-xs" id="dc-0" onclick="setDirectCleaning(0)">Нет</button>
+              <button type="button" class="btn btn-gh btn-xs" id="dc-20" onclick="setDirectCleaning(20)">$20</button>
+              <button type="button" class="btn btn-gh btn-xs" id="dc-25" onclick="setDirectCleaning(25)">$25</button>
+              <button type="button" class="btn btn-gh btn-xs" id="dc-x" onclick="setDirectCleaning(-1)">Другая</button>
             </div>
-            <input type="number" id="d-cleaning" placeholder="0.00" oninput="calcDirectTotals()" style="margin-top:6px">
-          </div>
-        </div>
-        <div style="background:var(--bg3);border-radius:var(--r8);padding:12px;margin-top:4px">
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;font-size:12px">
-            <div><div style="color:var(--t3);font-size:10px;margin-bottom:2px">Проживание</div><div id="d-accommodation" style="font-weight:700">$0</div></div>
-            <div><div style="color:var(--t3);font-size:10px;margin-bottom:2px">Итого получите</div><div id="d-net" style="font-weight:700;color:var(--sage)">$0</div></div>
+            <input type="number" id="d-clean" placeholder="сумма" style="margin-top:6px;display:none">
           </div>
         </div>
       </div>
 
-      <!-- Pet fee -->
-      <div id="pet-fee-block" style="display:none;margin-top:12px;padding:10px 12px;background:var(--beige-l);border-radius:var(--r8)">
-        <div style="font-size:12px;font-weight:500;margin-bottom:6px">🐾 Доп. уборка за животных</div>
-        <input type="number" id="w-pet-fee" placeholder="0.00" oninput="recalcCurrentPlatform()" style="width:150px">
-        <span style="font-size:11px;color:var(--t3);margin-left:8px">USD</span>
-      </div>
-
-      <!-- Exchange rate -->
-      <div style="margin-top:12px;display:flex;align-items:center;gap:8px;font-size:12px">
-        <span style="color:var(--t3)">Курс USD/GEL:</span>
-        <input type="number" id="w-rate" value="2.65" step="0.01" style="width:70px" oninput="recalcCurrentPlatform()">
-        <button class="btn btn-gh btn-xs" onclick="fetchTBCRate()"><i class="ti ti-refresh" aria-hidden="true"></i> TBC</button>
-        <span id="rate-status" style="color:var(--t3);font-size:11px"></span>
-      </div>
-
-      <!-- Admin fields -->
-      <div style="margin-top:14px;border-top:1px solid var(--bdr);padding-top:14px">
+      <div style="border-top:1px solid var(--bdr);margin-top:14px;padding-top:14px">
         <div class="form-grid">
-          <div class="fg"><label>Вид оплаты от гостя</label>
-            <select id="w-paytype" onchange="toggleWhoField()"><option value="cash">Кэш</option><option value="card">Карта</option><option value="transfer">Перевод</option><option value="platform">На платформе (Airbnb/Booking)</option></select>
+          <div class="fg"><label>Вид оплаты</label>
+            <select id="w-paytype" onchange="document.getElementById('who-field').style.display=this.value==='platform'?'none':''">
+              <option value="cash">Кэш</option><option value="card">Карта</option><option value="transfer">Перевод</option><option value="platform">На платформе</option>
+            </select>
           </div>
-          <div class="fg" id="who-field"><label>Кто принял деньги</label>
+          <div class="fg" id="who-field"><label>Кто принял</label>
             <select id="w-who"><option value="olya">Оля</option><option value="artem">Артём</option></select>
           </div>
           <div class="fg"><label>Финансовый статус</label>
-            <select id="w-fstatus" onchange="toggleWizPrepay()">
-              <option value="full">Оплачено полностью</option>
-              <option value="prepay">Предоплата</option>
-              <option value="platform">На счету платформы</option>
-              <option value="pending">Ожидает</option>
+            <select id="w-fstatus">
+              <option value="full">Оплачено полностью</option><option value="prepay">Предоплата</option><option value="platform">На платформе</option><option value="pending">Ожидает</option>
             </select>
           </div>
           <div class="fg"><label>Стоимость клинера</label>
             <div style="display:flex;gap:6px;margin-top:4px">
-              <button type="button" class="btn btn-gh btn-xs" onclick="setCleanerCost('default')" id="cc-d"><span id="cc-d-label">₾50</span></button>
-              <button type="button" class="btn btn-gh btn-xs" onclick="setCleanerCost('custom')" id="cc-c">Другая</button>
+              <button type="button" class="btn btn-gh btn-xs" id="cc-d" onclick="setCleanerDefault()">₾50</button>
+              <button type="button" class="btn btn-gh btn-xs" id="cc-c" onclick="setCleanerCustom()">Другая</button>
             </div>
-            <input type="number" id="w-cleaner-cost" placeholder="0" oninput="calcStep3()" style="margin-top:6px">
+            <input type="number" id="w-cleaner-cost" value="50" style="margin-top:6px">
           </div>
         </div>
-        <div id="wiz-prepay-block" style="display:none;background:var(--bg3);border-radius:var(--r8);padding:12px;margin-bottom:12px">
-          <div style="font-size:11px;font-weight:600;color:var(--t3);margin-bottom:8px;text-transform:uppercase">Детали предоплаты</div>
-          <div class="form-grid" style="margin-bottom:0">
-            <div class="fg"><label>Сумма аванса</label><input type="number" id="w-prepay-amt" placeholder="0.00" oninput="calcWizPrepayRest()"></div>
-            <div class="fg"><label>Остаток к оплате</label><input type="number" id="w-prepay-rest" placeholder="0.00" readonly style="background:var(--bg3);color:var(--t3)"></div>
-          </div>
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;font-size:12px">
+          <span style="color:var(--t3)">Курс USD/GEL:</span>
+          <input type="number" id="w-rate" value="2.65" step="0.01" style="width:70px">
+          <button class="btn btn-gh btn-xs" onclick="fetchTBCRate()"><i class="ti ti-refresh"></i> TBC</button>
+          <span id="rate-status" style="font-size:11px;color:var(--t3)"></span>
         </div>
         <div class="fg"><label>Комментарий</label><input type="text" id="w-comment" placeholder="Любые заметки..."></div>
       </div>
     </div>
     <div style="padding:12px 18px;border-top:1px solid var(--bdr);display:flex;justify-content:space-between">
-      <button class="btn btn-gh" onclick="goStep(1)">← Назад</button>
-      <button class="btn btn-pk" onclick="goStep(3)">Далее → Проверить</button>
+      <button class="btn btn-gh" onclick="wizShowStep(1)">← Назад</button>
+      <button class="btn btn-pk" onclick="wizNext2()">Далее → Итог</button>
     </div>
   </div>
 
-  <!-- STEP 3: Review -->
-  <div class="wiz-step" id="wiz-step-3" style="display:none">
-    <div class="card-b" style="padding:0">
-      <div id="wiz-review"></div>
-    </div>
+  <!-- STEP 3: REVIEW -->
+  <div id="wiz-step-3" style="display:none">
+    <div class="card-b" style="padding:0"><div id="wiz-review" style="padding:16px"></div></div>
     <div style="padding:12px 18px;border-top:1px solid var(--bdr);display:flex;justify-content:space-between">
-      <button class="btn btn-gh" onclick="goStep(2)">← Назад</button>
+      <button class="btn btn-gh" onclick="wizShowStep(2)">← Назад</button>
       <div style="display:flex;gap:8px">
-        <button class="btn btn-gh" onclick="resetWizard()"><i class="ti ti-x" aria-hidden="true"></i> Отмена</button>
-        <button class="btn btn-pk" id="wiz-submit-btn" onclick="submitWizard()"><i class="ti ti-check" aria-hidden="true"></i> Подтвердить и сохранить</button>
+        <button class="btn btn-gh" onclick="resetWizard()"><i class="ti ti-x"></i> Отмена</button>
+        <button class="btn btn-pk" onclick="submitWizard()"><i class="ti ti-check"></i> Подтвердить и сохранить</button>
       </div>
     </div>
   </div>
-
-  <!-- Hidden step 4 for compatibility -->
-  <div id="wiz-step-4" style="display:none"></div>
 </div>
+
+
 <!-- Bookings list -->
 <div class="card">
   <div class="card-h">
@@ -2247,659 +2185,450 @@ const OBJ_CODES = {
 };
 
 // ============================================================
-// WIZARD STATE
+// WIZARD
 // ============================================================
-let wizState = {step:1, editing:null};
+let wizState = {editing: null};
 
-function getWizApt(){return document.getElementById('w-obj').value;}
-function getWizSrc(){return document.getElementById('w-src').value;}
-function getWizRate(){return parseFloat(document.getElementById('w-rate').value)||2.65;}
-function getWizCur(){return document.getElementById('w-cur').value;}
-function getAptSettings(){return APT_SETTINGS[getWizApt()]||{type:'studio',cleaning:20,cleanerCost:50};}
-function fu2(n,cur){const sym=cur==='gel'?'₾':'$';return sym+(Math.abs(+n||0)).toFixed(2);}
-
-function toggleWhoField(){
-  const v=document.getElementById('w-paytype').value;
-  const el=document.getElementById('who-field');
-  if(el) el.style.display=v==='platform'?'none':'';
-}
-
-function goStep(n){
-  if(n>1){
-    const obj=document.getElementById('w-obj').value;
-    const ci=document.getElementById('w-ci').value;
-    const co=document.getElementById('w-co').value;
-    if(!obj||!ci||!co){alert('Заполните объект и даты');return;}
-  }
-  if(n===3) buildReview();
-  wizState.step=n;
-  [1,2,3,4].forEach(i=>{
-    const step=document.getElementById('wiz-step-'+i);
-    if(step) step.style.display=i===n?'block':'none';
-    const ind=document.getElementById('step-ind-'+i);
-    if(!ind) return;
-    ind.classList.remove('active','done');
-    if(i===n) ind.classList.add('active');
-    else if(i<n) ind.classList.add('done');
+function wizShowStep(n){
+  [1,2,3].forEach(i=>{
+    document.getElementById('wiz-step-'+i).style.display = i===n ? 'block' : 'none';
+    const ind = document.getElementById('step-ind-'+i);
+    if(ind){ ind.classList.remove('active','done'); if(i===n) ind.classList.add('active'); else if(i<n) ind.classList.add('done'); }
   });
 }
 
-function onObjChange(){
-  const apt=getWizApt();
-  const ci=document.getElementById('w-ci').value;
-  if(apt&&ci){
-    const d=new Date(ci);
-    const code=OBJ_CODES[apt]||'XX';
-    const ref=`BRE-${code}-${String(d.getDate()).padStart(2,'0')}${String(d.getMonth()+1).padStart(2,'0')}`;
-    document.getElementById('w-booking-ref').textContent=`ID: ${ref}`;
-  }
-  // Auto-set cleaner cost
-  setCleanerCost('default');
-  // Auto-set cleaning defaults on step 2
-  const src=getWizSrc();
-  autoSetCleaningDefaults(src);
+function wizNext1(){
+  const obj = document.getElementById('w-obj').value;
+  const ci = document.getElementById('w-ci').value;
+  const co = document.getElementById('w-co').value;
+  if(!obj || !ci || !co){ alert('Заполните объект и даты'); return; }
+  onSrcChange();
+  setCleanerDefault();
+  wizShowStep(2);
 }
 
-function onSrcChange(){
-  const src=getWizSrc();
-  ['airbnb','booking','sutochno','direct'].forEach(s=>{
-    const el=document.getElementById('fin-'+s);
-    if(el) el.style.display=s===src||(src==='other'&&s==='direct')?'block':'none';
-  });
-  autoSetCleaningDefaults(src);
-}
-
-function autoSetCleaningDefaults(src){
-  const apt=getAptSettings();
-  const defCleaning=apt.cleaning||20;
-  if(src==='airbnb') setWizClean(defCleaning,'a');
-  else if(src==='sutochno') setWizClean(defCleaning,'s');
-  else if(src==='booking') setWizClean(defCleaning,'bk');
-  else setWizClean(0,'d');
-}
-
-function onPetsChange(){
-  const hasPets=document.getElementById('w-pets').checked;
-  document.getElementById('pet-fee-block').style.display=hasPets?'block':'none';
-  recalcCurrentPlatform();
-}
-
-function setWizClean(val, prefix){
-  prefix=prefix||'a';
-  // Clear all buttons for this prefix
-  const allBtns=['wc-0','wc-20','wc-25','wc-d','wc-c',
-    'wc-bk-0','wc-bk-d','wc-bk-c',
-    'wc-s-0','wc-s-d','wc-s-c',
-    'wc-d-0','wc-d-d','wc-d-c'];
-  allBtns.forEach(id=>{const b=document.getElementById(id);if(b){b.style.background='';b.style.color='';}});
-
-  const apt=getAptSettings();
-  const inputMap={a:'a-cleaning',bk:'bk-cleaning',s:'s-cleaning',d:'d-cleaning'};
-  const inputId=inputMap[prefix]||'a-cleaning';
-  const input=document.getElementById(inputId);
-
-  let actualVal=0;
-  if(val==='default'){
-    actualVal=apt.cleaning;
-    // Highlight correct button
-    const btnId=prefix==='a'?(actualVal===25?'wc-25':'wc-20'):'wc-'+(prefix)+'-d';
-    const btn=document.getElementById(btnId);
-    if(btn){btn.style.background='var(--pink)';btn.style.color='#fff';}
-    if(input){input.value=actualVal;input.style.display='none';}
-  } else if(val==='custom'){
-    const btnId=prefix==='a'?'wc-c':'wc-'+prefix+'-c';
-    const btn=document.getElementById(btnId);
-    if(btn){btn.style.background='var(--pink)';btn.style.color='#fff';}
-    if(input){input.style.display='';input.focus();}
-    recalcCurrentPlatform();return;
-  } else if(typeof val==='number'){
-    actualVal=val;
-    const btnId=prefix==='a'?(val===0?'wc-0':val===20?'wc-20':val===25?'wc-25':'wc-c'):'wc-'+prefix+(val===0?'-0':'-d');
-    const btn=document.getElementById(btnId);
-    if(btn){btn.style.background='var(--pink)';btn.style.color='#fff';}
-    if(input){input.value=actualVal;input.style.display=val===0?'none':'none';}
-  } else {
-    // val === 0 (zero)
-    const btnId=prefix==='a'?'wc-0':'wc-'+prefix+'-0';
-    const btn=document.getElementById(btnId);
-    if(btn){btn.style.background='var(--pink)';btn.style.color='#fff';}
-    if(input){input.value=0;input.style.display='none';}
-  }
-  window._totalCleaning=actualVal;
-  recalcCurrentPlatform();
-}
-
-function setCleanerCost(mode){
-  const apt=getAptSettings();
-  ['d','c'].forEach(s=>{const b=document.getElementById('cc-'+s);if(b){b.style.background='';b.style.color='';}});
-  const input=document.getElementById('w-cleaner-cost');
-  if(mode==='default'){
-    document.getElementById('cc-d').style.background='var(--pink)';
-    document.getElementById('cc-d').style.color='#fff';
-    input.value=apt.cleanerCost;
-    const lbl=document.getElementById('cc-d-label');
-    if(lbl) lbl.textContent=`₾${apt.cleanerCost}`;
-    const hint=document.getElementById('cleaner-cost-hint');
-    if(hint) hint.textContent=apt.type==='studio'?'Студия: 50 ₾':'Однушка: 65 ₾';
-  } else {
-    document.getElementById('cc-c').style.background='var(--pink)';
-    document.getElementById('cc-c').style.color='#fff';
-    input.focus();
-  }
-  calcStep3();
+function wizNext2(){
+  buildReview();
+  wizShowStep(3);
 }
 
 function calcWizNights(){
-  const ci=document.getElementById('w-ci').value;
-  const co=document.getElementById('w-co').value;
-  if(ci&&co){
-    const n=Math.max(0,Math.round((new Date(co)-new Date(ci))/86400000));
-    document.getElementById('w-nights').value=n;
-    document.getElementById('w-nights-lbl').textContent=n?n+'н':'';
+  const ci = document.getElementById('w-ci').value;
+  const co = document.getElementById('w-co').value;
+  if(ci && co){
+    const n = Math.max(0, Math.round((new Date(co)-new Date(ci))/86400000));
+    document.getElementById('w-nights').value = n;
+    document.getElementById('w-nights-lbl').textContent = n ? n+'н' : '';
     onObjChange();
   }
 }
 
-function getPetFee(){return document.getElementById('w-pets').checked?(parseFloat(document.getElementById('w-pet-fee').value)||0):0;}
-
-// Airbnb calculations
-function calcAirbnbTotals(){
-  const acc=parseFloat(document.getElementById('a-accommodation').value)||0;
-  const cl=parseFloat(document.getElementById('a-cleaning').value)||0;
-  const pet=getPetFee();
-  const guestTotal=parseFloat(document.getElementById('a-guest-total').value)||0;
-  // Host fee = (accommodation + cleaning + pet) × 3% × 1.18 (VAT)
-  const subtotal=acc+cl+pet;
-  const hFee=Math.round(subtotal*0.03*1.18*100)/100;
-  // Guest fee = difference between what guest paid and our subtotal (if provided)
-  const gFee=guestTotal>0?Math.max(0,guestTotal-subtotal):0;
-  const payout=subtotal-hFee;
-  const ownerBase=acc+pet; // cleaning excluded from owner base
-  // Update hidden fields
-  document.getElementById('a-host-fee').value=hFee;
-  document.getElementById('a-guest-fee').value=gFee;
-  // Update display
-  const cur=getWizCur();
-  document.getElementById('a-host-fee-lbl').textContent='-'+fu2(hFee,cur);
-  document.getElementById('a-payout').textContent=fu2(payout,cur);
-  document.getElementById('a-owner-base-lbl').textContent=fu2(ownerBase,cur);
-  document.getElementById('a-total-guest').textContent=guestTotal>0?fu2(guestTotal,cur):'—';
-  calcStep3();
+function onObjChange(){
+  const obj = document.getElementById('w-obj').value;
+  const ci = document.getElementById('w-ci').value;
+  if(obj && ci){
+    const code = OBJ_CODES[obj] || 'XX';
+    const d = new Date(ci);
+    const ref = `BRE-${code}-${String(d.getDate()).padStart(2,'0')}${String(d.getMonth()+1).padStart(2,'0')}`;
+    document.getElementById('w-booking-ref').textContent = 'ID брони: '+ref;
+  }
+  setCleanerDefault();
+  autoHighlightCleaning();
 }
 
-// Booking calculations
-function calcBookingTotals(){
-  const total=parseFloat(document.getElementById('bk-total').value)||0;
-  const comm=parseFloat(document.getElementById('bk-commission').value)||0;
-  const cl=parseFloat(document.getElementById('bk-cleaning').value)||0;
-  const pet=getPetFee();
-  const vat=Math.round(comm*0.18*100)/100;
-  document.getElementById('bk-vat').value=vat.toFixed(2);
-  const totalFees=comm+vat;
-  const accommodation=total-cl-pet;
-  const net=total-totalFees;
-  const cur=getWizCur();
-  document.getElementById('bk-accommodation').textContent=fu2(accommodation,cur);
-  document.getElementById('bk-total-fees').textContent='-'+fu2(totalFees,cur);
-  document.getElementById('bk-net').textContent=fu2(net,cur);
-  calcStep3();
+function onSrcChange(){
+  const src = document.getElementById('w-src').value;
+  ['airbnb','booking','sutochno','direct'].forEach(s=>{
+    const el = document.getElementById('fin-'+s);
+    if(el) el.style.display = s===src ? 'block' : 'none';
+  });
+  autoHighlightCleaning();
 }
 
-// Sutochno calculations
-function calcSutochnoTotals(){
-  const acc=parseFloat(document.getElementById('s-accommodation').value)||0;
-  const cl=parseFloat(document.getElementById('s-cleaning').value)||0;
-  const pet=getPetFee();
-  const total=acc+cl+pet;
-  const prepay=Math.round(total*0.20*100)/100;
-  const balance=total-prepay;
-  const cur=getWizCur();
-  document.getElementById('s-total').textContent=fu2(total,cur);
-  document.getElementById('s-prepay').textContent=fu2(prepay,cur);
-  document.getElementById('s-balance').textContent=fu2(balance,cur);
-  calcStep3();
+function autoHighlightCleaning(){
+  const obj = document.getElementById('w-obj').value;
+  const src = document.getElementById('w-src').value;
+  const apt = APT_SETTINGS[obj] || {cleaning:20};
+  const cl = apt.cleaning || 20;
+  if(src==='airbnb') setAirbnbCleaning(cl);
+  else if(src==='sutochno') setSutochnoCleaning(cl);
+  else if(src==='booking') setBookingCleaning(cl);
+  else setDirectCleaning(0);
 }
 
-// Direct calculations
-function calcDirectTotals(){
-  const total=parseFloat(document.getElementById('d-total').value)||0;
-  const cl=parseFloat(document.getElementById('d-cleaning').value)||0;
-  const pet=getPetFee();
-  const acc=total-cl-pet;
-  const cur=getWizCur();
-  document.getElementById('d-accommodation').textContent=fu2(acc,cur);
-  document.getElementById('d-net').textContent=fu2(total,cur);
-  calcStep3();
+function hlBtn(prefix, val){
+  ['0','20','25','x'].forEach(v=>{
+    const b = document.getElementById(prefix+'-'+v);
+    if(b){ b.style.background=''; b.style.color=''; }
+  });
+  const key = (val===0)?'0':(val===20)?'20':(val===25)?'25':'x';
+  const btn = document.getElementById(prefix+'-'+key);
+  if(btn){ btn.style.background='var(--pink)'; btn.style.color='#fff'; }
 }
 
-function recalcCurrentPlatform(){
-  const src=getWizSrc();
-  if(src==='airbnb') calcAirbnbTotals();
-  else if(src==='booking') calcBookingTotals();
-  else if(src==='sutochno') calcSutochnoTotals();
-  else calcDirectTotals();
+function setAirbnbCleaning(val){
+  const inp = document.getElementById('a-clean');
+  if(val===-1){ hlBtn('ac','x'); inp.style.display=''; inp.focus(); }
+  else { hlBtn('ac',val); inp.style.display='none'; inp.value=val; }
+  calcAirbnb();
+}
+function setBookingCleaning(val){
+  const inp = document.getElementById('bk-clean');
+  if(val===-1){ hlBtn('bc','x'); inp.style.display=''; inp.focus(); }
+  else { hlBtn('bc',val); inp.style.display='none'; inp.value=val; }
+  calcBooking();
+}
+function setSutochnoCleaning(val){
+  const inp = document.getElementById('s-clean');
+  if(val===-1){ hlBtn('sc','x'); inp.style.display=''; inp.focus(); }
+  else { hlBtn('sc',val); inp.style.display='none'; inp.value=val; }
+  calcSutochno();
+}
+function setDirectCleaning(val){
+  const inp = document.getElementById('d-clean');
+  if(val===-1){ hlBtn('dc','x'); inp.style.display=''; inp.focus(); }
+  else { hlBtn('dc',val); inp.style.display='none'; inp.value=val; }
 }
 
-function calcStep3(){
-  // intentionally empty - margin shown in review step
+function setCleanerDefault(){
+  const obj = document.getElementById('w-obj').value;
+  const apt = APT_SETTINGS[obj] || {cleanerCost:50, type:'studio'};
+  document.getElementById('w-cleaner-cost').value = apt.cleanerCost || 50;
+  document.getElementById('cc-d').style.background='var(--pink)';
+  document.getElementById('cc-d').style.color='#fff';
+  document.getElementById('cc-d').textContent = '₾'+(apt.cleanerCost||50);
+  document.getElementById('cc-c').style.background='';
+  document.getElementById('cc-c').style.color='';
+}
+function setCleanerCustom(){
+  document.getElementById('cc-d').style.background='';
+  document.getElementById('cc-d').style.color='';
+  document.getElementById('cc-c').style.background='var(--pink)';
+  document.getElementById('cc-c').style.color='#fff';
+  document.getElementById('w-cleaner-cost').focus();
 }
 
-function toggleWizPrepay(){
-  const fst=document.getElementById('w-fstatus').value;
-  document.getElementById('wiz-prepay-block').style.display=fst==='prepay'?'block':'none';
-}
-
-function calcWizPrepayRest(){
-  const src=getWizSrc();
-  let total=0;
+function getWizCleaning(){
+  const src = document.getElementById('w-src').value;
   if(src==='airbnb'){
-    const acc=parseFloat(document.getElementById('a-accommodation').value)||0;
-    const cl=parseFloat(document.getElementById('a-cleaning').value)||0;
-    const hFee=parseFloat(document.getElementById('a-host-fee').value)||0;
-    total=acc+cl-hFee+getPetFee();
-  } else if(src==='booking'){
-    total=parseFloat(document.getElementById('bk-total').value)||0;
-    const comm=parseFloat(document.getElementById('bk-commission').value)||0;
-    const vat=Math.round(comm*0.18*100)/100;
-    total=total-comm-vat;
-  } else if(src==='sutochno'){
-    const acc=parseFloat(document.getElementById('s-accommodation').value)||0;
-    const cl=parseFloat(document.getElementById('s-cleaning').value)||0;
-    const t=acc+cl+getPetFee();
-    total=t*0.80;
-  } else {
-    total=parseFloat(document.getElementById('d-total').value)||0;
+    const inp = document.getElementById('a-clean');
+    return parseFloat(inp.style.display==='none' ? inp.value : inp.value)||0;
   }
-  const pre=parseFloat(document.getElementById('w-prepay-amt').value)||0;
-  document.getElementById('w-prepay-rest').value=Math.max(0,total-pre).toFixed(2);
+  if(src==='booking') return parseFloat(document.getElementById('bk-clean').value)||0;
+  if(src==='sutochno'){
+    const inp = document.getElementById('s-clean');
+    return parseFloat(inp.value)||0;
+  }
+  return parseFloat(document.getElementById('d-clean')?.value)||0;
 }
 
-// TBC rate
-async function fetchTBCRate(){
-  document.getElementById('rate-status').textContent='Загрузка...';
-  try{
-    // kursi.ge показывает курс TBC в реальном времени
-    const r=await fetch('https://api.myfinance.com.ge/api/rates?bank=tbc',{mode:'cors'});
-    const d=await r.json();
-    const usd=d?.find?.(x=>x?.currency==='USD');
-    if(usd?.sell){
-      const rateVal=parseFloat(usd.sell).toFixed(4);
-      document.getElementById('w-rate').value=rateVal;
-      document.getElementById('rate').value=rateVal;
-      S.gelRate=parseFloat(rateVal);save();
-      document.getElementById('rate-status').textContent='✓ TBC '+new Date().toLocaleDateString('ru-RU');
-      recalcCurrentPlatform();
-      return;
-    }
-    throw new Error('no rate');
-  }catch(e){
-    // Fallback: myfin.ge
-    try{
-      const r2=await fetch('https://myfin.ge/api/v1/currency/usd?bank=tbc');
-      const d2=await r2.json();
-      const rate2=d2?.sell||d2?.rate;
-      if(rate2){
-        const rateVal=parseFloat(rate2).toFixed(4);
-        document.getElementById('w-rate').value=rateVal;
-        document.getElementById('rate').value=rateVal;
-        S.gelRate=parseFloat(rateVal);save();
-        document.getElementById('rate-status').textContent='✓ TBC (myfin) '+new Date().toLocaleDateString('ru-RU');
-        recalcCurrentPlatform();
-        return;
-      }
-    }catch(e2){}
-    // Last resort: показать страницу TBC вручную
-    document.getElementById('rate-status').innerHTML='❌ Введите вручную · <a href="https://www.tbcbank.ge/web/exchange-rates" target="_blank" style="color:var(--pink-d)">Курс TBC</a>';
-  }
+function calcAirbnb(){
+  const acc = parseFloat(document.getElementById('a-acc').value)||0;
+  const cl = parseFloat(document.getElementById('a-clean').value)||0;
+  const pet = parseFloat(document.getElementById('w-pet-fee').value)||0;
+  const hFee = Math.round((acc+cl+pet)*0.03*1.18*100)/100;
+  const payout = acc+cl+pet-hFee;
+  document.getElementById('a-host-lbl').textContent = '-$'+hFee.toFixed(2);
+  document.getElementById('a-payout-lbl').textContent = '$'+payout.toFixed(2);
+  document.getElementById('a-base-lbl').textContent = '$'+(acc+pet).toFixed(2);
+}
+
+function calcBooking(){
+  const total = parseFloat(document.getElementById('bk-total').value)||0;
+  const cl = parseFloat(document.getElementById('bk-clean').value)||0;
+  const comm = parseFloat(document.getElementById('bk-comm').value)||0;
+  const vat = Math.round(comm*0.18*100)/100;
+  document.getElementById('bk-vat').value = vat.toFixed(2);
+  const fees = comm+vat;
+  const net = total-fees;
+  const base = total-cl-fees;
+  const cur = document.getElementById('w-cur').value;
+  const s = cur==='gel'?'₾':'$';
+  document.getElementById('bk-fees-lbl').textContent = '-'+s+fees.toFixed(2);
+  document.getElementById('bk-net-lbl').textContent = s+net.toFixed(2);
+  document.getElementById('bk-base-lbl').textContent = s+base.toFixed(2);
+}
+
+function calcSutochno(){
+  const acc = parseFloat(document.getElementById('s-acc').value)||0;
+  const cl = parseFloat(document.getElementById('s-clean').value)||0;
+  const pet = parseFloat(document.getElementById('w-pet-fee').value)||0;
+  const total = acc+cl+pet;
+  const prepay = Math.round(total*0.20*100)/100;
+  const balance = total-prepay;
+  document.getElementById('s-total-lbl').textContent = '$'+total.toFixed(2);
+  document.getElementById('s-prepay-lbl').textContent = '-$'+prepay.toFixed(2);
+  document.getElementById('s-balance-lbl').textContent = '$'+balance.toFixed(2);
 }
 
 function buildReview(){
-  try{
-  const src=getWizSrc();
-  const cur=getWizCur();
-  const rate=getWizRate();
-  const apt=getWizApt()||'Объект';
-  const nights=parseInt(document.getElementById('w-nights').value)||0;
-  const obj=document.getElementById('w-obj').value;
-  const guest=document.getElementById('w-guest').value||'Гость';
-  const ci=document.getElementById('w-ci').value||'—';
-  const co=document.getElementById('w-co').value||'—';
-  const opPct=obj?opct(obj,nights):0.70;
-  const pet=getPetFee();
-  const cleanerCostEl=document.getElementById('w-cleaner-cost');
-  const cleanerCostGel=cleanerCostEl?parseFloat(cleanerCostEl.value)||0:0;
+  const src = document.getElementById('w-src').value;
+  const cur = document.getElementById('w-cur').value;
+  const rate = parseFloat(document.getElementById('w-rate').value)||2.65;
+  const obj = document.getElementById('w-obj').value;
+  const guest = document.getElementById('w-guest').value||'Гость';
+  const ci = document.getElementById('w-ci').value;
+  const co = document.getElementById('w-co').value;
+  const nights = parseInt(document.getElementById('w-nights').value)||0;
+  const cleanerCostGel = parseFloat(document.getElementById('w-cleaner-cost').value)||0;
+  const pet = parseFloat(document.getElementById('w-pet-fee').value)||0;
+  const opPct = opct(obj, nights);
+  const s = cur==='gel'?'₾':'$';
+  const toUSD = v => cur==='gel' ? v/rate : v;
 
-  let payout=0,totalGuest=0,accommodation=0,cleaning=0,platformFees=0;
-  let platformLabel='';
+  let payout=0, totalGuest=0, cleaning=0, platformFees=0, platformLabel='';
 
   if(src==='airbnb'){
-    accommodation=parseFloat(document.getElementById('a-accommodation').value)||0;
-    cleaning=parseFloat(document.getElementById('a-cleaning').value)||0;
-    const hFee=parseFloat(document.getElementById('a-host-fee').value)||0;
-    const gTotal=parseFloat(document.getElementById('a-guest-total').value)||0;
-    payout=accommodation+cleaning+pet-hFee;
-    totalGuest=gTotal>0?gTotal:payout+hFee;
-    platformFees=hFee;
-    platformLabel='Сбор Airbnb с хозяина';
+    const acc = parseFloat(document.getElementById('a-acc').value)||0;
+    cleaning = parseFloat(document.getElementById('a-clean').value)||0;
+    const hFee = Math.round((acc+cleaning+pet)*0.03*1.18*100)/100;
+    const gTotal = parseFloat(document.getElementById('a-guest-total').value)||0;
+    payout = acc+cleaning+pet-hFee;
+    totalGuest = gTotal>0 ? gTotal : payout+hFee;
+    platformFees = hFee;
+    platformLabel = 'Сбор Airbnb с хозяина';
   } else if(src==='booking'){
-    const total=parseFloat(document.getElementById('bk-total').value)||0;
-    cleaning=parseFloat(document.getElementById('bk-cleaning').value)||0;
-    const comm=parseFloat(document.getElementById('bk-commission').value)||0;
-    const vat=Math.round(comm*0.18*100)/100;
-    accommodation=total-cleaning-pet;
-    totalGuest=total;platformFees=comm+vat;payout=total-platformFees;
-    platformLabel='Комиссия Booking + НДС';
+    const total = parseFloat(document.getElementById('bk-total').value)||0;
+    cleaning = parseFloat(document.getElementById('bk-clean').value)||0;
+    const comm = parseFloat(document.getElementById('bk-comm').value)||0;
+    const vat = Math.round(comm*0.18*100)/100;
+    totalGuest = total; platformFees = comm+vat; payout = total-platformFees;
+    platformLabel = 'Комиссия Booking + НДС';
   } else if(src==='sutochno'){
-    accommodation=parseFloat(document.getElementById('s-accommodation').value)||0;
-    cleaning=parseFloat(document.getElementById('s-cleaning').value)||0;
-    totalGuest=accommodation+cleaning+pet;
-    const prepay=Math.round(totalGuest*0.20*100)/100;
-    payout=totalGuest-prepay;platformFees=prepay;
-    platformLabel='Предоплата Суточно (20%)';
+    const acc = parseFloat(document.getElementById('s-acc').value)||0;
+    cleaning = parseFloat(document.getElementById('s-clean').value)||0;
+    totalGuest = acc+cleaning+pet;
+    platformFees = Math.round(totalGuest*0.20*100)/100;
+    payout = totalGuest-platformFees;
+    platformLabel = 'Предоплата Суточно (20%)';
   } else {
-    const total=parseFloat(document.getElementById('d-total').value)||0;
-    cleaning=parseFloat(document.getElementById('d-cleaning').value)||0;
-    accommodation=total-cleaning-pet;
-    totalGuest=total;payout=total;platformFees=0;
-    platformLabel='';
+    const total = parseFloat(document.getElementById('d-total').value)||0;
+    cleaning = parseFloat(document.getElementById('d-clean')?.value)||0;
+    totalGuest = total; payout = total; platformFees = 0;
   }
 
-  const payoutUsd=cur==='gel'?payout/rate:payout;
-  const cleaningUsd=cur==='gel'?cleaning/rate:cleaning;
-  const cleanerCostUsd=cleanerCostGel/rate;
-  const margin=cleaningUsd-cleanerCostUsd;
-  const ownerBase=payoutUsd-cleaningUsd;
-  const ownerAmt=ownerBase*opPct;
-  const ourAmt=ownerBase*(1-opPct);
-  const srcLabel=SRCLBL[src]||src;
-  const fstLabel={full:'Оплачено полностью',prepay:'Предоплата',platform:'На платформе',pending:'Ожидает'}[document.getElementById('w-fstatus').value]||'';
-  const whoLabel=document.getElementById('w-paytype').value==='platform'?'Платформа':(document.getElementById('w-who').value==='olya'?'Оля':'Артём');
+  const payoutUsd = toUSD(payout);
+  const cleaningUsd = toUSD(cleaning);
+  const cleanerUsd = cleanerCostGel/rate;
+  const ownerBase = payoutUsd - cleaningUsd;
+  const ownerAmt = ownerBase * opPct;
+  const ourAmt = ownerBase * (1-opPct);
+  const margin = cleaningUsd - cleanerUsd;
+  const srcLabel = {airbnb:'Airbnb',booking:'Booking',sutochno:'Суточно',direct:'Прямое'}[src]||src;
+  const fstLabel = {full:'Оплачено',prepay:'Предоплата',platform:'На платформе',pending:'Ожидает'}[document.getElementById('w-fstatus').value]||'';
 
-  const row=(label,val,color,big)=>`
-    <div style="display:flex;justify-content:space-between;align-items:center;padding:9px 0;border-bottom:1px solid var(--bdr)">
-      <span style="font-size:12px;color:var(--t2)">${label}</span>
-      <span style="font-size:${big?'15px':'13px'};font-weight:${big?700:500};color:${color||'var(--t1)'}">${val}</span>
-    </div>`;
+  const row = (l,v,vc) => `<div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--bdr);font-size:13px"><span style="color:var(--t2)">${l}</span><span style="font-weight:600;color:${vc||'var(--t1)'}">${v}</span></div>`;
 
-  const html=`
-  <div style="padding:16px 18px">
-
-    <!-- Header -->
+  document.getElementById('wiz-review').innerHTML = `
     <div style="display:flex;align-items:center;gap:10px;padding-bottom:14px;border-bottom:2px solid var(--bdr);margin-bottom:14px">
-      <div style="width:40px;height:40px;border-radius:50%;background:var(--pink-bg);display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0">🏠</div>
-      <div>
-        <div style="font-size:15px;font-weight:700">${apt}</div>
-        <div style="font-size:12px;color:var(--t3)">${guest} · ${ci} → ${co} · ${nights} ноч. · ${srcLabel}</div>
-      </div>
-      <div style="margin-left:auto;text-align:right">
-        <div style="font-size:10px;color:var(--t3)">Статус</div>
-        <div style="font-size:12px;font-weight:600;color:var(--pink-d)">${fstLabel}</div>
-        <div style="font-size:11px;color:var(--t3)">${whoLabel}</div>
-      </div>
+      <div style="width:40px;height:40px;border-radius:50%;background:var(--pink-bg);display:flex;align-items:center;justify-content:center;font-size:20px">🏠</div>
+      <div><div style="font-size:15px;font-weight:700">${obj}</div><div style="font-size:12px;color:var(--t3)">${guest} · ${ci} → ${co} · ${nights}н · ${srcLabel} · ${fstLabel}</div></div>
     </div>
-
-    <!-- Finance summary -->
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px">
-
-      <!-- Left: flow -->
-      <div style="background:var(--bg3);border-radius:var(--r8);padding:12px">
+      <div style="background:var(--bg3);border-radius:8px;padding:12px">
         <div style="font-size:10px;font-weight:700;color:var(--t3);text-transform:uppercase;margin-bottom:8px">Деньги</div>
-        ${row('Гость заплатил',fu2(totalGuest,cur),'var(--t1)',false)}
-        ${platformFees>0?row(platformLabel,'-'+fu2(platformFees,cur),'var(--pink-d)',false):''}
-        ${cleaning>0?row('Уборка с гостя',fu2(cleaning,cur),'var(--t2)',false):''}
-        ${pet>0?row('Доп. сбор (животные)',fu2(pet,cur),'var(--t2)',false):''}
-        ${row('Вы получите',fu2(payout,cur),'var(--sage)',true)}
+        ${row('Гость заплатил', s+totalGuest.toFixed(2))}
+        ${platformFees>0 ? row(platformLabel, '-'+s+platformFees.toFixed(2), 'var(--pink-d)') : ''}
+        ${cleaning>0 ? row('Уборка с гостя', s+cleaning.toFixed(2), 'var(--t2)') : ''}
+        ${row('Вы получите', s+payout.toFixed(2), 'var(--sage)')}
       </div>
-
-      <!-- Right: distribution -->
-      <div style="background:var(--bg3);border-radius:var(--r8);padding:12px">
+      <div style="background:var(--bg3);border-radius:8px;padding:12px">
         <div style="font-size:10px;font-weight:700;color:var(--t3);text-transform:uppercase;margin-bottom:8px">Распределение</div>
-        ${row('База (без уборки)',fu2(payoutUsd-cleaningUsd,'usd'),'var(--t1)',false)}
-        ${row(`Собственнику ${(opPct*100).toFixed(0)}%`,fu2(ownerAmt,'usd'),'var(--beige-d)',false)}
-        ${row('Нам',fu2(ourAmt,'usd'),'var(--pink-d)',true)}
-        <div style="margin-top:6px;padding-top:6px;border-top:1px dashed var(--bdr)">
-          ${row('Маржа уборки',(margin>=0?'+':'')+fu2(Math.abs(margin),'usd'),margin>=0?'var(--sage)':'var(--pink-d)',false)}
-        </div>
+        ${row('База (без уборки)', '$'+ownerBase.toFixed(2))}
+        ${row('Собственнику '+Math.round(opPct*100)+'%', '$'+ownerAmt.toFixed(2), 'var(--beige-d)')}
+        ${row('Нам', '$'+ourAmt.toFixed(2), 'var(--pink-d)')}
+        ${row('Маржа уборки', (margin>=0?'+':'')+' $'+Math.abs(margin).toFixed(2), margin>=0?'var(--sage)':'var(--pink-d)')}
       </div>
     </div>
-
-    <!-- Auto expenses -->
-    <div style="background:var(--bg3);border-radius:var(--r8);padding:12px;margin-bottom:4px">
-      <div style="font-size:10px;font-weight:700;color:var(--t3);text-transform:uppercase;margin-bottom:8px">📋 Создадутся в расходах</div>
-      <div style="display:flex;gap:8px;flex-wrap:wrap">
-        <div style="flex:1;min-width:120px;background:var(--bg2);border-radius:6px;padding:8px 10px;display:flex;align-items:center;gap:8px">
-          <span style="font-size:16px">🧹</span>
-          <div><div style="font-size:11px;font-weight:600">Клинер</div><div style="font-size:12px;color:var(--pink-d);font-weight:700">₾${cleanerCostGel}</div><div style="font-size:10px;color:var(--t3)">${co}</div></div>
+    <div style="background:var(--bg3);border-radius:8px;padding:12px">
+      <div style="font-size:10px;font-weight:700;color:var(--t3);text-transform:uppercase;margin-bottom:8px">📋 Создадутся в расходах автоматически</div>
+      <div style="display:flex;gap:8px">
+        <div style="flex:1;background:var(--bg2);border-radius:6px;padding:8px 10px;display:flex;gap:8px;align-items:center">
+          <span style="font-size:18px">🧹</span>
+          <div><div style="font-size:11px;font-weight:600">Клинер</div><div style="font-size:12px;color:var(--pink-d);font-weight:700">₾${cleanerCostGel}</div><div style="font-size:10px;color:var(--t3)">дата выезда: ${co}</div></div>
         </div>
-        <div style="flex:1;min-width:120px;background:var(--beige-l);border-radius:6px;padding:8px 10px;display:flex;align-items:center;gap:8px">
-          <span style="font-size:16px">🧺</span>
-          <div><div style="font-size:11px;font-weight:600">Прачечная</div><div style="font-size:12px;color:var(--t3)">⏳ заполнить позже</div><div style="font-size:10px;color:var(--t3)">${co}</div></div>
+        <div style="flex:1;background:var(--beige-l);border-radius:6px;padding:8px 10px;display:flex;gap:8px;align-items:center">
+          <span style="font-size:18px">🧺</span>
+          <div><div style="font-size:11px;font-weight:600">Прачечная</div><div style="font-size:12px;color:var(--t3)">⏳ заполнить позже</div><div style="font-size:10px;color:var(--t3)">дата выезда: ${co}</div></div>
         </div>
       </div>
-    </div>
-  </div>`;
-
-  document.getElementById('wiz-review').innerHTML=html;
-  }catch(e){
-    console.error('buildReview error:',e);
-    document.getElementById('wiz-review').innerHTML=`<div style="padding:16px;color:var(--pink-d)">Ошибка отображения: ${e.message}. Проверьте заполненность полей.</div>`;
-  }
+    </div>`;
 }
 
 function submitWizard(){
-  const src=getWizSrc();
-  const cur=getWizCur();
-  const rate=getWizRate();
-  const obj=document.getElementById('w-obj').value;
-  const ci=document.getElementById('w-ci').value;
-  const co=document.getElementById('w-co').value;
-  const nights=parseInt(document.getElementById('w-nights').value)||0;
-  if(!obj||!ci||!co){alert('Заполните объект и даты');return;}
-  const pet=getPetFee();
-  let payout=0,totalGuest=0,accommodation=0,cleaning=0,commAbs=0,guestFee=0,hostFee=0,vatAmt=0;
+  const src = document.getElementById('w-src').value;
+  const cur = document.getElementById('w-cur').value;
+  const rate = parseFloat(document.getElementById('w-rate').value)||2.65;
+  const obj = document.getElementById('w-obj').value;
+  const ci = document.getElementById('w-ci').value;
+  const co = document.getElementById('w-co').value;
+  if(!obj||!ci||!co){ alert('Заполните объект и даты'); return; }
+  const nights = parseInt(document.getElementById('w-nights').value)||0;
+  const pet = parseFloat(document.getElementById('w-pet-fee').value)||0;
+  const cleanerCostGel = parseFloat(document.getElementById('w-cleaner-cost').value)||0;
+  const toUSD = v => cur==='gel' ? v/rate : v;
+
+  let payout=0, totalGuest=0, cleaning=0, platformFees=0, accommodation=0, guestFee=0, hostFee=0, vatAmt=0;
 
   if(src==='airbnb'){
-    accommodation=parseFloat(document.getElementById('a-accommodation').value)||0;
-    cleaning=parseFloat(document.getElementById('a-cleaning').value)||0;
-    guestFee=parseFloat(document.getElementById('a-guest-fee').value)||0;
-    hostFee=parseFloat(document.getElementById('a-host-fee').value)||0;
-    const guestTotal=parseFloat(document.getElementById('a-guest-total').value)||0;
-    totalGuest=guestTotal>0?guestTotal:(accommodation+cleaning+guestFee+pet);
-    payout=accommodation+cleaning+pet-hostFee;
-    commAbs=hostFee;
+    const acc = parseFloat(document.getElementById('a-acc').value)||0;
+    cleaning = parseFloat(document.getElementById('a-clean').value)||0;
+    hostFee = Math.round((acc+cleaning+pet)*0.03*1.18*100)/100;
+    const gTotal = parseFloat(document.getElementById('a-guest-total').value)||0;
+    payout = acc+cleaning+pet-hostFee;
+    totalGuest = gTotal>0 ? gTotal : payout+hostFee;
+    accommodation = acc; platformFees = hostFee;
   } else if(src==='booking'){
-    const total=parseFloat(document.getElementById('bk-total').value)||0;
-    cleaning=parseFloat(document.getElementById('bk-cleaning').value)||0;
-    const comm=parseFloat(document.getElementById('bk-commission').value)||0;
-    vatAmt=Math.round(comm*0.18*100)/100;
-    accommodation=total-cleaning-pet;
-    totalGuest=total;commAbs=comm+vatAmt;payout=total-commAbs;
+    const total = parseFloat(document.getElementById('bk-total').value)||0;
+    cleaning = parseFloat(document.getElementById('bk-clean').value)||0;
+    const comm = parseFloat(document.getElementById('bk-comm').value)||0;
+    vatAmt = Math.round(comm*0.18*100)/100;
+    accommodation = total-cleaning; totalGuest = total;
+    platformFees = comm+vatAmt; payout = total-platformFees;
   } else if(src==='sutochno'){
-    accommodation=parseFloat(document.getElementById('s-accommodation').value)||0;
-    cleaning=parseFloat(document.getElementById('s-cleaning').value)||0;
-    totalGuest=accommodation+cleaning+pet;
-    commAbs=Math.round(totalGuest*0.20*100)/100;payout=totalGuest-commAbs;
+    const acc = parseFloat(document.getElementById('s-acc').value)||0;
+    cleaning = parseFloat(document.getElementById('s-clean').value)||0;
+    totalGuest = acc+cleaning+pet;
+    platformFees = Math.round(totalGuest*0.20*100)/100;
+    payout = totalGuest-platformFees; accommodation = acc;
   } else {
-    const total=parseFloat(document.getElementById('d-total').value)||0;
-    cleaning=parseFloat(document.getElementById('d-cleaning').value)||0;
-    accommodation=total-cleaning-pet;totalGuest=total;payout=total;commAbs=0;
+    const total = parseFloat(document.getElementById('d-total').value)||0;
+    cleaning = parseFloat(document.getElementById('d-clean')?.value)||0;
+    accommodation = total-cleaning; totalGuest = total; payout = total;
   }
 
-  const payoutUsd=cur==='gel'?payout/rate:payout;
-  const commPct=totalGuest>0?commAbs/totalGuest*100:0;
-  const cleanerCost=parseFloat(document.getElementById('w-cleaner-cost').value)||0;
+  const payoutUsd = toUSD(payout);
+  const commPct = totalGuest>0 ? platformFees/totalGuest*100 : 0;
+  const d = new Date(ci);
+  const code = OBJ_CODES[obj]||'XX';
+  const bookingRef = `BRE-${code}-${String(d.getDate()).padStart(2,'0')}${String(d.getMonth()+1).padStart(2,'0')}`;
 
-  const d=new Date(ci);
-  const aptCode=OBJ_CODES[obj]||'XX';
-  const bookingRef=`BRE-${aptCode}-${String(d.getDate()).padStart(2,'0')}${String(d.getMonth()+1).padStart(2,'0')}`;
-
-  const booking={
-    id:Date.now(),
-    obj,guest:document.getElementById('w-guest').value.trim(),
-    ci,co,nights,
-    amount:payout,currency:cur,source:src,
-    commissionPct:commPct,commissionAbs:commAbs,
-    guestPaid:totalGuest,
-    cleaning,cleaningWho:'client',cleanerCostGel:cleanerCost,
-    extraFee:pet,
-    accommodationAmount:accommodation,
-    platformGuestFee:guestFee,
-    platformHostFee:hostFee,
-    platformVat:vatAmt,
-    amountUsd:payoutUsd,
-    payType:document.getElementById('w-paytype').value,
-    enteredBy:document.getElementById('w-who').value,
-    finStatus:document.getElementById('w-fstatus').value,
-    prepayAmt:parseFloat(document.getElementById('w-prepay-amt').value)||0,
-    prepayRest:parseFloat(document.getElementById('w-prepay-rest').value)||0,
-    exchangeRate:rate,
+  const booking = {
+    id: Date.now(),
+    obj, guest: document.getElementById('w-guest').value.trim(),
+    ci, co, nights, amount: payout, currency: cur, source: src,
+    commissionPct: commPct, commissionAbs: platformFees,
+    guestPaid: totalGuest, cleaning, cleaningWho: 'client',
+    cleanerCostGel, extraFee: pet, accommodationAmount: accommodation,
+    platformGuestFee: guestFee, platformHostFee: hostFee, platformVat: vatAmt,
+    amountUsd: payoutUsd,
+    payType: document.getElementById('w-paytype').value,
+    enteredBy: document.getElementById('w-who').value,
+    finStatus: document.getElementById('w-fstatus').value,
+    exchangeRate: rate,
     bookingRef,
-    adults:parseInt(document.getElementById('w-adults').value)||1,
-    children:parseInt(document.getElementById('w-children').value)||0,
-    pets:document.getElementById('w-pets').checked,
-    comment:document.getElementById('w-comment').value.trim(),
-    outstandingBalance:payout-(parseFloat(document.getElementById('w-prepay-amt').value)||0)
+    adults: parseInt(document.getElementById('w-adults').value)||1,
+    children: parseInt(document.getElementById('w-children').value)||0,
+    pets: document.getElementById('w-pets').checked,
+    comment: document.getElementById('w-comment').value.trim()
   };
 
-  if(wizState.editing!==null){
-    const i=S.bookings.findIndex(b=>b.id===wizState.editing);
-    if(i!==-1)S.bookings[i]={...S.bookings[i],...booking,id:wizState.editing};
-    wizState.editing=null;
+  if(wizState.editing !== null){
+    const i = S.bookings.findIndex(b=>b.id===wizState.editing);
+    if(i!==-1) S.bookings[i] = {...S.bookings[i], ...booking, id: wizState.editing};
+    wizState.editing = null;
   } else {
     S.bookings.push(booking);
     // Auto-create cleaner expense
-    if(booking.cleanerCostGel>0&&booking.cleaning>0){
+    if(cleanerCostGel>0){
       S.expenses.push({
-        id:Date.now()+1,
-        obj:booking.obj,cat:'cleaning',
-        amount:booking.cleanerCostGel,currency:'gel',
-        date:booking.co,
-        comment:`Клинер · ${booking.guest||'Гость'} · ${booking.ci}→${booking.co}`,
-        paidBy:'company',payType:'cash',
-        enteredBy:booking.enteredBy||'olya',
-        amountUsd:booking.cleanerCostGel/(booking.exchangeRate||S.gelRate||2.65),
-        who:'us',bookingId:booking.id,autoCreated:true
+        id: Date.now()+1, obj, cat:'cleaning',
+        amount: cleanerCostGel, currency:'gel', date: co,
+        comment: `🧹 Клинер · ${booking.guest||'Гость'} · ${ci}→${co}`,
+        paidBy:'company', payType:'cash', enteredBy: booking.enteredBy,
+        amountUsd: cleanerCostGel/rate, who:'us',
+        bookingId: booking.id, autoCreated: true
       });
     }
-    // Auto-create laundry expense (pending - no amount yet)
+    // Auto-create laundry (pending)
     S.expenses.push({
-      id:Date.now()+2,
-      obj:booking.obj,cat:'cleaning',
-      amount:0,currency:'gel',
-      date:booking.co,
-      comment:`🧺 Прачечная · ${booking.guest||'Гость'} · ${booking.ci}→${booking.co}`,
-      paidBy:'company',payType:'cash',
-      enteredBy:booking.enteredBy||'olya',
-      amountUsd:0,who:'us',
-      bookingId:booking.id,autoCreated:true,pending:true
+      id: Date.now()+2, obj, cat:'cleaning',
+      amount: 0, currency:'gel', date: co,
+      comment: `🧺 Прачечная · ${booking.guest||'Гость'} · ${ci}→${co}`,
+      paidBy:'company', payType:'cash', enteredBy: booking.enteredBy,
+      amountUsd: 0, who:'us',
+      bookingId: booking.id, autoCreated: true, pending: true
     });
   }
+
   save();
-  try{syncToSheets();}catch(e){console.warn('Sync failed:',e);}
+  try{ syncToSheets(); }catch(e){ console.warn(e); }
   resetWizard();
-  renderB();renderE();renderDash();
+  renderB(); renderE(); renderDash();
   setSyncStatus('✅ Бронирование добавлено','var(--sage)');
   setTimeout(()=>setSyncStatus(''),3000);
 }
 
 function resetWizard(){
-  wizState={step:1,editing:null};
+  wizState.editing = null;
   ['w-obj','w-src','w-cur','w-paytype','w-who','w-fstatus'].forEach(id=>{
-    const el=document.getElementById(id);if(el)el.value=el.options?.[0]?.value||'';
+    const el=document.getElementById(id); if(el) el.value=el.options?.[0]?.value||'';
   });
-  ['w-guest','w-phone','w-ci','w-co','w-nights','w-comment','w-prepay-amt','w-prepay-rest',
-   'a-accommodation','a-cleaning','a-guest-fee','a-host-fee','a-guest-total',
-   'bk-total','bk-cleaning','bk-commission','bk-vat',
-   's-accommodation','s-cleaning',
-   'd-total','d-cleaning','w-pet-fee','w-cleaner-cost'].forEach(id=>{
-    const el=document.getElementById(id);if(el)el.value='';
+  ['w-guest','w-phone','w-ci','w-co','w-nights','w-comment',
+   'a-acc','a-clean','a-guest-total','bk-total','bk-clean','bk-comm','bk-vat',
+   's-acc','s-clean','d-total','d-clean','w-pet-fee'].forEach(id=>{
+    const el=document.getElementById(id); if(el) el.value='';
   });
   document.getElementById('w-adults').value=2;
   document.getElementById('w-children').value=0;
   document.getElementById('w-pets').checked=false;
   document.getElementById('pet-fee-block').style.display='none';
-  document.getElementById('wiz-prepay-block').style.display='none';
   document.getElementById('w-booking-ref').textContent='';
   document.getElementById('w-nights-lbl').textContent='';
-  onSrcChange();toggleWhoField();
-  goStep(1);
+  document.getElementById('wiz-review').innerHTML='';
+  onSrcChange();
+  setCleanerDefault();
+  wizShowStep(1);
 }
 
 function editB(id){
-  const b=S.bookings.find(x=>x.id===id);
-  if(!b)return;
-  wizState.editing=id;
+  const b = S.bookings.find(x=>x.id===id);
+  if(!b) return;
+  wizState.editing = id;
   go('bookings');
   setTimeout(()=>{
-    document.getElementById('w-obj').value=b.obj||'';
-    document.getElementById('w-src').value=b.source||'airbnb';
-    document.getElementById('w-guest').value=b.guest||'';
-    document.getElementById('w-phone').value=b.guestPhone||'';
-    document.getElementById('w-ci').value=b.ci||'';
-    document.getElementById('w-co').value=b.co||'';
-    document.getElementById('w-cur').value=b.currency||'usd';
-    document.getElementById('w-adults').value=b.adults||2;
-    document.getElementById('w-children').value=b.children||0;
-    document.getElementById('w-pets').checked=b.pets||false;
-    document.getElementById('w-cleaner-cost').value=b.cleanerCostGel||50;
-    document.getElementById('w-paytype').value=b.payType||'cash';
-    document.getElementById('w-who').value=b.enteredBy||'olya';
-    document.getElementById('w-fstatus').value=b.finStatus||'full';
-    document.getElementById('w-comment').value=b.comment||'';
-    document.getElementById('w-rate').value=b.exchangeRate||2.65;
-    if(b.pets){
-      document.getElementById('pet-fee-block').style.display='block';
-      if(b.extraFee) document.getElementById('w-pet-fee').value=b.extraFee;
-    }
-    if(b.prepayAmt){
-      document.getElementById('wiz-prepay-block').style.display='block';
-      document.getElementById('w-prepay-amt').value=b.prepayAmt;
-      document.getElementById('w-prepay-rest').value=b.prepayRest||0;
-    }
+    document.getElementById('w-obj').value = b.obj||'';
+    document.getElementById('w-src').value = b.source||'airbnb';
+    document.getElementById('w-guest').value = b.guest||'';
+    document.getElementById('w-ci').value = b.ci||'';
+    document.getElementById('w-co').value = b.co||'';
+    document.getElementById('w-cur').value = b.currency||'usd';
+    document.getElementById('w-adults').value = b.adults||2;
+    document.getElementById('w-children').value = b.children||0;
+    document.getElementById('w-cleaner-cost').value = b.cleanerCostGel||50;
+    document.getElementById('w-paytype').value = b.payType||'cash';
+    document.getElementById('w-who').value = b.enteredBy||'olya';
+    document.getElementById('w-fstatus').value = b.finStatus||'full';
+    document.getElementById('w-comment').value = b.comment||'';
+    document.getElementById('w-rate').value = b.exchangeRate||2.65;
     calcWizNights();
-    onSrcChange();setCleanerCost('default');toggleWhoField();goStep(1);
-    const cl=b.cleaning||0;
-    if(cl===0) setWizClean(0, b.source==='airbnb'?'a':b.source==='booking'?'bk':b.source==='sutochno'?'s':'d');
-    else if(cl===20||cl===25){
-      const pfx=b.source==='airbnb'?'a':b.source==='booking'?'bk':b.source==='sutochno'?'s':'d';
-      setWizClean('default',pfx);
-      // Override with actual value
-      const inp=document.getElementById(pfx==='a'?'a-cleaning':pfx+'-cleaning');
-      if(inp) inp.value=cl;
-    } else {
-      const pfx=b.source==='airbnb'?'a':b.source==='booking'?'bk':b.source==='sutochno'?'s':'d';
-      setWizClean('custom',pfx);
-      const inp=document.getElementById(pfx==='a'?'a-cleaning':pfx+'-cleaning');
-      if(inp) inp.value=cl;
-    }
-    setCleanerCost('default');
-    // Fill platform fields
+    onSrcChange();
+    const cl = b.cleaning||0;
     if(b.source==='airbnb'){
-      document.getElementById('a-accommodation').value=b.accommodationAmount||0;
-      document.getElementById('a-cleaning').value=b.cleaning||0;
-      const gt=document.getElementById('a-guest-total');
-      if(gt) gt.value=b.guestPaid&&b.guestPaid!==b.amount?b.guestPaid:'';
-      calcAirbnbTotals();
+      document.getElementById('a-acc').value = b.accommodationAmount||0;
+      setAirbnbCleaning(cl===20?20:cl===25?25:cl>0?-1:0);
+      if(cl!==20&&cl!==25&&cl>0) document.getElementById('a-clean').value=cl;
+      calcAirbnb();
     } else if(b.source==='booking'){
-      document.getElementById('bk-total').value=b.guestPaid||0;
-      document.getElementById('bk-cleaning').value=b.cleaning||0;
-      const commBase=b.commissionAbs?(b.commissionAbs/1.18):0;
-      document.getElementById('bk-commission').value=commBase.toFixed(2);
-      calcBookingTotals();
+      document.getElementById('bk-total').value = b.guestPaid||0;
+      setBookingCleaning(cl===20?20:cl===25?25:cl>0?-1:0);
+      if(cl!==20&&cl!==25&&cl>0) document.getElementById('bk-clean').value=cl;
+      const commBase = b.commissionAbs ? b.commissionAbs/1.18 : 0;
+      document.getElementById('bk-comm').value = commBase.toFixed(2);
+      calcBooking();
     } else if(b.source==='sutochno'){
-      document.getElementById('s-accommodation').value=b.accommodationAmount||0;
-      document.getElementById('s-cleaning').value=b.cleaning||0;
-      calcSutochnoTotals();
+      document.getElementById('s-acc').value = b.accommodationAmount||0;
+      setSutochnoCleaning(cl===20?20:cl===25?25:cl>0?-1:0);
+      if(cl!==20&&cl!==25&&cl>0) document.getElementById('s-clean').value=cl;
+      calcSutochno();
     } else {
-      document.getElementById('d-total').value=b.guestPaid||0;
-      document.getElementById('d-cleaning').value=b.cleaning||0;
-      calcDirectTotals();
+      document.getElementById('d-total').value = b.guestPaid||0;
     }
-    goStep(1);
+    wizShowStep(1);
   },100);
 }
 
-popMons();initApartments();popSels();onSrcChange();setCleanerCost('default');renderDash();
+popMons();initApartments();popSels();onSrcChange();setCleanerDefault();renderDash();
 </script>
 <script>
 // ============================================================
