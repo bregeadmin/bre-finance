@@ -2314,14 +2314,18 @@ async function parseVoiceWithClaude(text,ctx){
 Сообщение: "${text}"
 
 Формат:
-{"obj":"точное название из списка или null","guest":"имя гостя или null","ci":"YYYY-MM-DD или null","co":"YYYY-MM-DD или null","amount":число или null,"currency":"usd или gel","source":"airbnb/booking/sutochno/direct/other","commissionPct":число,"cleaning":число,"cleaningWho":"client или us","payType":"cash/card/transfer","enteredBy":"olya/artem","finStatus":"full/prepay/pending","prepayAmt":число,"prepayType":"cash/card/transfer","comment":"доп детали или пусто"}
+{"obj":"точное название из списка или null","guest":"имя гостя или null","ci":"YYYY-MM-DD или null","co":"YYYY-MM-DD или null","nights":число или null,"night_price":число или null,"cleaning":число или null,"currency":"usd или gel","source":"airbnb/booking/sutochno/direct","commission":число или null,"payType":"cash/card/transfer/platform","enteredBy":"olya/artem","finStatus":"full/prepay/pending","comment":"доп детали или пусто"}
 
 Правила:
 - Объект: ищи похожее ("белая"="White Camelia","некст"="Next apartment 1718","батуми вью"="Batumi view 606","красная"="Red camelia","корал"="Coral apartment","лермонтова"="Lermontova","кава"="Cozy apart center","гринсайд"="Greenside 603","санрайс"="Sunrise","гранат"="Granat orbi d2 1225","бургунди"="Alliance palace 803 Burgundy")
 - Даты: "с 15 по 20 мая"→ci=${today.substring(0,4)}-05-15,co=${today.substring(0,4)}-05-20
 - "X ночей с Y" → посчитай дату выезда
-- Комиссия: airbnb=3%, booking=15%, суточно=20%, прямое=0%
-- "аванс/предоплата X"→finStatus=prepay,prepayAmt=X`;
+- "35 долларов ночь" или "цена 35" → night_price=35
+- "уборка 20" → cleaning=20
+- "airbnb" → source=airbnb, payType=platform
+- "суточно" → source=sutochno
+- "прямое/напрямую" → source=direct
+- "аванс/предоплата" → finStatus=prepay`;
   }
 
   try{
@@ -2453,34 +2457,46 @@ function parseVoiceLocal(text){
 
 function applyVoiceData(d,originalText){
   let filled=[];
-  if(d.obj){document.getElementById('w-obj').value=d.obj;filled.push('объект');}
-  if(d.guest){document.getElementById('w-guest').value=d.guest;filled.push('гость');}
-  if(d.ci){const el=document.getElementById('w-ci');if(el){el.value=d.ci;calcWizNights();}filled.push('заезд');}
-  if(d.co){const el=document.getElementById('w-co');if(el){el.value=d.co;calcWizNights();}filled.push('выезд');}
-  if(d.amount){document.getElementById('b-amt').value=d.amount;filled.push('сумма');}
-  if(d.currency)document.getElementById('b-cur').value=d.currency;
-  if(d.source){document.getElementById('b-src').value=d.source;togC();}
-  if(d.commissionPct!==undefined)document.getElementById('b-cp').value=d.commissionPct;
-  if(d.cleaning)document.getElementById('b-cl').value=d.cleaning;
-  if(d.cleaningWho)document.getElementById('b-cl-who').value=d.cleaningWho;
-  if(d.payType)document.getElementById('b-paytype').value=d.payType;
-  if(d.enteredBy)document.getElementById('b-who').value=d.enteredBy;
-  if(d.finStatus){
-    document.getElementById('w-fstatus').value=d.finStatus;
-    toggleFinStatus();
+
+  // Step 1 fields
+  if(d.obj){const el=document.getElementById('w-obj');if(el){el.value=d.obj;filled.push('объект');}}
+  if(d.guest){const el=document.getElementById('w-guest');if(el){el.value=d.guest;filled.push('гость');}}
+  if(d.source){const el=document.getElementById('w-src');if(el){el.value=d.source;onSrcChange();filled.push('платформа');}}
+  if(d.ci){const el=document.getElementById('w-ci');if(el){el.value=d.ci;calcWizNights();filled.push('заезд');}}
+  if(d.co){const el=document.getElementById('w-co');if(el){el.value=d.co;calcWizNights();filled.push('выезд');}}
+  if(d.currency){const el=document.getElementById('w-cur');if(el)el.value=d.currency;}
+
+  // Step 2 - unified night price
+  if(d.night_price){
+    const el=document.getElementById('night-price');
+    if(el){el.value=d.night_price;filled.push('цена ночи');}
   }
-  if(d.prepayAmt&&d.finStatus==='prepay'){
-    document.getElementById('b-pre-amt').value=d.prepayAmt;
-    if(d.prepayType)document.getElementById('b-pre-type').value=d.prepayType;
+  if(d.cleaning){
+    setUnivCleaning(d.cleaning===20?20:d.cleaning===25?25:d.cleaning>0?-1:0);
+    if(d.cleaning!==20&&d.cleaning!==25&&d.cleaning>0){
+      const el=document.getElementById('univ-clean');if(el)el.value=d.cleaning;
+    }
+    filled.push('уборка');
   }
-  if(d.comment)document.getElementById('b-comment').value=d.comment;
-  // Auto-calc nights and preview
-  autoN();calcP();
+  // Booking commission
+  if(d.commission){
+    const el=document.getElementById('bk-comm');if(el){el.value=d.commission;filled.push('комиссия');}
+  }
+  // Recalculate
+  calcFromNight();
+
+  // Admin fields
+  if(d.payType){const el=document.getElementById('w-paytype');if(el){el.value=d.payType;togglePayFields();}}
+  if(d.enteredBy){const el=document.getElementById('w-who');if(el)el.value=d.enteredBy;}
+  if(d.finStatus){const el=document.getElementById('w-fstatus');if(el)el.value=d.finStatus;}
+  if(d.comment){const el=document.getElementById('w-comment');if(el)el.value=d.comment;}
+
   const missing=[];
   if(!d.obj)missing.push('объект');
   if(!d.ci)missing.push('дата заезда');
-  if(!d.co)missing.push('дата выезда');
-  if(!d.amount)missing.push('сумма');
+  if(!d.co&&!d.nights)missing.push('дата выезда');
+  if(!d.night_price)missing.push('цена ночи');
+
   const msg=filled.length?
     `✅ Заполнено: ${filled.join(', ')}${missing.length?' · ⚠️ Уточните: '+missing.join(', '):''}`:
     '⚠️ Не удалось разобрать. Попробуйте сказать иначе.';
