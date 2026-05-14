@@ -2271,11 +2271,7 @@ function goStep(n){
     const co=document.getElementById('w-co').value;
     if(!obj||!ci||!co){alert('Заполните объект и даты');return;}
   }
-  if(n===3){
-    buildReview();
-    const cc=document.getElementById('w-cleaner-cost');
-    if(cc){const el=document.getElementById('review-cleaner-cost');if(el)el.textContent='₾'+(cc.value||50);}
-  }
+  if(n===3) buildReview();
   wizState.step=n;
   [1,2,3,4].forEach(i=>{
     const step=document.getElementById('wiz-step-'+i);
@@ -2485,27 +2481,8 @@ function recalcCurrentPlatform(){
 }
 
 function calcStep3(){
-  const src=getWizSrc();
-  const cur=getWizCur();
-  const rate=getWizRate();
-  const cleanerCostGel=parseFloat(document.getElementById('w-cleaner-cost').value)||0;
-  const cleanerCostUsd=cleanerCostGel/rate;
-  // Update preview
-  const preview=document.getElementById('cleaner-cost-preview');
-  if(preview) preview.textContent='₾'+cleanerCostGel;
-  let cleaningCharged=0;
-  if(src==='airbnb') cleaningCharged=parseFloat(document.getElementById('a-cleaning').value)||0;
-  else if(src==='booking') cleaningCharged=parseFloat(document.getElementById('bk-cleaning').value)||0;
-  else if(src==='sutochno') cleaningCharged=parseFloat(document.getElementById('s-cleaning').value)||0;
-  else cleaningCharged=parseFloat(document.getElementById('d-cleaning').value)||0;
-  const cleaningChargedUsd=cur==='gel'?cleaningCharged/rate:cleaningCharged;
-  const margin=cleaningChargedUsd-cleanerCostUsd;
-  const sym=cur==='gel'?'₾':'$';
-  document.getElementById('cleaning-margin').textContent=
-    (margin>=0?'+':'')+fu2(Math.abs(margin),'usd');
-  document.getElementById('cleaning-margin').style.color=margin>=0?'var(--sage)':'var(--pink-d)';
-  document.getElementById('cleaning-margin-hint').textContent=
-    cleaningCharged>0?`${sym}${cleaningCharged.toFixed(0)} от гостя − ₾${cleanerCostGel} клинеру`:'Уборка не указана';
+  // Just recalc platform totals - margin shown in review
+  recalcCurrentPlatform();
 }
 
 function toggleWizPrepay(){
@@ -2578,19 +2555,20 @@ async function fetchTBCRate(){
 }
 
 function buildReview(){
+  try{
   const src=getWizSrc();
   const cur=getWizCur();
   const rate=getWizRate();
-  const apt=getWizApt();
+  const apt=getWizApt()||'Объект';
   const nights=parseInt(document.getElementById('w-nights').value)||0;
   const obj=document.getElementById('w-obj').value;
   const guest=document.getElementById('w-guest').value||'Гость';
-  const ci=document.getElementById('w-ci').value;
-  const co=document.getElementById('w-co').value;
-  const opPct=opct(obj,nights);
-  const sym=cur==='gel'?'₾':'$';
+  const ci=document.getElementById('w-ci').value||'—';
+  const co=document.getElementById('w-co').value||'—';
+  const opPct=obj?opct(obj,nights):0.70;
   const pet=getPetFee();
-  const cleanerCostGel=parseFloat(document.getElementById('w-cleaner-cost').value)||0;
+  const cleanerCostEl=document.getElementById('w-cleaner-cost');
+  const cleanerCostGel=cleanerCostEl?parseFloat(cleanerCostEl.value)||0:0;
 
   let payout=0,totalGuest=0,accommodation=0,cleaning=0,platformFees=0;
   let platformLabel='';
@@ -2703,6 +2681,10 @@ function buildReview(){
   </div>`;
 
   document.getElementById('wiz-review').innerHTML=html;
+  }catch(e){
+    console.error('buildReview error:',e);
+    document.getElementById('wiz-review').innerHTML=`<div style="padding:16px;color:var(--pink-d)">Ошибка отображения: ${e.message}. Проверьте заполненность полей.</div>`;
+  }
 }
 
 function submitWizard(){
