@@ -1008,7 +1008,7 @@ if(eBid){const i=S.bookings.findIndex(x=>x.id===eBid);if(i!==-1)S.bookings[i]={.
 else S.bookings.push({id:Date.now(),...data});
 save();canB();renderB();renderDash();
 }
-function delB(id){if(!confirm('Удалить бронирование?'))return;S.bookings=S.bookings.filter(b=>b.id!==id);save();renderB();renderDash();}
+function delB(id){if(!confirm('Удалить бронирование?'))return;S.bookings=S.bookings.filter(b=>b.id!==id);save();sbDelete('bookings',id).catch(e=>console.warn(e));renderB();renderDash();}
 function editE(id){const e=S.expenses.find(x=>x.id===id);if(!e)return;eEid=id;
 document.getElementById('e-obj').value=e.obj;document.getElementById('e-cat').value=e.cat;
 document.getElementById('e-amt').value=e.amount;document.getElementById('e-cur').value=e.currency;
@@ -1033,7 +1033,7 @@ if(eEid){const i=S.expenses.findIndex(x=>x.id===eEid);if(i!==-1)S.expenses[i]={.
 else S.expenses.push({id:Date.now(),...data});
 save();['e-amt','e-cm','e-free-cat'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});canE();renderE();
 }
-function delE(id){if(!confirm('Удалить расход?'))return;S.expenses=S.expenses.filter(e=>e.id!==id);save();renderE();}
+function delE(id){if(!confirm('Удалить расход?'))return;S.expenses=S.expenses.filter(e=>e.id!==id);save();sbDelete('expenses',id).catch(e=>console.warn(e));renderE();}
 function getStats(fm){
 const bks=fm==='all'?S.bookings:S.bookings.filter(b=>mkey(b.ci)===fm);
 const exps=fm==='all'?S.expenses:S.expenses.filter(e=>mkey(e.date)===fm);
@@ -2477,24 +2477,7 @@ function buildReview(){
         </label>
       </div>
     </div>
-    <div style="background:var(--bg3);border-radius:8px;padding:12px;margin-bottom:14px">
-      <div style="font-size:10px;font-weight:700;color:var(--t3);text-transform:uppercase;margin-bottom:10px">⚙️ Параметры</div>
-      <div style="display:flex;flex-wrap:wrap;gap:12px;align-items:center">
-        <div style="display:flex;align-items:center;gap:6px;font-size:12px">
-          <span style="color:var(--t2)">% собственнику:</span>
-          <input type="number" id="rev-owner-pct" value="70" min="0" max="100" style="width:60px;padding:4px 6px;border:1px solid var(--bdr);border-radius:6px;background:var(--bg2);font-size:12px" oninput="buildReview()">
-          <span style="color:var(--t3)">%</span>
-        </div>
-        <label style="display:flex;align-items:center;gap:6px;font-size:12px;cursor:pointer">
-          <input type="checkbox" id="rev-create-cleaner" checked>
-          <span>🧹 Создать расход клинера</span>
-        </label>
-        <label style="display:flex;align-items:center;gap:6px;font-size:12px;cursor:pointer">
-          <input type="checkbox" id="rev-create-laundry" checked>
-          <span>🧺 Создать прачечную</span>
-        </label>
-      </div>
-    </div>
+
       <div style="display:flex;gap:8px">
         <div style="flex:1;background:var(--bg2);border-radius:6px;padding:8px 10px;display:flex;gap:8px;align-items:center">
           <span style="font-size:18px">🧹</span>
