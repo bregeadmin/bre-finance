@@ -20,7 +20,7 @@
 .step-line{flex:1;height:2px;background:var(--bdr);margin:0 6px;min-width:20px}
 @media(max-width:500px){.step-lbl{display:none}.step-line{min-width:10px}}
 
-.si{background:var(--bg3);border:1px solid var(--bdr);border-radius:var(--r8);padding:7px 10px;font-size:13px;color:var(--t1);font-family:inherit;outline:none}.si:focus{border-color:var(--pink)}
+@keyframes spin{to{transform:rotate(360deg)}}.si{background:var(--bg3);border:1px solid var(--bdr);border-radius:var(--r8);padding:7px 10px;font-size:13px;color:var(--t1);font-family:inherit;outline:none}.si:focus{border-color:var(--pink)}
 .mob-menu-btn{display:none;width:34px;height:34px;border-radius:var(--r8);border:1px solid var(--bdr);background:transparent;cursor:pointer;align-items:center;justify-content:center;color:var(--t2);font-size:18px;flex-shrink:0}
 .sb-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.4);z-index:99}
 @media(max-width:680px){
@@ -154,7 +154,24 @@ input[type=date]{max-width:100%;font-size:13px}
   <!-- Collapsed header - always visible -->
   <div id="wiz-collapsed" style="padding:12px 18px;display:flex;align-items:center;justify-content:space-between">
     <span style="font-size:13px;font-weight:600;color:var(--t2)">Бронирования</span>
-    <button class="btn btn-pk btn-xs" onclick="toggleWizard()"><i class="ti ti-plus" aria-hidden="true"></i> Новое бронирование</button>
+    <div style="display:flex;gap:8px">
+      <button class="btn btn-gh btn-xs" onclick="toggleScreenshot()"><i class="ti ti-camera" aria-hidden="true"></i> Из скриншота</button>
+      <button class="btn btn-pk btn-xs" onclick="toggleWizard()"><i class="ti ti-plus" aria-hidden="true"></i> Новое бронирование</button>
+    </div>
+  </div>
+
+  <!-- Screenshot drop zone -->
+  <div id="screenshot-zone" style="display:none;border-top:1px solid var(--bdr);padding:20px 18px">
+    <div id="drop-area" onclick="document.getElementById('scr-file').click()"
+      ondrop="handleScreenDrop(event)" ondragover="event.preventDefault();this.style.borderColor='var(--pink)'" ondragleave="this.style.borderColor='var(--bdr)'"
+      style="border:2px dashed var(--bdr);border-radius:14px;padding:32px 20px;text-align:center;cursor:pointer;transition:all .2s;background:var(--bg3)">
+      <div style="font-size:28px;margin-bottom:8px">📸</div>
+      <div style="font-size:14px;font-weight:600;color:var(--t1);margin-bottom:4px">Перетяни скриншот сюда</div>
+      <div style="font-size:12px;color:var(--t3)">или нажми чтобы выбрать файл</div>
+      <div style="font-size:11px;color:var(--t3);margin-top:8px">Airbnb · Booking · Суточно</div>
+    </div>
+    <input type="file" id="scr-file" accept="image/*" style="display:none" onchange="handleScreenFile(event)">
+    <div id="scr-status" style="margin-top:12px;text-align:center;font-size:13px;color:var(--t3);display:none"></div>
   </div>
   <!-- Expanded wizard content -->
   <div id="wiz-expanded" style="display:none;border-top:1px solid var(--bdr)">
@@ -2554,6 +2571,151 @@ function wizShowStep(n){
   });
 }
 
+function toggleScreenshot(){
+  const z=document.getElementById('screenshot-zone');
+  const exp=document.getElementById('wiz-expanded');
+  const open=z.style.display==='none';
+  z.style.display=open?'block':'none';
+  if(open && exp.style.display!=='none'){
+    toggleWizard(false);
+  }
+}
+
+function handleScreenDrop(e){
+  e.preventDefault();
+  document.getElementById('drop-area').style.borderColor='var(--bdr)';
+  const file=e.dataTransfer.files[0];
+  if(file && file.type.startsWith('image/')) processScreenshot(file);
+}
+
+function handleScreenFile(e){
+  const file=e.target.files[0];
+  if(file) processScreenshot(file);
+  e.target.value='';
+}
+
+async function processScreenshot(file){
+  const status=document.getElementById('scr-status');
+  const dropArea=document.getElementById('drop-area');
+  status.style.display='block';
+  status.innerHTML='<i class="ti ti-loader" style="animation:spin 1s linear infinite"></i> Анализирую скриншот...';
+  dropArea.style.opacity='0.5';
+
+  try{
+    const base64=await new Promise((res,rej)=>{
+      const r=new FileReader();
+      r.onload=()=>res(r.result.split(',')[1]);
+      r.onerror=rej;
+      r.readAsDataURL(file);
+    });
+
+    const apiKey=localStorage.getItem('bre_api_key');
+    if(!apiKey){
+      status.innerHTML='❌ Нужен API ключ Claude. Введите его при входе.';
+      dropArea.style.opacity='1';
+      return;
+    }
+
+    const objList=OBJ.join(', ');
+    const prompt=`Это скриншот бронирования с платформы (Airbnb, Booking или Суточно).
+Извлеки данные и верни ТОЛЬКО JSON без пояснений:
+{
+  "source": "airbnb" | "booking" | "sutochno" | "direct",
+  "guest": "имя гостя",
+  "ci": "YYYY-MM-DD",
+  "co": "YYYY-MM-DD",
+  "nights": число,
+  "accommodation": число (стоимость ночей без уборки),
+  "cleaning": число (уборка, 0 если нет),
+  "host_fee": число (сбор с хозяина у Airbnb, 0 если нет),
+  "total_guest": число (итого уплачено гостем, 0 если нет),
+  "commission": число (комиссия Booking, 0 если нет),
+  "currency": "usd" | "gel",
+  "obj_guess": "предполагаемый объект если видно название, иначе пусто"
+}
+Объекты в системе: ${objList}`;
+
+    const resp=await fetch('https://api.anthropic.com/v1/messages',{
+      method:'POST',
+      headers:{
+        'Content-Type':'application/json',
+        'x-api-key':apiKey,
+        'anthropic-version':'2023-06-01',
+        'anthropic-dangerous-direct-browser-access':'true'
+      },
+      body:JSON.stringify({
+        model:'claude-haiku-4-5-20251001',
+        max_tokens:500,
+        messages:[{role:'user',content:[
+          {type:'image',source:{type:'base64',media_type:file.type,data:base64}},
+          {type:'text',text:prompt}
+        ]}]
+      })
+    });
+
+    const data=await resp.json();
+    const text=data.content?.[0]?.text||'';
+    const json=JSON.parse(text.replace(/```json|```/g,'').trim());
+
+    // Fill wizard fields
+    toggleWizard(true);
+    document.getElementById('screenshot-zone').style.display='none';
+
+    setTimeout(()=>{
+      // Source
+      document.getElementById('w-src').value=json.source||'airbnb';
+      // Guest
+      if(json.guest) document.getElementById('w-guest').value=json.guest;
+      // Dates
+      if(json.ci) document.getElementById('w-ci').value=json.ci;
+      if(json.co) document.getElementById('w-co').value=json.co;
+      // Currency
+      if(json.currency) document.getElementById('w-cur').value=json.currency;
+      // Object guess
+      if(json.obj_guess && OBJ.includes(json.obj_guess)){
+        document.getElementById('w-obj').value=json.obj_guess;
+      }
+      calcWizNights();
+      onSrcChange();
+      setCleanerDefault();
+
+      // Fill financial fields based on source
+      if(json.source==='airbnb'||!json.source){
+        if(json.accommodation) document.getElementById('a-acc').value=json.accommodation;
+        if(json.cleaning) setAirbnbCleaning(json.cleaning===20?20:json.cleaning===25?25:-1);
+        if(json.cleaning&&json.cleaning!==20&&json.cleaning!==25) document.getElementById('a-clean').value=json.cleaning;
+        if(json.total_guest) document.getElementById('a-guest-total').value=json.total_guest;
+        calcAirbnb();
+      } else if(json.source==='booking'){
+        if(json.accommodation) document.getElementById('bk-total').value=json.accommodation+(json.cleaning||0);
+        if(json.cleaning) setBookingCleaning(json.cleaning===20?20:json.cleaning===25?25:-1);
+        if(json.commission) document.getElementById('bk-comm').value=json.commission;
+        calcBooking();
+      } else if(json.source==='sutochno'){
+        if(json.accommodation) document.getElementById('s-acc').value=json.accommodation;
+        if(json.cleaning) setSutochnoCleaning(json.cleaning===20?20:json.cleaning===25?25:-1);
+        calcSutochno();
+      }
+
+      wizShowStep(1);
+      status.style.display='none';
+      dropArea.style.opacity='1';
+
+      // Show success with what was found
+      const found=[];
+      if(json.guest) found.push('гость: '+json.guest);
+      if(json.ci) found.push('заезд: '+json.ci);
+      if(json.co) found.push('выезд: '+json.co);
+      if(json.accommodation) found.push('сумма: '+json.accommodation);
+      alert('✅ Распознано: '+found.join(' · ')+'\n\nПроверьте данные и при необходимости скорректируйте.');
+    },300);
+
+  }catch(e){
+    console.error(e);
+    status.innerHTML='❌ Ошибка распознавания. Попробуйте другой скриншот.';
+    dropArea.style.opacity='1';
+  }
+}
 function toggleWizard(forceOpen){
   const exp=document.getElementById('wiz-expanded');
   const col=document.getElementById('wiz-collapsed');
