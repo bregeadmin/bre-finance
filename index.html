@@ -226,15 +226,18 @@ input[type=date]{max-width:100%;font-size:13px}
 </div>
 <!-- Expense detail modal -->
 <div id="expense-modal" style="display:none;position:fixed;inset:0;z-index:1000;background:rgba(0,0,0,.45);backdrop-filter:blur(4px)" onclick="if(event.target===this)closeExpenseModal()">
-  <div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:min(480px,95vw);background:var(--bg2);border-radius:18px;box-shadow:0 24px 60px rgba(0,0,0,.3)">
-    <div style="padding:18px 20px;border-bottom:1px solid var(--bdr);display:flex;align-items:center;justify-content:space-between">
+  <div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:min(480px,95vw);max-height:92vh;overflow-y:auto;background:var(--bg2);border-radius:18px;box-shadow:0 24px 60px rgba(0,0,0,.3)">
+    <div style="padding:16px 20px;border-bottom:1px solid var(--bdr);display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;background:var(--bg2);z-index:1">
       <div style="font-size:15px;font-weight:700" id="em-title">Расход</div>
-      <button onclick="closeExpenseModal()" style="width:30px;height:30px;border:none;background:var(--bg3);border-radius:50%;cursor:pointer;font-size:16px;color:var(--t2)">×</button>
+      <div style="display:flex;gap:8px;align-items:center">
+        <button class="btn btn-gh btn-xs" id="em-mode-btn" onclick="toggleEMEdit()"><i class="ti ti-edit"></i> Изменить</button>
+        <button onclick="closeExpenseModal()" style="width:28px;height:28px;border:none;background:var(--bg3);border-radius:50%;cursor:pointer;font-size:16px;color:var(--t2)">×</button>
+      </div>
     </div>
     <div id="em-content" style="padding:18px 20px"></div>
-    <div style="padding:14px 20px;border-top:1px solid var(--bdr);display:flex;gap:8px;justify-content:flex-end">
-      <button class="btn btn-gh" onclick="closeExpenseModal()">Закрыть</button>
-      <button class="btn btn-pk" onclick="const _id=window._emId;closeExpenseModal();editE(_id)"><i class="ti ti-edit"></i> Изменить</button>
+    <div id="em-footer" style="padding:14px 20px;border-top:1px solid var(--bdr);display:none;gap:8px;justify-content:flex-end">
+      <button class="btn btn-gh" onclick="closeExpenseModal()">Отмена</button>
+      <button class="btn btn-pk" onclick="saveEMEdit()"><i class="ti ti-check"></i> Сохранить</button>
     </div>
   </div>
 </div>
@@ -2975,15 +2978,69 @@ function closeExpenseModal(){
   window._emId=null;
 }
 
-function openExpenseModal(id){
+function toggleEMEdit(){
+  const id=window._emId;
+  if(!id) return;
+  document.getElementById('em-mode-btn').style.display='none';
+  document.getElementById('em-footer').style.display='flex';
+  openExpenseModal(id, true);
+}
+
+function saveEMEdit(){
+  const id=window._emId;
+  const i=S.expenses.findIndex(e=>e.id===id);
+  if(i===-1) return;
+  const e=S.expenses[i];
+  const amt=parseFloat(document.getElementById('eme-amt')?.value)||0;
+  const cur=document.getElementById('eme-cur')?.value||'gel';
+  const rate=S.gelRate||2.65;
+  e.obj=document.getElementById('eme-obj')?.value||e.obj;
+  e.cat=document.getElementById('eme-cat')?.value||e.cat;
+  e.amount=amt;
+  e.currency=cur;
+  e.amountUsd=cur==='gel'?amt/rate:amt;
+  e.date=document.getElementById('eme-date')?.value||e.date;
+  e.comment=document.getElementById('eme-comment')?.value||'';
+  e.paidBy=document.getElementById('eme-paid')?.value||e.paidBy;
+  e.enteredBy=document.getElementById('eme-who')?.value||e.enteredBy;
+  e.pending=!amt||amt===0;
+  save();
+  sbUpsert('expenses',[eToDb(e)]).catch(err=>console.warn(err));
+  renderE();
+  openExpenseModal(id, false);
+  document.getElementById('em-mode-btn').style.display='';
+  document.getElementById('em-footer').style.display='none';
+}
+
+function openExpenseModal(id, editMode=false){
   const e=S.expenses.find(x=>x.id===id);
   if(!e) return;
   window._emId=id;
   const isPending=e.pending&&(!e.amount||e.amount===0);
   const catLabel=CATLBL[e.cat]||e.cat;
-  const row=(l,v,color='var(--t1)')=>`<div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--bdr);font-size:13px"><span style="color:var(--t3)">${l}</span><span style="font-weight:500;color:${color}">${v}</span></div>`;
+  const ist='background:var(--bg2);border:1.5px solid var(--bdr);border-radius:8px;padding:6px 10px;font-size:13px;color:var(--t1);font-family:inherit;outline:none;width:100%';
   document.getElementById('em-title').textContent=`${catLabel} · ${e.obj==='__all'?'Общий':e.obj}`;
-  document.getElementById('em-content').innerHTML=`
+
+  if(editMode){
+    const objOpts=['__all',...OBJ].map(o=>`<option value="${o}" ${e.obj===o?'selected':''}>${o==='__all'?'Общий':o}</option>`).join('');
+    const catOpts=Object.entries(CATLBL).map(([k,v])=>`<option value="${k}" ${e.cat===k?'selected':''}>${v}</option>`).join('');
+    const curOpts=['gel','usd'].map(c=>`<option value="${c}" ${(e.currency||'gel')===c?'selected':''}>${c.toUpperCase()}</option>`).join('');
+    const whoOpts=`<option value="olya" ${e.enteredBy==='olya'?'selected':''}>Оля</option><option value="artem" ${e.enteredBy==='artem'?'selected':''}>Артём</option>`;
+    const paidOpts=`<option value="company" ${(e.paidBy||'company')==='company'?'selected':''}>Компания</option><option value="owner" ${e.paidBy==='owner'?'selected':''}>Собственник</option><option value="olya" ${e.paidBy==='olya'?'selected':''}>Оля</option><option value="artem" ${e.paidBy==='artem'?'selected':''}>Артём</option>`;
+    document.getElementById('em-content').innerHTML=`
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+      <div class="fg"><label style="font-size:11px;color:var(--t3)">Объект</label><select id="eme-obj" style="${ist}">${objOpts}</select></div>
+      <div class="fg"><label style="font-size:11px;color:var(--t3)">Категория</label><select id="eme-cat" style="${ist}">${catOpts}</select></div>
+      <div class="fg"><label style="font-size:11px;color:var(--t3)">Сумма</label><input id="eme-amt" type="number" value="${e.amount||''}" placeholder="0" style="${ist}"></div>
+      <div class="fg"><label style="font-size:11px;color:var(--t3)">Валюта</label><select id="eme-cur" style="${ist}">${curOpts}</select></div>
+      <div class="fg"><label style="font-size:11px;color:var(--t3)">Дата</label><input id="eme-date" type="date" value="${e.date||''}" style="${ist}"></div>
+      <div class="fg"><label style="font-size:11px;color:var(--t3)">Кто платит</label><select id="eme-paid" style="${ist}">${paidOpts}</select></div>
+      <div class="fg"><label style="font-size:11px;color:var(--t3)">Кто вносит</label><select id="eme-who" style="${ist}">${whoOpts}</select></div>
+      <div class="fg" style="grid-column:span 2"><label style="font-size:11px;color:var(--t3)">Комментарий</label><input id="eme-comment" type="text" value="${e.comment||''}" style="${ist}"></div>
+    </div>`;
+  } else {
+    const row=(l,v,color='var(--t1)')=>`<div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--bdr);font-size:13px"><span style="color:var(--t3)">${l}</span><span style="font-weight:500;color:${color}">${v}</span></div>`;
+    document.getElementById('em-content').innerHTML=`
     <div style="background:var(--bg3);border-radius:10px;padding:14px">
       ${isPending?`<div style="background:var(--pink-bg);border-radius:8px;padding:10px;margin-bottom:10px;font-size:12px;color:var(--pink-d);font-weight:500">⏳ Сумма не указана</div>`:''}
       ${row('Объект',e.obj==='__all'?'Общий':e.obj)}
@@ -2995,6 +3052,7 @@ function openExpenseModal(id){
       ${row('Кто платит',e.paidBy==='owner'?'Собственник':'Компания')}
       ${row('Внёс',e.enteredBy==='olya'?'Оля':'Артём')}
     </div>`;
+  }
   document.getElementById('expense-modal').style.display='block';
 }
 
