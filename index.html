@@ -138,8 +138,13 @@ input[type=date]{max-width:100%;font-size:13px}
 <div class="metric"><div class="mi mi-s"><i class="ti ti-moon" aria-hidden="true"></i></div><div class="m-lbl">Ночей продано</div><div class="m-val" id="m-n">0</div></div>
 </div>
 <div class="card">
-<div class="card-h"><div class="card-t"><i class="ti ti-building-skyscraper" aria-hidden="true"></i> По объектам</div><span style="font-size:11px;color:var(--t3)">Текущий месяц</span></div>
-<table><thead><tr><th>Объект</th><th>Ночей</th><th>Собрано</th><th>Комиссия</th><th>Чистая</th><th>Собственнику</th><th>Нам</th></tr></thead><tbody id="dash-tb"></tbody></table>
+<div class="card-h"><div class="card-t"><i class="ti ti-building-skyscraper" aria-hidden="true"></i> По объектам</div>
+<div style="display:flex;gap:2px;background:var(--bg3);padding:3px;border-radius:var(--r8)">
+  <button class="tab active" id="dash-tab-bk" onclick="setDashView('bookings')">Бронирования</button>
+  <button class="tab" id="dash-tab-obj" onclick="setDashView('objects')">По объектам</button>
+</div>
+</div>
+<table><thead><tr id="dash-thead"><th>Объект</th><th>Гость</th><th>Период</th><th>Ночей</th><th>Собрано</th><th>Собственнику</th><th>Нам</th></tr></thead><tbody id="dash-tb"></tbody></table>
 </div>
 </div>
 <div class="page" id="page-bookings">
@@ -450,7 +455,18 @@ input[type=date]{max-width:100%;font-size:13px}
 </div></div>
 <div class="card">
 <div class="card-h"><div class="card-t"><i class="ti ti-table" aria-hidden="true"></i> P&L по объектам</div></div>
-<table><thead><tr><th>Объект</th><th>Ночей</th><th>Собрано</th><th>Ком.</th><th>Чистая</th><th>Собств.</th><th>Наша доля</th><th>Расходы</th><th>Прибыль</th></tr></thead><tbody id="pnl-tb"></tbody></table>
+<table style="table-layout:fixed;width:100%">
+<thead><tr>
+<th style="width:160px">Объект</th>
+<th style="width:60px">Ночей</th>
+<th style="width:90px">Собрано</th>
+<th style="width:80px">Ком.</th>
+<th style="width:90px">Чистая</th>
+<th style="width:90px">Собств.</th>
+<th style="width:90px">Наша доля</th>
+<th style="width:80px">Расходы</th>
+<th style="width:90px">Прибыль</th>
+</tr></thead><tbody id="pnl-tb"></tbody></table>
 <div style="border-top:1px solid var(--bdr)"><table><tbody id="pnl-tot"></tbody></table></div>
 </div>
 </div>
@@ -1212,13 +1228,65 @@ let tG=0,tC=0,tN=0,tOP=0,tOS=0,tOE=0,tCM=0;
 OBJ.forEach(o=>{const d=bo[o];tG+=d.g;tC+=d.comm;tN+=d.payout;tOP+=(d.ob-d.ce);tOS+=d.os;tOE+=d.oe;tCM+=d.cleaningMargin;});
 return{bo,tG,tC,tN,tOP,tOS,tOE,tCM};
 }
+let dashView = 'bookings';
+function setDashView(v){
+  dashView=v;
+  document.getElementById('dash-tab-bk').classList.toggle('active',v==='bookings');
+  document.getElementById('dash-tab-obj').classList.toggle('active',v==='objects');
+  if(v==='bookings'){
+    document.getElementById('dash-thead').innerHTML='<th>Объект</th><th>Гость</th><th>Период</th><th>Ночей</th><th>Собрано</th><th>Собственнику</th><th>Нам</th>';
+  } else {
+    document.getElementById('dash-thead').innerHTML='<th>Объект</th><th>Ночей</th><th>Собрано</th><th>Комиссия</th><th>Чистая</th><th>Собственнику</th><th>Нам</th>';
+  }
+  renderDash();
+}
+
 function renderDash(){
 const{bo,tG,tC,tOS,tOE}=getStats(cmon());
 document.getElementById('m-g').textContent=fu(tG);document.getElementById('m-c').textContent=fu(tC);
 document.getElementById('m-p').textContent=fu(tOS-tOE);document.getElementById('m-n').textContent=OBJ.reduce((s,o)=>s+bo[o].nights,0);
-const rows=OBJ.filter(o=>bo[o].g>0);const tb=document.getElementById('dash-tb');
-if(!rows.length){tb.innerHTML='<tr><td colspan="7"><div class="empty"><i class="ti ti-calendar-off" aria-hidden="true"></i><span>Нет бронирований в текущем месяце</span></div></td></tr>';return;}
-tb.innerHTML=rows.map(o=>{const d=bo[o];const u=d.os-d.oe;return`<tr><td class="s">${o}</td><td>${d.nights}</td><td style="color:var(--sage)">${fu(d.g)}</td><td style="color:var(--pink-d)">${fu(d.comm)}</td><td>${fu(d.payout)}</td><td style="color:var(--beige-d)">${fu(d.ob-d.ce)}</td><td style="color:${u>=0?'var(--sage)':'var(--pink-d)'};font-weight:600">${fu(u)}</td></tr>`;}  ).join('');
+const tb=document.getElementById('dash-tb');
+const fm=cmon();
+
+if(dashView==='objects'){
+  const rows=OBJ.filter(o=>bo[o].g>0);
+  if(!rows.length){tb.innerHTML='<tr><td colspan="7"><div class="empty"><i class="ti ti-calendar-off" aria-hidden="true"></i><span>Нет бронирований в текущем месяце</span></div></td></tr>';return;}
+  tb.innerHTML=rows.map(o=>{const d=bo[o];const u=d.os-d.oe;return`<tr>
+    <td class="s">${o}</td><td>${d.nights}</td>
+    <td style="color:var(--sage)">${fu(d.g)}</td>
+    <td style="color:var(--pink-d)">${d.comm>0?fu(d.comm):'—'}</td>
+    <td>${fu(d.payout)}</td>
+    <td style="color:var(--beige-d)">${fu(d.ob-d.ce)}</td>
+    <td style="color:${u>=0?'var(--sage)':'var(--pink-d)'};font-weight:600">${fu(u)}</td>
+  </tr>`;}).join('');
+  return;
+}
+
+// Bookings view
+const monthBks=[];
+S.bookings.forEach(b=>{
+  const parts=splitBookingByMonth(b);
+  const part=parts.find(p=>p.monthKey===fm);
+  if(!part) return;
+  const c=cB(b);
+  const frac=part.fraction;
+  const isPartial=parts.length>1;
+  monthBks.push({b,c,frac,isPartial,nights:part.nights});
+});
+monthBks.sort((a,b)=>a.b.ci.localeCompare(b.b.ci));
+if(!monthBks.length){tb.innerHTML='<tr><td colspan="7"><div class="empty"><i class="ti ti-calendar-off" aria-hidden="true"></i><span>Нет бронирований в текущем месяце</span></div></td></tr>';return;}
+tb.innerHTML=monthBks.map(({b,c,frac,isPartial,nights})=>{
+  const partialBadge=isPartial?`<span class="pill pb" style="font-size:9px;margin-left:4px">частичное</span>`:'';
+  const srcLabel=SRCLBL[b.source]||b.source;
+  return`<tr style="cursor:pointer" onclick="go('bookings');setTimeout(()=>{const el=document.querySelector('[data-bid=\'${b.id}\']');if(el){el.scrollIntoView({behavior:'smooth'});el.style.background='var(--pink-bg)';setTimeout(()=>el.style.background='',2000);}},300)">
+    <td class="s">${b.obj}</td>
+    <td>${b.guest||'—'}${partialBadge}<br><span style="font-size:10px;color:var(--t3)">${srcLabel}</span></td>
+    <td style="font-size:11px">${b.ci} → ${b.co}</td>
+    <td>${nights}${isPartial?`<span style="color:var(--t3);font-size:10px"> из ${b.nights}</span>`:''}</td>
+    <td style="color:var(--sage)">${fu(c.g*frac)}</td>
+    <td style="color:var(--beige-d)">${fu(c.ob*frac)}</td>
+    <td style="color:var(--pink-d);font-weight:600">${fu(c.os*frac)}</td>
+  </tr>`;}).join('');
 }
 function sortBks(bks){
 const s=document.getElementById('b-sort')?.value||'date-desc';
@@ -1237,7 +1305,7 @@ tb.innerHTML=bks.map(b=>{const c=cB(b);const isE=eBid===b.id;
 const fst=b.finStatus||'full';const fstCls=FSTCLS[fst]||'pg';
 const whoLabel=b.enteredBy==='artem'?'<span class="pill ps" style="font-size:9px">А</span>':'<span class="pill pp" style="font-size:9px">О</span>';
 const ptLabel=PAYTLBL[b.payType||'cash']||'';
-return`<tr class="${isE?'erow':''}">
+return`<tr class="${isE?'erow':''}" data-bid="${b.id}">
 <td class="s">${b.obj}<br><span class="pill ${b.nights>=30?'pp':'ps'}" style="font-size:9px">${b.nights>=30?'≥30н':'<30н'} ${(c.op*100).toFixed(0)}%</span></td>
 <td>${b.guest||'—'}</td>
 <td style="font-size:11px">${b.ci}<br>${b.co}<br><span style="color:var(--t3)">${b.nights}н</span></td>
@@ -1362,7 +1430,7 @@ function renderPnl(){
 const f=document.getElementById('pnl-mon').value;const{bo,tG,tC,tN,tOP,tOS,tOE}=getStats(f);
 document.getElementById('pnl-tb').innerHTML=OBJ.map(o=>{const d=bo[o];const p=d.os-d.oe;return`<tr><td class="s">${o}</td><td>${d.nights}</td><td style="color:var(--sage)">${fu(d.g)}</td><td style="color:var(--pink-d)">${d.comm>0?fu(d.comm):'—'}</td><td>${fu(d.payout)}</td><td style="color:var(--beige-d)">${fu(d.ob-d.ce)}</td><td>${fu(d.os)}</td><td style="color:var(--pink-d)">${d.oe>0?fu(d.oe):'—'}</td><td style="color:${p>=0?'var(--sage)':'var(--pink-d)'};font-weight:600">${fu(p)}</td></tr>`;}).join('');
 const tp=tOS-tOE;
-document.getElementById('pnl-tot').innerHTML=`<tr style="background:var(--bg3)"><td class="s">Итого</td><td style="font-weight:600">${OBJ.reduce((s,o)=>s+bo[o].nights,0)}</td><td style="color:var(--sage);font-weight:600">${fu(tG)}</td><td style="color:var(--pink-d);font-weight:600">${fu(tC)}</td><td style="font-weight:600">${fu(tN)}</td><td style="color:var(--beige-d);font-weight:600">${fu(tOP)}</td><td style="font-weight:600">${fu(tOS)}</td><td style="color:var(--pink-d);font-weight:600">${fu(tOE)}</td><td style="color:${tp>=0?'var(--sage)':'var(--pink-d)'};font-weight:700;font-size:14px">${fu(tp)}</td></tr>`;
+document.getElementById('pnl-tot').innerHTML=`<tr style="background:var(--bg3);font-weight:600"><td class="s" style="font-weight:700">Итого</td><td style="font-weight:700">${OBJ.reduce((s,o)=>s+bo[o].nights,0)}</td><td style="color:var(--sage);font-weight:600">${fu(tG)}</td><td style="color:var(--pink-d);font-weight:600">${fu(tC)}</td><td style="font-weight:600">${fu(tN)}</td><td style="color:var(--beige-d);font-weight:600">${fu(tOP)}</td><td style="font-weight:600">${fu(tOS)}</td><td style="color:var(--pink-d);font-weight:600">${fu(tOE)}</td><td style="color:${tp>=0?'var(--sage)':'var(--pink-d)'};font-weight:700;font-size:14px">${fu(tp)}</td></tr>`;
 }
 function renderSplit(){
 const{tG,tC,tN,tOP,tOS,tOE}=getStats('all');const pr=tOS-tOE,each=pr/2;
