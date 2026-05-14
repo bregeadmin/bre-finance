@@ -99,12 +99,11 @@ input[type=date]{max-width:100%;font-size:13px}
 <div style="font-size:18px;font-weight:600;margin-bottom:6px">Панель управления</div>
 <div style="font-size:13px;color:var(--t3);margin-bottom:24px">bre.ge finance · Batumi</div>
 <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:16px">
-<input type="password" id="pwd-input" placeholder="Введите пароль" style="text-align:center;padding:11px 14px;font-size:15px;border-radius:10px;border:1.5px solid var(--bdr);background:var(--bg3);color:var(--t1);font-family:inherit;outline:none;width:100%;transition:border-color .15s" onkeydown="if(event.key==='Enter')checkPwd()">
-<input type="password" id="api-key-input" placeholder="Claude API ключ (sk-ant-...)" style="text-align:center;padding:11px 14px;font-size:13px;border-radius:10px;border:1.5px solid var(--bdr);background:var(--bg3);color:var(--t1);font-family:inherit;outline:none;width:100%;transition:border-color .15s;margin-top:0" onkeydown="if(event.key==='Enter')checkPwd()">
-<div style="font-size:10px;color:var(--t3);text-align:center;margin-top:-4px">API ключ сохранится в браузере автоматически</div>
-<button onclick="checkPwd()" style="padding:11px;background:var(--pink);color:#fff;border:none;border-radius:10px;font-size:14px;font-weight:600;cursor:pointer;font-family:inherit;transition:background .15s" onmouseover="this.style.background='var(--pink-d)'" onmouseout="this.style.background='var(--pink)'">Войти</button>
+<input type="email" id="email-input" placeholder="Email" autocomplete="email" style="text-align:center;padding:11px 14px;font-size:15px;border-radius:10px;border:1.5px solid var(--bdr);background:var(--bg3);color:var(--t1);font-family:inherit;outline:none;width:100%;transition:border-color .15s" onkeydown="if(event.key==='Enter')document.getElementById('pwd-input').focus()">
+<input type="password" id="pwd-input" placeholder="Пароль" autocomplete="current-password" style="text-align:center;padding:11px 14px;font-size:15px;border-radius:10px;border:1.5px solid var(--bdr);background:var(--bg3);color:var(--t1);font-family:inherit;outline:none;width:100%;transition:border-color .15s" onkeydown="if(event.key==='Enter')checkPwd()">
+<button id="login-btn" onclick="checkPwd()" style="padding:11px;background:var(--pink);color:#fff;border:none;border-radius:10px;font-size:14px;font-weight:600;cursor:pointer;font-family:inherit;transition:background .15s" onmouseover="this.style.background='var(--pink-d)'" onmouseout="this.style.background='var(--pink)'">Войти</button>
 </div>
-<div id="pwd-err" style="font-size:12px;color:var(--pink-d);display:none;margin-top:-4px">Неверный пароль</div>
+<div id="pwd-err" style="font-size:12px;color:var(--pink-d);display:none;margin-top:-4px">Неверный email или пароль</div>
 <div style="font-size:11px;color:var(--t3);margin-top:16px">bre.ge · Real Estate & Lifestyle in Batumi</div>
 </div>
 </div>
@@ -140,7 +139,14 @@ input[type=date]{max-width:100%;font-size:13px}
 <div class="ni" onclick="go('settings')" id="nav-settings"><i class="ti ti-adjustments-horizontal" aria-hidden="true"></i> Настройки</div>
 </div>
 <div class="sb-ft">
-<div class="sb-user"><div class="sb-av">OA</div><div><div style="font-size:12px;font-weight:500">Оля & Артём</div><div style="font-size:10.5px;color:var(--t3)">50 / 50 · bre.ge</div></div></div>
+<div class="sb-user" id="sb-user-widget">
+  <div class="sb-av" id="sb-av">OA</div>
+  <div style="flex:1;min-width:0">
+    <div style="font-size:12px;font-weight:500" id="sb-user-name">Оля & Артём</div>
+    <div style="font-size:10.5px;color:var(--t3)" id="sb-user-sub">50 / 50 · bre.ge</div>
+  </div>
+  <button id="logout-btn" onclick="logout()" title="Выйти" style="display:none;width:26px;height:26px;border-radius:50%;border:none;background:transparent;cursor:pointer;color:var(--t3);font-size:14px;display:none;align-items:center;justify-content:center;transition:all .15s;flex-shrink:0" onmouseover="this.style.background='var(--bg2)';this.style.color='var(--pink-d)'" onmouseout="this.style.background='transparent';this.style.color='var(--t3)'"><i class="ti ti-logout" aria-hidden="true"></i></button>
+</div>
 </div>
 </div>
 <div class="main">
@@ -3428,49 +3434,131 @@ async function sbDelete(table, id){
   return fetch(`${SUPA_URL}/rest/v1/${table}?id=eq.${id}`, {method:'DELETE', headers:SB_HEADERS});
 }
 // ============================================================
-// AUTH
-function checkPwd() {
-const val = document.getElementById('pwd-input').value;
-const apiKey = document.getElementById('api-key-input').value.trim();
-const err = document.getElementById('pwd-err');
-if (val === APP_PASSWORD) {
-  // Save API key to localStorage if provided
-  if (apiKey && apiKey.startsWith('sk-ant-')) {
-    localStorage.setItem('bre_api_key', apiKey);
-    window.CLAUDE_API_KEY = apiKey;
-  } else {
-    const saved = localStorage.getItem('bre_api_key');
-    if (saved) window.CLAUDE_API_KEY = saved;
-  }
-  document.getElementById('login-screen').style.opacity = '0';
-  document.getElementById('login-screen').style.transition = 'opacity .3s';
-  setTimeout(() => {
-    document.getElementById('login-screen').style.display = 'none';
-    document.getElementById('app').style.display = '';
-  }, 300);
-  sessionStorage.setItem('bre_auth', '1');
-  loadFromSupabase();
-} else {
-  err.style.display = 'block';
-  document.getElementById('pwd-input').style.borderColor = 'var(--pink-d)';
-  setTimeout(() => {
-    err.style.display = 'none';
-    document.getElementById('pwd-input').style.borderColor = 'var(--bdr)';
-  }, 2000);
+// AUTH (Supabase)
+// ============================================================
+// Маппинг email → отображаемое имя
+const USER_NAMES = {
+  'artem@bre.ge': {name:'Артём', short:'А', sub:'bre.ge · co-owner'},
+  'olya@bre.ge':  {name:'Оля',   short:'О', sub:'bre.ge · co-owner'}
+};
+
+// Текущий пользователь (после успешного логина)
+window.currentUser = null;
+
+function getStoredSession(){
+  try{ return JSON.parse(localStorage.getItem('bre_session')||'null'); }catch(e){ return null; }
 }
+function setStoredSession(s){
+  if(s) localStorage.setItem('bre_session', JSON.stringify(s));
+  else  localStorage.removeItem('bre_session');
 }
 
-// Auto-login if already authenticated this session
-if (sessionStorage.getItem('bre_auth') === '1') {
-  const savedKey = localStorage.getItem('bre_api_key');
-  if (savedKey) window.CLAUDE_API_KEY = savedKey;
-  document.getElementById('login-screen').style.display = 'none';
-  document.getElementById('app').style.display = '';
-  loadFromSupabase();
-} else {
-  const savedKey = localStorage.getItem('bre_api_key');
-  if (savedKey) { const el = document.getElementById('api-key-input'); if (el) el.value = savedKey; }
+function applyUserToUI(email){
+  const info = USER_NAMES[email] || {name: email.split('@')[0], short:(email[0]||'?').toUpperCase(), sub:'bre.ge'};
+  const av = document.getElementById('sb-av');
+  const nm = document.getElementById('sb-user-name');
+  const sb = document.getElementById('sb-user-sub');
+  const lo = document.getElementById('logout-btn');
+  if(av) av.textContent = info.short;
+  if(nm) nm.textContent = info.name;
+  if(sb) sb.textContent = info.sub;
+  if(lo){ lo.style.display = 'flex'; }
+  window.currentUser = {email, name: info.name};
 }
+
+async function checkPwd() {
+  const emailEl = document.getElementById('email-input');
+  const pwdEl   = document.getElementById('pwd-input');
+  const err     = document.getElementById('pwd-err');
+  const btn     = document.getElementById('login-btn');
+
+  const email   = (emailEl?.value||'').trim().toLowerCase();
+  const pwd     = pwdEl?.value || '';
+
+  if(!email || !pwd){
+    err.textContent = 'Введите email и пароль';
+    err.style.display = 'block';
+    return;
+  }
+
+  // disable button while logging in
+  if(btn){ btn.disabled = true; btn.textContent = 'Вход...'; btn.style.opacity = '0.7'; }
+
+  try{
+    const r = await fetch(`${SUPA_URL}/auth/v1/token?grant_type=password`, {
+      method:'POST',
+      headers:{'Content-Type':'application/json','apikey':SUPA_KEY},
+      body: JSON.stringify({email, password: pwd})
+    });
+    const data = await r.json();
+
+    if(!r.ok || !data.access_token){
+      throw new Error(data.error_description || data.msg || 'Неверный email или пароль');
+    }
+
+    // Save session
+    setStoredSession({
+      access_token: data.access_token,
+      refresh_token: data.refresh_token,
+      expires_at: Date.now() + (data.expires_in||3600)*1000,
+      user: { email: data.user?.email || email, id: data.user?.id }
+    });
+
+    // Load saved Claude API key if exists (for voice assistant)
+    const saved = localStorage.getItem('bre_api_key');
+    if (saved) window.CLAUDE_API_KEY = saved;
+
+    // Update UI
+    applyUserToUI(data.user?.email || email);
+
+    document.getElementById('login-screen').style.opacity = '0';
+    document.getElementById('login-screen').style.transition = 'opacity .3s';
+    setTimeout(() => {
+      document.getElementById('login-screen').style.display = 'none';
+      document.getElementById('app').style.display = '';
+    }, 300);
+
+    sessionStorage.setItem('bre_auth', '1');
+    loadFromSupabase();
+  }catch(e){
+    err.textContent = e.message || 'Неверный email или пароль';
+    err.style.display = 'block';
+    pwdEl.style.borderColor = 'var(--pink-d)';
+    setTimeout(() => {
+      err.style.display = 'none';
+      pwdEl.style.borderColor = 'var(--bdr)';
+    }, 3000);
+  }finally{
+    if(btn){ btn.disabled = false; btn.textContent = 'Войти'; btn.style.opacity = '1'; }
+  }
+}
+
+function logout(){
+  if(!confirm('Выйти из системы?')) return;
+  setStoredSession(null);
+  sessionStorage.removeItem('bre_auth');
+  window.currentUser = null;
+  location.reload();
+}
+
+// Auto-login if we have a valid stored session
+(function tryAutoLogin(){
+  const sess = getStoredSession();
+  if(sess && sess.access_token && sess.expires_at && Date.now() < sess.expires_at){
+    // Session looks valid
+    const savedKey = localStorage.getItem('bre_api_key');
+    if (savedKey) window.CLAUDE_API_KEY = savedKey;
+
+    applyUserToUI(sess.user?.email || '');
+
+    document.getElementById('login-screen').style.display = 'none';
+    document.getElementById('app').style.display = '';
+    sessionStorage.setItem('bre_auth', '1');
+    loadFromSupabase();
+  } else {
+    // No valid session — show login.
+  }
+})();
 
 // SYNC
 function setSyncStatus(msg, color) {
@@ -3485,7 +3573,7 @@ function bToDb(b){ return {
   id:b.id, obj:b.obj, guest:b.guest||'', ci:b.ci, co:b.co, nights:b.nights||0,
   amount:b.amount||0, currency:b.currency||'usd', source:b.source||'direct',
   commission_pct:b.commissionPct||0, cleaning:b.cleaning||0, cleaning_who:b.cleaningWho||'client',
-  amount_usd:b.amountUsd||0, pay_type:b.payType||'cash', entered_by:b.enteredBy||'olya',
+  amount_usd:b.amountUsd||0, pay_type:b.payType||'cash', entered_by:b.enteredBy||(window.currentUser?.email||'olya'),
   fin_status:b.finStatus||'full', prepay_amt:b.prepayAmt||0, prepay_type:b.prepayType||'',
   prepay_rest:b.prepayRest||0, prepay_when:b.prepayWhen||'', comment:b.comment||''
 };}
@@ -3502,7 +3590,7 @@ function dbToB(r){ return {
 function eToDb(e){ return {
   id:e.id, obj:e.obj, cat:e.cat, free_cat:e.freeCat||'', amount:e.amount||0,
   currency:e.currency||'usd', date:e.date, comment:e.comment||'',
-  paid_by:e.paidBy||'company', pay_type:e.payType||'cash', entered_by:e.enteredBy||'olya',
+  paid_by:e.paidBy||'company', pay_type:e.payType||'cash', entered_by:e.enteredBy||(window.currentUser?.email||'olya'),
   amount_usd:e.amountUsd||0, who:e.who||'us'
 };}
 function dbToE(r){ return {
