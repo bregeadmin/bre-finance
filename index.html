@@ -288,12 +288,15 @@ input[type=date]{max-width:100%;font-size:13px}
       <div style="border-top:1px solid var(--bdr);margin-top:14px;padding-top:14px">
         <div class="form-grid">
           <div class="fg"><label>Вид оплаты</label>
-            <select id="w-paytype" onchange="document.getElementById('who-field').style.display=this.value==='platform'?'none':''">
+            <select id="w-paytype" onchange="togglePayFields()">
               <option value="cash">Кэш</option><option value="card">Карта</option><option value="transfer">Перевод</option><option value="platform">На платформе</option>
             </select>
           </div>
-          <div class="fg" id="who-field"><label>Кто принял</label>
+          <div class="fg" id="who-field"><label>Кто принял деньги</label>
             <select id="w-who"><option value="olya">Оля</option><option value="artem">Артём</option></select>
+          </div>
+          <div class="fg" id="received-date-field"><label>Когда получено</label>
+            <input type="date" id="w-received-date">
           </div>
           <div class="fg"><label>Финансовый статус</label>
             <select id="w-fstatus">
@@ -763,7 +766,7 @@ function cB(b){
 
   // Owner base = payout minus cleaning (cleaning is company revenue)
   const ownerBase = Math.max(0, payout - cleaningCharged - petFee);
-  const op = opct(b.obj, b.nights);
+  const op = b.ownerPctOverride ? b.ownerPctOverride/100 : opct(b.obj, b.nights);
   const ownerAmt = ownerBase * op;
   const ourAmt = ownerBase * (1 - op);
   const cleaningMargin = cleaningCharged - cleanerCostUsd;
@@ -2204,6 +2207,10 @@ function wizNext1(){
   if(!obj || !ci || !co){ alert('Заполните объект и даты'); return; }
   onSrcChange();
   setCleanerDefault();
+  // Set today as default received date
+  const rd = document.getElementById('w-received-date');
+  if(rd && !rd.value) rd.value = new Date().toISOString().split('T')[0];
+  togglePayFields();
   wizShowStep(2);
 }
 
@@ -2234,6 +2241,13 @@ function onObjChange(){
   }
   setCleanerDefault();
   autoHighlightCleaning();
+}
+
+function togglePayFields(){
+  const v = document.getElementById('w-paytype').value;
+  const isPlatform = v === 'platform';
+  document.getElementById('who-field').style.display = isPlatform ? 'none' : '';
+  document.getElementById('received-date-field').style.display = isPlatform ? 'none' : '';
 }
 
 function onSrcChange(){
@@ -2407,12 +2421,17 @@ function buildReview(){
     totalGuest = total; payout = total; platformFees = 0;
   }
 
+  // Use editable override if available
+  const revPctEl = document.getElementById('rev-owner-pct');
+  const opPctOverride = revPctEl ? parseFloat(revPctEl.value)/100 : null;
+  const opPctFinal = (opPctOverride !== null && !isNaN(opPctOverride)) ? opPctOverride : opPct;
+
   const payoutUsd = toUSD(payout);
   const cleaningUsd = toUSD(cleaning);
   const cleanerUsd = cleanerCostGel/rate;
   const ownerBase = payoutUsd - cleaningUsd;
-  const ownerAmt = ownerBase * opPct;
-  const ourAmt = ownerBase * (1-opPct);
+  const ownerAmt = ownerBase * opPctFinal;
+  const ourAmt = ownerBase * (1-opPctFinal);
   const margin = cleaningUsd - cleanerUsd;
   const srcLabel = {airbnb:'Airbnb',booking:'Booking',sutochno:'Суточно',direct:'Прямое'}[src]||src;
   const fstLabel = {full:'Оплачено',prepay:'Предоплата',platform:'На платформе',pending:'Ожидает'}[document.getElementById('w-fstatus').value]||'';
@@ -2435,13 +2454,47 @@ function buildReview(){
       <div style="background:var(--bg3);border-radius:8px;padding:12px">
         <div style="font-size:10px;font-weight:700;color:var(--t3);text-transform:uppercase;margin-bottom:8px">Распределение</div>
         ${row('База (без уборки)', '$'+ownerBase.toFixed(2))}
-        ${row('Собственнику '+Math.round(opPct*100)+'%', '$'+ownerAmt.toFixed(2), 'var(--beige-d)')}
+        ${row('Собственнику '+Math.round(opPctFinal*100)+'%', '$'+ownerAmt.toFixed(2), 'var(--beige-d)')}
         ${row('Нам', '$'+ourAmt.toFixed(2), 'var(--pink-d)')}
         ${row('Маржа уборки', (margin>=0?'+':'')+' $'+Math.abs(margin).toFixed(2), margin>=0?'var(--sage)':'var(--pink-d)')}
       </div>
     </div>
-    <div style="background:var(--bg3);border-radius:8px;padding:12px">
-      <div style="font-size:10px;font-weight:700;color:var(--t3);text-transform:uppercase;margin-bottom:8px">📋 Создадутся в расходах автоматически</div>
+    <div style="background:var(--bg3);border-radius:8px;padding:12px;margin-bottom:14px">
+      <div style="font-size:10px;font-weight:700;color:var(--t3);text-transform:uppercase;margin-bottom:10px">⚙️ Параметры</div>
+      <div style="display:flex;flex-wrap:wrap;gap:12px;align-items:center">
+        <div style="display:flex;align-items:center;gap:6px;font-size:12px">
+          <span style="color:var(--t2)">% собственнику:</span>
+          <input type="number" id="rev-owner-pct" value="${Math.round(opPctFinal*100)}" min="0" max="100" style="width:60px;padding:4px 6px;border:1px solid var(--bdr);border-radius:6px;background:var(--bg2);font-size:12px" oninput="buildReview()">
+          <span style="color:var(--t3)">%</span>
+        </div>
+        <label style="display:flex;align-items:center;gap:6px;font-size:12px;cursor:pointer">
+          <input type="checkbox" id="rev-create-cleaner" checked>
+          <span>🧹 Создать расход клинера</span>
+        </label>
+        <label style="display:flex;align-items:center;gap:6px;font-size:12px;cursor:pointer">
+          <input type="checkbox" id="rev-create-laundry" checked>
+          <span>🧺 Создать прачечную</span>
+        </label>
+      </div>
+    </div>
+    <div style="background:var(--bg3);border-radius:8px;padding:12px;margin-bottom:14px">
+      <div style="font-size:10px;font-weight:700;color:var(--t3);text-transform:uppercase;margin-bottom:10px">⚙️ Параметры</div>
+      <div style="display:flex;flex-wrap:wrap;gap:12px;align-items:center">
+        <div style="display:flex;align-items:center;gap:6px;font-size:12px">
+          <span style="color:var(--t2)">% собственнику:</span>
+          <input type="number" id="rev-owner-pct" value="70" min="0" max="100" style="width:60px;padding:4px 6px;border:1px solid var(--bdr);border-radius:6px;background:var(--bg2);font-size:12px" oninput="buildReview()">
+          <span style="color:var(--t3)">%</span>
+        </div>
+        <label style="display:flex;align-items:center;gap:6px;font-size:12px;cursor:pointer">
+          <input type="checkbox" id="rev-create-cleaner" checked>
+          <span>🧹 Создать расход клинера</span>
+        </label>
+        <label style="display:flex;align-items:center;gap:6px;font-size:12px;cursor:pointer">
+          <input type="checkbox" id="rev-create-laundry" checked>
+          <span>🧺 Создать прачечную</span>
+        </label>
+      </div>
+    </div>
       <div style="display:flex;gap:8px">
         <div style="flex:1;background:var(--bg2);border-radius:6px;padding:8px 10px;display:flex;gap:8px;align-items:center">
           <span style="font-size:18px">🧹</span>
@@ -2503,6 +2556,11 @@ function submitWizard(){
   const code = OBJ_CODES[obj]||'XX';
   const bookingRef = `BRE-${code}-${String(d.getDate()).padStart(2,'0')}${String(d.getMonth()+1).padStart(2,'0')}`;
 
+  const revPct = parseFloat(document.getElementById('rev-owner-pct')?.value)||0;
+  const createCleaner = document.getElementById('rev-create-cleaner')?.checked ?? true;
+  const createLaundry = document.getElementById('rev-create-laundry')?.checked ?? true;
+  const opPctFinal = revPct>0 ? revPct/100 : opct(obj, nights);
+
   const booking = {
     id: Date.now(),
     obj, guest: document.getElementById('w-guest').value.trim(),
@@ -2512,8 +2570,10 @@ function submitWizard(){
     cleanerCostGel, extraFee: pet, accommodationAmount: accommodation,
     platformGuestFee: guestFee, platformHostFee: hostFee, platformVat: vatAmt,
     amountUsd: payoutUsd,
+    ownerPctOverride: revPct > 0 ? revPct : null,
     payType: document.getElementById('w-paytype').value,
     enteredBy: document.getElementById('w-who').value,
+    receivedDate: document.getElementById('w-received-date')?.value || '',
     finStatus: document.getElementById('w-fstatus').value,
     exchangeRate: rate,
     bookingRef,
@@ -2530,7 +2590,7 @@ function submitWizard(){
   } else {
     S.bookings.push(booking);
     // Auto-create cleaner expense
-    if(cleanerCostGel>0){
+    if(createCleaner && cleanerCostGel>0){
       S.expenses.push({
         id: Date.now()+1, obj, cat:'cleaning',
         amount: cleanerCostGel, currency:'gel', date: co,
@@ -2541,14 +2601,16 @@ function submitWizard(){
       });
     }
     // Auto-create laundry (pending)
-    S.expenses.push({
-      id: Date.now()+2, obj, cat:'cleaning',
-      amount: 0, currency:'gel', date: co,
-      comment: `🧺 Прачечная · ${booking.guest||'Гость'} · ${ci}→${co}`,
-      paidBy:'company', payType:'cash', enteredBy: booking.enteredBy,
-      amountUsd: 0, who:'us',
-      bookingId: booking.id, autoCreated: true, pending: true
-    });
+    if(createLaundry){
+      S.expenses.push({
+        id: Date.now()+2, obj, cat:'cleaning',
+        amount: 0, currency:'gel', date: co,
+        comment: `🧺 Прачечная · ${booking.guest||'Гость'} · ${ci}→${co}`,
+        paidBy:'company', payType:'cash', enteredBy: booking.enteredBy,
+        amountUsd: 0, who:'us',
+        bookingId: booking.id, autoCreated: true, pending: true
+      });
+    }
   }
 
   save();
@@ -2566,7 +2628,7 @@ function resetWizard(){
   });
   ['w-guest','w-phone','w-ci','w-co','w-nights','w-comment',
    'a-acc','a-clean','a-guest-total','bk-total','bk-clean','bk-comm','bk-vat',
-   's-acc','s-clean','d-total','d-clean','w-pet-fee'].forEach(id=>{
+   's-acc','s-clean','d-total','d-clean','w-pet-fee','w-received-date'].forEach(id=>{
     const el=document.getElementById(id); if(el) el.value='';
   });
   document.getElementById('w-adults').value=2;
