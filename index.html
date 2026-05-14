@@ -79,6 +79,7 @@ input[type=date]{max-width:100%;font-size:13px}
 <div class="ni" onclick="go('calendar')" id="nav-calendar"><i class="ti ti-calendar-month" aria-hidden="true"></i> Календарь</div>
 <div class="ni" onclick="go('reports')" id="nav-reports"><i class="ti ti-file-analytics" aria-hidden="true"></i> Отчёты</div>
 <div class="ni" onclick="go('pnl')" id="nav-pnl"><i class="ti ti-trending-up" aria-hidden="true"></i> P&L</div>
+<div class="ni" onclick="go('monthly')" id="nav-monthly"><i class="ti ti-report-money" aria-hidden="true"></i> Финансы месяца</div>
 <div class="ni" onclick="go('split')" id="nav-split"><i class="ti ti-users-group" aria-hidden="true"></i> Раздел 50/50</div>
 <div class="sb-grp">Система</div>
 <div class="ni" onclick="go('object')" id="nav-object"><i class="ti ti-home-search" aria-hidden="true"></i> По объекту</div>
@@ -271,17 +272,22 @@ input[type=date]{max-width:100%;font-size:13px}
       <!-- DIRECT -->
       <div id="fin-direct" style="display:none">
         <div class="form-grid">
-          <div class="fg"><label>Сумма от гостя</label><input type="number" id="d-total" placeholder="0"></div>
+          <div class="fg"><label>Сумма от гостя (всё включено)</label><input type="number" id="d-total" placeholder="0" oninput="calcDirect()"></div>
           <div class="fg">
-            <label>Уборка (если взяли)</label>
+            <label>Уборка (входит в сумму гостя)</label>
             <div style="display:flex;gap:6px;margin-top:4px">
               <button type="button" class="btn btn-gh btn-xs" id="dc-0" onclick="setDirectCleaning(0)">Нет</button>
               <button type="button" class="btn btn-gh btn-xs" id="dc-20" onclick="setDirectCleaning(20)">$20</button>
               <button type="button" class="btn btn-gh btn-xs" id="dc-25" onclick="setDirectCleaning(25)">$25</button>
               <button type="button" class="btn btn-gh btn-xs" id="dc-x" onclick="setDirectCleaning(-1)">Другая</button>
             </div>
-            <input type="number" id="d-clean" placeholder="сумма" style="margin-top:6px;display:none">
+            <input type="number" id="d-clean" placeholder="сумма" style="margin-top:6px;display:none" oninput="calcDirect()">
           </div>
+        </div>
+        <div style="background:var(--bg3);border-radius:8px;padding:12px;display:grid;grid-template-columns:repeat(3,1fr);gap:10px">
+          <div><div style="font-size:10px;color:var(--t3)">Итого получите</div><div id="d-net-lbl" style="font-weight:700;font-size:15px;color:var(--sage)">$0</div></div>
+          <div><div style="font-size:10px;color:var(--t3)">Уборка (часть суммы)</div><div id="d-clean-lbl" style="font-weight:700">$0</div></div>
+          <div><div style="font-size:10px;color:var(--t3)">База собственника</div><div id="d-base-lbl" style="font-weight:700">$0</div><div style="font-size:9px;color:var(--t3)">без уборки</div></div>
         </div>
       </div>
 
@@ -366,13 +372,14 @@ input[type=date]{max-width:100%;font-size:13px}
 <div class="card-h"><div class="card-t"><i class="ti ti-plus" aria-hidden="true"></i> <span id="e-ftitle">Новый расход</span></div></div>
 <div class="card-b">
 <div class="form-grid">
-<div class="fg"><label>Объект</label><select id="e-obj"><option value="__all">Общий (все)</option></select></div>
+<div class="fg"><label>Объект</label><select id="e-obj"><option value="__all">Общий (не по объекту)</option></select></div>
 <div class="fg"><label>Категория</label><select id="e-cat" onchange="toggleExpCat()">
 <option value="communal">Коммунальные (с собственника)</option>
 <option value="cleaning">Уборка (с нас)</option>
 <option value="repair">Ремонт (с нас)</option>
 <option value="household">Хозтовары (с нас)</option>
 <option value="ads">Реклама (с нас)</option>
+<option value="company">🏢 Расход компании (из прибыли)</option>
 <option value="other">Другое (с нас)</option>
 <option value="free">Свободный вариант</option>
 </select></div>
@@ -447,6 +454,16 @@ input[type=date]{max-width:100%;font-size:13px}
 <div style="border-top:1px solid var(--bdr)"><table><tbody id="pnl-tot"></tbody></table></div>
 </div>
 </div>
+<div class="page" id="page-monthly">
+<div class="card">
+  <div class="card-h">
+    <div class="card-t"><i class="ti ti-report-money" aria-hidden="true"></i> Финансы месяца</div>
+    <select id="monthly-mon" onchange="renderMonthly()" class="si" style="font-size:12px;padding:5px 10px;width:auto"></select>
+  </div>
+</div>
+<div id="monthly-content"></div>
+</div>
+
 <div class="page" id="page-split">
 <div class="split-g">
 <div class="pc"><div class="pav po">О</div><div style="font-size:14px;font-weight:600;margin-bottom:6px">Оля</div><div class="p-amt" id="sp-o">$0</div><div class="p-sub">50% чистой прибыли</div></div>
@@ -647,8 +664,8 @@ input[type=date]{max-width:100%;font-size:13px}
 // OBJ is now dynamic — loaded from S.apartments
 const OBJ_DEFAULT=['Красная камелия','Белая камелия','Лермонтова','Корал','Кава Вью','НЕКСТ','Батуми Вью','Гринсайд','Санрайс','Гранат','Бургунди'];
 let OBJ=OBJ_DEFAULT.slice();
-const CATLBL={communal:'Коммунальные',cleaning:'Уборка',repair:'Ремонт',household:'Хозтовары',ads:'Реклама',other:'Другое',free:'Своё'};
-const CATWHO={communal:'owner',cleaning:'us',repair:'us',household:'us',ads:'us',other:'us',free:'us'};
+const CATLBL={communal:'Коммунальные',cleaning:'Уборка',repair:'Ремонт',household:'Хозтовары',ads:'Реклама',company:'Расход компании',other:'Другое',free:'Своё'};
+const CATWHO={communal:'owner',cleaning:'us',repair:'us',household:'us',ads:'us',company:'us',other:'us',free:'us'};
 const PAYTLBL={cash:'Кэш',card:'Карта',transfer:'Перевод'};
 const FSTLBL={full:'Оплачено',prepay:'Предоплата',platform:'На платформе',pending:'Ожидает'};
 const FSTCLS={full:'pg',prepay:'pa',platform:'ps',pending:'br'};
@@ -784,8 +801,8 @@ function cB(b){
     op                      // owner percentage
   };
 }
-const PSUBS={dashboard:'· текущий месяц',bookings:'· все объекты',expenses:'· все объекты',owners:'· за всё время',calendar:'· все брони',reports:'· выберите объект',pnl:'· P&L анализ',split:'· Оля & Артём',object:'· история по квартире',settings:'· настройки'};
-const PTITLES={dashboard:'Дашборд',bookings:'Бронирования',expenses:'Расходы',owners:'Собственники',calendar:'Календарь',reports:'Отчёты',pnl:'P&L',split:'Раздел 50/50',object:'По объекту',settings:'Настройки'};
+const PSUBS={dashboard:'· текущий месяц',bookings:'· все объекты',expenses:'· все объекты',owners:'· за всё время',calendar:'· все брони',reports:'· выберите объект',pnl:'· P&L анализ',monthly:'· доходы и расходы',split:'· Оля & Артём',object:'· история по квартире',settings:'· настройки'};
+const PTITLES={dashboard:'Дашборд',bookings:'Бронирования',expenses:'Расходы',owners:'Собственники',calendar:'Календарь',reports:'Отчёты',pnl:'P&L',monthly:'Финансы месяца',split:'Раздел 50/50',object:'По объекту',settings:'Настройки'};
 function openSb(){document.getElementById('sidebar').classList.add('open');document.getElementById('sb-overlay').classList.add('open');}
 function closeSb(){document.getElementById('sidebar').classList.remove('open');document.getElementById('sb-overlay').classList.remove('open');}
 function go(name){
@@ -796,7 +813,7 @@ document.getElementById('nav-'+name).classList.add('active');
 document.getElementById('tb-t').textContent=PTITLES[name]||name;
 document.getElementById('tb-s').textContent=PSUBS[name]||'';
 closeSb();
-({dashboard:renderDash,bookings:renderB,expenses:renderE,owners:renderOwners,calendar:initCalendar,reports:()=>popMons(),pnl:()=>{popMons();renderPnl();},split:renderSplit,object:initObjDetail,settings:renderSettings})[name]?.();
+({dashboard:renderDash,bookings:renderB,expenses:renderE,owners:renderOwners,calendar:initCalendar,reports:()=>popMons(),pnl:()=>{popMons();renderPnl();},monthly:()=>{popMons();renderMonthly();},split:renderSplit,object:initObjDetail,settings:renderSettings})[name]?.();
 }
 function popSels(){
 ['e-obj','r-obj','od-obj','w-obj','cal-obj-filter'].forEach(id=>{
@@ -807,6 +824,115 @@ OBJ.forEach(o=>{const op=document.createElement('option');op.value=o;op.textCont
 if(cur)el.value=cur;
 });
 }
+function renderMonthly(){
+  const sel = document.getElementById('monthly-mon');
+  const fm = sel ? sel.value : cmon();
+  const {bo,tG,tC,tN,tOP,tOS,tOE,tCM} = getStats(fm);
+
+  // Gather all expenses for month
+  const exps = S.expenses.filter(e=>mkey(e.date)===fm && !e.pending);
+  const companyExps = exps.filter(e=>e.cat==='company');
+  const cleaningExps = exps.filter(e=>e.cat==='cleaning' && e.amount>0);
+  const otherExps = exps.filter(e=>e.cat!=='company'&&e.cat!=='communal'&&e.cat!=='cleaning');
+  const communalExps = exps.filter(e=>e.cat==='communal');
+  const totalCompanyExps = companyExps.reduce((s,e)=>s+e.amountUsd,0);
+  const totalCleaningExps = cleaningExps.reduce((s,e)=>s+e.amountUsd,0);
+  const totalOtherExps = otherExps.reduce((s,e)=>s+e.amountUsd,0);
+  const totalCommunalExps = communalExps.reduce((s,e)=>s+e.amountUsd,0);
+
+  // P&L
+  const grossRevenue = tN; // total payout received
+  const totalOurShare = tOS; // our share after owner split
+  const cleaningRevenue = Object.values(bo).reduce((s,d)=>s+d.cleaning,0);
+  const cleaningMargin = tCM;
+  const profitBeforeCompany = totalOurShare + cleaningMargin - totalOtherExps - totalCleaningExps;
+  const netProfit = profitBeforeCompany - totalCompanyExps;
+  const olyaShare = netProfit / 2;
+  const artemShare = netProfit / 2;
+
+  const sec = (title,color='var(--t1)')=>`<div style="font-size:11px;font-weight:700;color:${color};text-transform:uppercase;letter-spacing:.05em;padding:10px 0 6px;border-bottom:2px solid var(--bdr);margin-bottom:8px">${title}</div>`;
+  const row = (l,v,color='var(--t1)',bold=false)=>`<div style="display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid var(--bdr);font-size:13px"><span style="color:var(--t2)">${l}</span><span style="font-weight:${bold?700:500};color:${color}">${v}</span></div>`;
+  const expRows = arr => arr.map(e=>`<div style="display:flex;justify-content:space-between;padding:5px 8px;font-size:11px;color:var(--t3)"><span>${e.comment||e.cat} ${e.obj!=='__all'?'· '+e.obj:''}</span><span style="color:var(--pink-d)">-${fu(e.amountUsd)}</span></div>`).join('');
+
+  document.getElementById('monthly-content').innerHTML = `
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px">
+
+    <!-- ДОХОДЫ -->
+    <div class="card" style="margin:0">
+      <div class="card-b">
+        ${sec('💰 Доходы','var(--sage)')}
+        ${row('Выручка (payout от гостей)',fu(grossRevenue),'var(--sage)')}
+        ${row('Уборка с гостей',fu(cleaningRevenue),'var(--t2)')}
+        ${row('Маржа уборки (уборка − клинеры)',fu(cleaningMargin),cleaningMargin>=0?'var(--sage)':'var(--pink-d)')}
+        <div style="display:flex;justify-content:space-between;padding:8px 0;font-size:14px;font-weight:700;margin-top:4px">
+          <span>Итого поступило</span><span style="color:var(--sage)">${fu(grossRevenue+cleaningRevenue)}</span>
+        </div>
+
+        ${sec('👥 Выплаты собственникам','var(--beige-d)')}
+        ${OBJ.filter(o=>bo[o].ob>0).map(o=>{
+          const cfg=S.owners[o]||{name:''};
+          return row((cfg.name||o)+` (${Math.round(bo[o].bookings[0]?.c?.op*100||70)}%)`, fu(bo[o].ob-bo[o].ce), 'var(--beige-d)');
+        }).join('')}
+        ${row('Коммунальные с собственников',fu(totalCommunalExps),'var(--t3)')}
+        <div style="display:flex;justify-content:space-between;padding:8px 0;font-size:13px;font-weight:600;margin-top:4px">
+          <span>Итого собственникам</span><span style="color:var(--beige-d)">${fu(tOP)}</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- РАСХОДЫ И ПРИБЫЛЬ -->
+    <div class="card" style="margin:0">
+      <div class="card-b">
+        ${sec('📋 Расходы компании','var(--pink-d)')}
+        ${row('Клинеры и уборка',fu(totalCleaningExps),'var(--pink-d)')}
+        ${expRows(cleaningExps)}
+        ${row('Прочие расходы',fu(totalOtherExps),'var(--pink-d)')}
+        ${expRows(otherExps)}
+        <div style="display:flex;justify-content:space-between;padding:8px 0;font-size:13px;font-weight:600">
+          <span>Прибыль до общих расходов</span><span style="color:${profitBeforeCompany>=0?'var(--sage)':'var(--pink-d)'}">${fu(profitBeforeCompany)}</span>
+        </div>
+
+        ${totalCompanyExps>0?`
+        ${sec('🏢 Общие расходы компании','var(--t2)')}
+        ${expRows(companyExps)}
+        ${row('Итого общих расходов',fu(totalCompanyExps),'var(--pink-d)')}
+        `:''}
+
+        <div style="background:var(--sage-bg);border-radius:8px;padding:12px;margin-top:10px">
+          <div style="font-size:10px;color:var(--t3);text-transform:uppercase;font-weight:600;margin-bottom:8px">Чистая прибыль компании</div>
+          <div style="font-size:24px;font-weight:700;color:var(--sage);margin-bottom:8px">${fu(netProfit)}</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+            <div style="background:var(--bg2);border-radius:6px;padding:10px;text-align:center">
+              <div style="font-size:10px;color:var(--t3);margin-bottom:4px">🌸 Оля (50%)</div>
+              <div style="font-size:17px;font-weight:700;color:var(--pink-d)">${fu(olyaShare)}</div>
+            </div>
+            <div style="background:var(--bg2);border-radius:6px;padding:10px;text-align:center">
+              <div style="font-size:10px;color:var(--t3);margin-bottom:4px">💼 Артём (50%)</div>
+              <div style="font-size:17px;font-weight:700;color:var(--beige-d)">${fu(artemShare)}</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Детали расходов -->
+  <div class="card">
+    <div class="card-h"><div class="card-t"><i class="ti ti-list" aria-hidden="true"></i> Все расходы месяца</div></div>
+    <table>
+      <thead><tr><th>Объект</th><th>Категория</th><th>Сумма</th><th>Комментарий</th><th>Дата</th></tr></thead>
+      <tbody>${exps.length?exps.map(e=>`<tr>
+        <td class="s">${e.obj==='__all'?'Общий':e.obj}</td>
+        <td><span class="pill ${e.cat==='company'?'pb':e.cat==='communal'?'pp':'pg'}" style="font-size:10px">${CATLBL[e.cat]||e.cat}</span></td>
+        <td style="color:var(--pink-d);font-weight:600">${e.amount} ${e.currency.toUpperCase()}</td>
+        <td style="color:var(--t3)">${e.comment||'—'}</td>
+        <td style="color:var(--t3)">${e.date}</td>
+      </tr>`).join(''):'<tr><td colspan="5"><div class="empty"><i class="ti ti-receipt-off"></i><span>Нет расходов</span></div></td></tr>'}
+      </tbody>
+    </table>
+  </div>`;
+}
+
 function popMons(){
   // Build month list from bookings data + last 12 months
   const monSet=new Set();
@@ -819,8 +945,9 @@ function popMons(){
   // Populate reports month select
   const el=document.getElementById('r-mon');if(el){el.innerHTML='';mons.forEach(k=>{const op=document.createElement('option');op.value=k;op.textContent=mlbl(k);if(k===curMon)op.selected=true;el.appendChild(op);});}
 
-  // Populate pnl month select
   const pel=document.getElementById('pnl-mon');if(pel){const cur=pel.value;pel.innerHTML='<option value="all">Все месяцы</option>';mons.forEach(k=>{const op=document.createElement('option');op.value=k;op.textContent=mlbl(k);if(k===curMon)op.selected=true;pel.appendChild(op);});if(cur&&cur!=='all')pel.value=cur;}
+  // Populate monthly finance select
+  const msel=document.getElementById('monthly-mon');if(msel){const cur=msel.value;msel.innerHTML='';mons.forEach(k=>{const op=document.createElement('option');op.value=k;op.textContent=mlbl(k);if(k===curMon)op.selected=true;msel.appendChild(op);});if(cur)msel.value=cur;}
 }
 function toggleFinStatus(){
   const v=document.getElementById('w-fstatus').value;
@@ -1034,25 +1161,46 @@ else S.expenses.push({id:Date.now(),...data});
 save();['e-amt','e-cm','e-free-cat'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});canE();renderE();
 }
 function delE(id){if(!confirm('Удалить расход?'))return;S.expenses=S.expenses.filter(e=>e.id!==id);save();sbDelete('expenses',id).catch(e=>console.warn(e));renderE();}
+// Split booking proportionally across months
+function splitBookingByMonth(b){
+  const ci=new Date(b.ci),co=new Date(b.co);
+  const totalNights=b.nights||Math.round((co-ci)/86400000);
+  if(!totalNights)return[{monthKey:mkey(b.ci),nights:totalNights,fraction:1}];
+  const months={};
+  let cur=new Date(ci);
+  while(cur<co){
+    const mk=cur.getFullYear()+'-'+String(cur.getMonth()+1).padStart(2,'0');
+    months[mk]=(months[mk]||0)+1;
+    cur.setDate(cur.getDate()+1);
+  }
+  return Object.entries(months).map(([mk,n])=>({monthKey:mk,nights:n,fraction:n/totalNights}));
+}
+
 function getStats(fm){
-const bks=fm==='all'?S.bookings:S.bookings.filter(b=>mkey(b.ci)===fm);
+// For month filter: include bookings that overlap that month
+const bks=fm==='all'?S.bookings:S.bookings.filter(b=>{
+  const parts=splitBookingByMonth(b);
+  return parts.some(p=>p.monthKey===fm);
+});
 const exps=fm==='all'?S.expenses:S.expenses.filter(e=>mkey(e.date)===fm);
 const bo={};OBJ.forEach(o=>bo[o]={nights:0,g:0,comm:0,cleaning:0,cleaningMargin:0,payout:0,ob:0,os:0,ce:0,oe:0,bookings:[],communals:[]});
 bks.forEach(b=>{
   if(!bo[b.obj])return;
   const c=cB(b);
-  bo[b.obj].nights+=b.nights;
-  bo[b.obj].g+=c.g;
-  bo[b.obj].comm+=c.comm;
-  bo[b.obj].cleaning+=c.cleaning;
-  bo[b.obj].cleaningMargin+=c.cleaningMargin;
-  bo[b.obj].payout+=c.payout;
-  bo[b.obj].ob+=c.ob;
-  bo[b.obj].os+=c.os;
-  bo[b.obj].bookings.push({...b,c});
+  const parts=splitBookingByMonth(b);
+  const frac=fm==='all'?1:(parts.find(p=>p.monthKey===fm)?.fraction||1);
+  bo[b.obj].nights+=Math.round(b.nights*frac);
+  bo[b.obj].g+=c.g*frac;
+  bo[b.obj].comm+=c.comm*frac;
+  bo[b.obj].cleaning+=c.cleaning*frac;
+  bo[b.obj].cleaningMargin+=c.cleaningMargin*frac;
+  bo[b.obj].payout+=c.payout*frac;
+  bo[b.obj].ob+=c.ob*frac;
+  bo[b.obj].os+=c.os*frac;
+  bo[b.obj].bookings.push({...b,c,_frac:frac});
 });
 exps.forEach(e=>{
-  if(e.pending&&!e.amount)return; // skip pending
+  if(e.pending&&!e.amount)return;
   const ap=o=>{
     if(!bo[o])return;
     if(e.cat==='communal'){bo[o].ce+=e.amountUsd;bo[o].communals.push(e);}
@@ -1070,7 +1218,7 @@ document.getElementById('m-g').textContent=fu(tG);document.getElementById('m-c')
 document.getElementById('m-p').textContent=fu(tOS-tOE);document.getElementById('m-n').textContent=OBJ.reduce((s,o)=>s+bo[o].nights,0);
 const rows=OBJ.filter(o=>bo[o].g>0);const tb=document.getElementById('dash-tb');
 if(!rows.length){tb.innerHTML='<tr><td colspan="7"><div class="empty"><i class="ti ti-calendar-off" aria-hidden="true"></i><span>Нет бронирований в текущем месяце</span></div></td></tr>';return;}
-tb.innerHTML=rows.map(o=>{const d=bo[o];const u=d.os-d.oe;return`<tr><td class="s">${o}</td><td>${d.nights}</td><td style="color:var(--sage)">${fu(d.g)}</td><td style="color:var(--pink-d)">${fu(d.comm)}</td><td>${fu(d.net)}</td><td style="color:var(--beige-d)">${fu(d.ob-d.ce)}</td><td style="color:${u>=0?'var(--sage)':'var(--pink-d)'};font-weight:600">${fu(u)}</td></tr>`;}  ).join('');
+tb.innerHTML=rows.map(o=>{const d=bo[o];const u=d.os-d.oe;return`<tr><td class="s">${o}</td><td>${d.nights}</td><td style="color:var(--sage)">${fu(d.g)}</td><td style="color:var(--pink-d)">${fu(d.comm)}</td><td>${fu(d.payout)}</td><td style="color:var(--beige-d)">${fu(d.ob-d.ce)}</td><td style="color:${u>=0?'var(--sage)':'var(--pink-d)'};font-weight:600">${fu(u)}</td></tr>`;}  ).join('');
 }
 function sortBks(bks){
 const s=document.getElementById('b-sort')?.value||'date-desc';
@@ -1145,7 +1293,7 @@ return`<tr class="${isE?'erow':''}" style="${isPending?'background:var(--beige-l
 function renderOwners(){
 const{bo}=getStats('all');
 document.getElementById('obj-cards').innerHTML=OBJ.map(o=>{const d=bo[o];const cfg=S.owners[o]||{};return`<div class="oc"><div class="oc-name">${o}</div><div class="oc-own">${cfg.name||'Собственник'}</div><div class="oc-val">${fu(d.ob-d.ce)}</div><div class="oc-n">${d.nights} ночей</div></div>`;}  ).join('');
-document.getElementById('own-tb').innerHTML=OBJ.map(o=>{const d=bo[o];const cfg=S.owners[o]||{shortPct:70,longPct:85};return`<tr><td class="s">${o}</td><td style="color:var(--t3);font-size:12px">${cfg.name||'—'}</td><td style="font-size:12px;color:var(--t2);white-space:nowrap">${cfg.shortPct}% / ${cfg.longPct}%</td><td>${fu(d.net)}</td><td style="color:var(--beige-d)">${fu(d.ob)}</td><td style="color:var(--pink-d)">-${fu(d.ce).slice(1)}</td><td style="color:var(--pink-d);font-weight:600">${fu(d.ob-d.ce)}</td></tr>`;}  ).join('');
+document.getElementById('own-tb').innerHTML=OBJ.map(o=>{const d=bo[o];const cfg=S.owners[o]||{shortPct:70,longPct:85};return`<tr><td class="s">${o}</td><td style="color:var(--t3);font-size:12px">${cfg.name||'—'}</td><td style="font-size:12px;color:var(--t2);white-space:nowrap">${cfg.shortPct}% / ${cfg.longPct}%</td><td>${fu(d.payout)}</td><td style="color:var(--beige-d)">${fu(d.ob)}</td><td style="color:var(--pink-d)">-${fu(d.ce).slice(1)}</td><td style="color:var(--pink-d);font-weight:600">${fu(d.ob-d.ce)}</td></tr>`;}  ).join('');
 }
 function genRep(){
 const obj=document.getElementById('r-obj').value,monK=document.getElementById('r-mon').value;
@@ -1164,7 +1312,7 @@ const bRows=d.bookings.length?d.bookings.map(b=>{
     <td style="padding:10px 12px;border-bottom:1px solid #ede8e2;text-align:right;font-weight:700;color:#c97577">${fu(b.c.ob)}</td>
   </tr>`;}).join(''):'<tr><td colspan="6" style="text-align:center;padding:2rem;color:#9a9088;font-size:13px">Бронирований нет</td></tr>';
 const cRows=d.communals.length?d.communals.map(e=>`<tr><td style="padding:9px 12px;border-bottom:1px solid #ede8e2;font-size:13px">${CATLBL[e.cat]}${e.comment?' — '+e.comment:''}</td><td style="padding:9px 12px;border-bottom:1px solid #ede8e2;text-align:right;color:#c97577">-${fu(e.amountUsd).slice(1)}</td></tr>`  ).join(''):'<tr><td colspan="2" style="text-align:center;padding:1rem;color:#9a9088;font-size:12px">Нет коммунальных расходов</td></tr>';
-const tB=d.bookings.length?`<tr><td colspan="3" style="padding:10px 12px;font-weight:700;border-top:2px solid #1e1e1e">Итого</td><td style="padding:10px 12px;font-weight:700;text-align:right;border-top:2px solid #1e1e1e">${fu(d.net)}</td><td style="border-top:2px solid #1e1e1e"></td><td style="padding:10px 12px;font-weight:700;text-align:right;border-top:2px solid #1e1e1e;color:#c97577">${fu(d.ob)}</td></tr>`:'';
+const tB=d.bookings.length?`<tr><td colspan="3" style="padding:10px 12px;font-weight:700;border-top:2px solid #1e1e1e">Итого</td><td style="padding:10px 12px;font-weight:700;text-align:right;border-top:2px solid #1e1e1e">${fu(d.payout)}</td><td style="border-top:2px solid #1e1e1e"></td><td style="padding:10px 12px;font-weight:700;text-align:right;border-top:2px solid #1e1e1e;color:#c97577">${fu(d.ob)}</td></tr>`:'';
 const tC=d.communals.length?`<tr><td style="padding:10px 12px;font-weight:700;border-top:2px solid #1e1e1e">Итого</td><td style="padding:10px 12px;font-weight:700;text-align:right;border-top:2px solid #1e1e1e;color:#c97577">-${fu(d.ce).slice(1)}</td></tr>`:'';
 const html=`<div id="rpt" style="background:#fff;color:#1e1e1e;font-family:-apple-system,BlinkMacSystemFont,'DM Sans',sans-serif;padding:40px;max-width:760px">
 <table style="width:100%;border-collapse:collapse;margin-bottom:28px;border-bottom:2px solid #e2d0c4;padding-bottom:20px">
@@ -1212,7 +1360,7 @@ pdf.save(`bre.ge_${obj}_${mon}.pdf`);btn.innerHTML='<i class="ti ti-download" ar
 }
 function renderPnl(){
 const f=document.getElementById('pnl-mon').value;const{bo,tG,tC,tN,tOP,tOS,tOE}=getStats(f);
-document.getElementById('pnl-tb').innerHTML=OBJ.map(o=>{const d=bo[o];const p=d.os-d.oe;return`<tr><td class="s">${o}</td><td>${d.nights}</td><td style="color:var(--sage)">${fu(d.g)}</td><td style="color:var(--pink-d)">${fu(d.comm)}</td><td>${fu(d.net)}</td><td style="color:var(--beige-d)">${fu(d.ob-d.ce)}</td><td>${fu(d.os)}</td><td style="color:var(--pink-d)">${fu(d.oe)}</td><td style="color:${p>=0?'var(--sage)':'var(--pink-d)'};font-weight:600">${fu(p)}</td></tr>`;}  ).join('');
+document.getElementById('pnl-tb').innerHTML=OBJ.map(o=>{const d=bo[o];const p=d.os-d.oe;return`<tr><td class="s">${o}</td><td>${d.nights}</td><td style="color:var(--sage)">${fu(d.g)}</td><td style="color:var(--pink-d)">${d.comm>0?fu(d.comm):'—'}</td><td>${fu(d.payout)}</td><td style="color:var(--beige-d)">${fu(d.ob-d.ce)}</td><td>${fu(d.os)}</td><td style="color:var(--pink-d)">${d.oe>0?fu(d.oe):'—'}</td><td style="color:${p>=0?'var(--sage)':'var(--pink-d)'};font-weight:600">${fu(p)}</td></tr>`;}).join('');
 const tp=tOS-tOE;
 document.getElementById('pnl-tot').innerHTML=`<tr style="background:var(--bg3)"><td class="s">Итого</td><td style="font-weight:600">${OBJ.reduce((s,o)=>s+bo[o].nights,0)}</td><td style="color:var(--sage);font-weight:600">${fu(tG)}</td><td style="color:var(--pink-d);font-weight:600">${fu(tC)}</td><td style="font-weight:600">${fu(tN)}</td><td style="color:var(--beige-d);font-weight:600">${fu(tOP)}</td><td style="font-weight:600">${fu(tOS)}</td><td style="color:var(--pink-d);font-weight:600">${fu(tOE)}</td><td style="color:${tp>=0?'var(--sage)':'var(--pink-d)'};font-weight:700;font-size:14px">${fu(tp)}</td></tr>`;
 }
@@ -1329,7 +1477,7 @@ document.getElementById('od-period-lbl').textContent=lbl;
 // calc
 let tG=0,tComm=0,tNet=0,tOB=0,tOS=0,tNights=0;
 const bRows=bks.map(b=>{
-const c=cB(b);tG+=c.g;tComm+=c.comm;tNet+=c.net;tOB+=c.ob;tOS+=c.os;tNights+=b.nights;
+const c=cB(b);tG+=c.g;tComm+=c.comm;tNet+=c.payout;tOB+=c.ob;tOS+=c.os;tNights+=b.nights;
 const pct=(c.op*100).toFixed(0)+'%';
 return`<tr>
 <td class="s">${b.guest||'—'}</td>
@@ -1339,7 +1487,7 @@ return`<tr>
 <td><span class="pill ps" style="font-size:10px">${SRCLBL[b.source]}</span></td>
 <td style="color:var(--sage)">${fu(c.g)}</td>
 <td style="color:var(--pink-d)">${(b.source==='direct'||b.source==='other')?'—':'-'+fu(c.comm)}</td>
-<td>${fu(c.net)}</td>
+<td>${fu(c.payout)}</td>
 <td><span class="pill ${b.nights>=30?'pp':'ps'}" style="font-size:10px">${b.nights>=30?'≥30н':'<30н'} ${pct}</span></td>
 <td style="color:var(--beige-d);font-weight:500">${fu(c.ob)}</td>
 <td style="color:var(--pink-d);font-weight:500">${fu(c.os)}</td>
@@ -1409,13 +1557,13 @@ let tCE=0,tOE=0;
 communalExps.forEach(e=>tCE+=e.amountUsd);
 ourExps.forEach(e=>tOE+=e.amountUsd);
 const bRowsHtml=bks.map(b=>{
-const c=cB(b);tG+=c.g;tComm+=c.comm;tNet+=c.net;tOB+=c.ob;tOS+=c.os;tNights+=b.nights;
+const c=cB(b);tG+=c.g;tComm+=c.comm;tNet+=c.payout;tOB+=c.ob;tOS+=c.os;tNights+=b.nights;
 const pct=(c.op*100).toFixed(0)+'%';const sch=b.nights>=30?`≥30н (${pct})`:`<30н (${pct})`;
 return`<tr>
 <td style="padding:9px 10px;border-bottom:1px solid #ede8e2;font-size:13px">${b.guest||'Гость'}</td>
 <td style="padding:9px 10px;border-bottom:1px solid #ede8e2;font-size:12px;color:#9a9088">${b.ci} — ${b.co}</td>
 <td style="padding:9px 10px;border-bottom:1px solid #ede8e2;text-align:center">${b.nights}</td>
-<td style="padding:9px 10px;border-bottom:1px solid #ede8e2;text-align:right;font-weight:600">${fu(c.net)}</td>
+<td style="padding:9px 10px;border-bottom:1px solid #ede8e2;text-align:right;font-weight:600">${fu(c.payout)}</td>
 <td style="padding:9px 10px;border-bottom:1px solid #ede8e2;text-align:center;font-size:11px;color:#9a9088">${sch}</td>
 <td style="padding:9px 10px;border-bottom:1px solid #ede8e2;text-align:right;font-weight:700;color:#c97577">${fu(c.ob)}</td>
 </tr>`;
@@ -2298,10 +2446,20 @@ function setSutochnoCleaning(val){
   else { hlBtn('sc',val); inp.style.display='none'; inp.value=val; }
   calcSutochno();
 }
+function calcDirect(){
+  const total = parseFloat(document.getElementById('d-total').value)||0;
+  const cl = parseFloat(document.getElementById('d-clean').value)||0;
+  const base = total - cl;
+  document.getElementById('d-net-lbl').textContent = '$'+total.toFixed(2);
+  document.getElementById('d-clean-lbl').textContent = cl>0 ? '$'+cl.toFixed(2) : '—';
+  document.getElementById('d-base-lbl').textContent = '$'+base.toFixed(2);
+}
+
 function setDirectCleaning(val){
   const inp = document.getElementById('d-clean');
   if(val===-1){ hlBtn('dc','x'); inp.style.display=''; inp.focus(); }
   else { hlBtn('dc',val); inp.style.display='none'; inp.value=val; }
+  calcDirect();
 }
 
 function setCleanerDefault(){
