@@ -2,7 +2,7 @@
 // Стратегия: network-first для HTML (всегда свежая версия если есть инет),
 // cache-first для шрифтов/иконок/скриптов CDN.
 
-const CACHE_VERSION = 'brege-v1';
+const CACHE_VERSION = 'brege-v2';
 const APP_SHELL = [
   './',
   './index.html',
@@ -21,7 +21,6 @@ const CDN_HOSTS = [
 self.addEventListener('install', (event) => {
   event.waitUntil(
     caches.open(CACHE_VERSION).then((cache) => {
-      // Не падаем если какой-то ресурс не загрузился
       return Promise.all(
         APP_SHELL.map((url) =>
           cache.add(url).catch((err) => console.warn('[SW] failed to cache', url, err))
@@ -44,18 +43,17 @@ self.addEventListener('activate', (event) => {
 self.addEventListener('fetch', (event) => {
   const req = event.request;
 
-  // Только GET кешируем
   if (req.method !== 'GET') return;
 
   const url = new URL(req.url);
 
-  // Supabase API и Google Apps Script — НЕ кешируем (всегда онлайн)
+  // Supabase API и Anthropic — НЕ кешируем
   if (
     url.hostname.endsWith('.supabase.co') ||
     url.hostname.includes('script.google.com') ||
     url.hostname.includes('api.anthropic.com')
   ) {
-    return; // дефолтное поведение браузера
+    return;
   }
 
   // HTML / навигация → network-first
@@ -72,7 +70,7 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // CDN-шрифты, иконки, скрипты → cache-first
+  // CDN → cache-first
   if (CDN_HOSTS.some((h) => url.hostname.endsWith(h))) {
     event.respondWith(
       caches.match(req).then((cached) => {
@@ -89,7 +87,7 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // Прочее → network-first, fallback на кеш
+  // Прочее → network-first
   event.respondWith(
     fetch(req)
       .then((res) => {
@@ -103,7 +101,7 @@ self.addEventListener('fetch', (event) => {
   );
 });
 
-// Принудительное обновление через postMessage
+// Принудительное обновление
 self.addEventListener('message', (event) => {
   if (event.data === 'skip-waiting') self.skipWaiting();
 });
