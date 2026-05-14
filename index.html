@@ -471,6 +471,7 @@ input[type=date]{max-width:100%;font-size:13px}
 <div class="fg"><label>Категория</label><select id="e-cat" onchange="toggleExpCat()">
 <option value="communal">Коммунальные (с собственника)</option>
 <option value="cleaning">Уборка (с нас)</option>
+<option value="laundry">Прачечная (с нас)</option>
 <option value="repair">Ремонт (с нас)</option>
 <option value="household">Хозтовары (с нас)</option>
 <option value="ads">Реклама (с нас)</option>
@@ -754,8 +755,8 @@ input[type=date]{max-width:100%;font-size:13px}
 // OBJ is now dynamic — loaded from S.apartments
 const OBJ_DEFAULT=['Red camelia','White Camelia','Lermontova','Coral apartment','Cozy apart center','Next apartment 1718','Batumi view 606','Greenside 603','Sunrise','Granat orbi d2 1225','Alliance palace 803 Burgundy'];
 let OBJ=OBJ_DEFAULT.slice();
-const CATLBL={communal:'Коммунальные',cleaning:'Уборка',repair:'Ремонт',household:'Хозтовары',ads:'Реклама',company:'Расход компании',other:'Другое',free:'Своё'};
-const CATWHO={communal:'owner',cleaning:'us',repair:'us',household:'us',ads:'us',company:'us',other:'us',free:'us'};
+const CATLBL={communal:'Коммунальные',cleaning:'Уборка',laundry:'Прачечная',repair:'Ремонт',household:'Хозтовары',ads:'Реклама',company:'Расход компании',other:'Другое',free:'Своё'};
+const CATWHO={communal:'owner',cleaning:'us',laundry:'us',repair:'us',household:'us',ads:'us',company:'us',other:'us',free:'us'};
 const PAYTLBL={cash:'Кэш',card:'Карта',transfer:'Перевод'};
 const FSTLBL={full:'Оплачено',prepay:'Предоплата',platform:'На платформе',pending:'Ожидает'};
 const FSTCLS={full:'pg',prepay:'pa',platform:'ps',pending:'br'};
@@ -1329,10 +1330,26 @@ const payType=document.getElementById('e-paytype').value;
 const enteredBy=document.getElementById('e-who').value;
 const freeCat=cat==='free'?document.getElementById('e-free-cat').value.trim():'';
 if(!amt||!date){alert('Заполните сумму и дату');return;}
-const data={obj,cat,amount:amt,currency:cur,date,comment,paidBy,payType,enteredBy,freeCat,amountUsd:toUSD(amt,cur),who:CATWHO[cat]||'us'};
-if(eEid){const i=S.expenses.findIndex(x=>x.id===eEid);if(i!==-1)S.expenses[i]={...S.expenses[i],...data};eEid=null;}
-else S.expenses.push({id:Date.now(),...data});
-save();['e-amt','e-cm','e-free-cat'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});canE();renderE();
+const data={obj,cat,amount:amt,currency:cur,date,comment,paidBy,payType,enteredBy,freeCat,
+  amountUsd:toUSD(amt,cur),who:CATWHO[cat]||'us',
+  pending:false // clear pending when amount is set
+};
+let expenseId;
+if(eEid){
+  const i=S.expenses.findIndex(x=>x.id===eEid);
+  if(i!==-1){S.expenses[i]={...S.expenses[i],...data};expenseId=S.expenses[i].id;}
+  eEid=null;
+} else {
+  const newE={id:Date.now(),...data};
+  S.expenses.push(newE);
+  expenseId=newE.id;
+}
+save();
+// Save to Supabase
+const exp=S.expenses.find(e=>e.id===expenseId);
+if(exp) sbUpsert('expenses',[exp]).catch(e=>console.warn('Expense save error:',e));
+['e-amt','e-cm','e-free-cat'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
+canE();renderE();
 }
 function delE(id){if(!confirm('Удалить расход?'))return;S.expenses=S.expenses.filter(e=>e.id!==id);save();sbDelete('expenses',id).catch(e=>console.warn(e));renderE();}
 // Split booking proportionally across months
@@ -1374,7 +1391,7 @@ bks.forEach(b=>{
   bo[b.obj].bookings.push({...b,c,_frac:frac});
 });
 exps.forEach(e=>{
-  if(e.pending&&!e.amount)return;
+  if(e.pending&&(!e.amount||e.amount===0))return;
   const ap=o=>{
     if(!bo[o])return;
     if(e.cat==='communal'){bo[o].ce+=e.amountUsd;bo[o].communals.push(e);}
@@ -1463,6 +1480,9 @@ tb.innerHTML=bks.map(b=>{const c=cB(b);const isE=eBid===b.id;
 const fst=b.finStatus||'full';const fstCls=FSTCLS[fst]||'pg';
 const whoLabel=b.enteredBy==='artem'?'<span class="pill ps" style="font-size:9px">А</span>':'<span class="pill pp" style="font-size:9px">О</span>';
 const ptLabel=PAYTLBL[b.payType||'cash']||'';
+// Check for pending laundry expense
+const pendingLaundry=S.expenses.find(e=>e.bookingId===b.id&&(e.cat==='laundry'||e.cat==='cleaning')&&e.pending&&(!e.amount||e.amount===0));
+const laundryBadge=pendingLaundry?`<br><button class="btn btn-xs" style="margin-top:3px;background:var(--pink);color:#fff;font-size:9px;padding:2px 6px" onclick="event.stopPropagation();editE(${pendingLaundry.id})">🧺 Заполни прачку</button>`:'';
 return`<tr class="${isE?'erow':''}" data-bid="${b.id}">
 <td class="s">${b.obj}<br><span class="pill ${b.nights>=30?'pp':'ps'}" style="font-size:9px">${b.nights>=30?'≥30н':'<30н'} ${(c.op*100).toFixed(0)}%</span></td>
 <td>${b.guest||'—'}</td>
@@ -1473,7 +1493,7 @@ return`<tr class="${isE?'erow':''}" data-bid="${b.id}">
 <td style="font-weight:600;color:var(--sage)">${fu(c.payout)}</td>
 <td style="color:var(--beige-d)">${fu(c.ob)}</td>
 <td style="font-weight:600;color:var(--pink-d)">${fu(c.os)}</td>
-<td><span class="pill ${fstCls}" style="font-size:9px">${FSTLBL[fst]}</span>${whoLabel}</td>
+<td><span class="pill ${fstCls}" style="font-size:9px">${FSTLBL[fst]}</span>${whoLabel}${laundryBadge}</td>
 <td style="white-space:nowrap;display:flex;gap:3px;padding:7px 9px"><button class="btn btn-xs bxe" onclick="editB(${b.id})" aria-label="Редактировать"><i class="ti ti-edit" aria-hidden="true"></i></button><button class="btn btn-xs bxd" onclick="delB(${b.id})" aria-label="Удалить"><i class="ti ti-trash" aria-hidden="true"></i></button></td>
 </tr>`;}).join('');
 }
@@ -1501,8 +1521,8 @@ tb.innerHTML=exps.map(e=>{const isE=eEid===e.id;
 const catLbl=e.cat==='free'?(e.freeCat||'Своё'):(CATLBL[e.cat]||e.cat);
 const entWho=e.enteredBy==='artem'?'<span class="pill ps" style="font-size:9px">Артём</span>':'<span class="pill pp" style="font-size:9px">Оля</span>';
 const ptLabel=PAYTLBL[e.payType||'cash']||'';
-const isPending=e.pending&&!e.amount;
-const pendingBadge=isPending?'<span class="pill pa" style="font-size:9px">⏳ Указать сумму</span>':'';
+const isPending=e.pending&&(!e.amount||e.amount===0);
+const pendingBadge=isPending?`<button class="btn btn-xs" style="background:var(--pink);color:#fff;font-size:10px;padding:3px 10px;border-radius:6px;margin-left:6px" onclick="event.stopPropagation();editE(${e.id})">Заполнить →</button>`:'';
 return`<tr class="${isE?'erow':''}" style="${isPending?'background:var(--beige-l)':''}">
 <td class="s">${e.obj==='__all'?'Общий':e.obj}</td>
 <td><span class="pill pg" style="font-size:10px">${catLbl}</span>${pendingBadge}</td>
@@ -3322,7 +3342,7 @@ function submitWizard(){
         comment: `🧺 Прачечная · ${booking.guest||'Гость'} · ${ci}→${co}`,
         paidBy:'company', payType:'cash', enteredBy: booking.enteredBy,
         amountUsd: 0, who:'us',
-        bookingId: booking.id, autoCreated: true, pending: true
+        bookingId: booking.id, autoCreated: true, pending: true, cat: 'laundry'
       });
     }
   }
