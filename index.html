@@ -319,63 +319,60 @@ input[type=date]{max-width:100%;font-size:13px}
   <div id="wiz-step-2" style="display:none">
     <div class="card-b">
 
-      <!-- AIRBNB -->
-      <div id="fin-airbnb">
-        <div style="font-size:12px;color:var(--t2);background:var(--pink-bg);padding:8px 12px;border-radius:6px;margin-bottom:12px;border-left:3px solid var(--pink)">Введите цену за ночь — итог считается автоматически. Сбор с хозяина 3.54%</div>
-        <div class="form-grid">
+      <!-- COMMON: ночь + уборка -->
+      <div style="background:var(--bg3);border-radius:10px;padding:14px;margin-bottom:14px">
+        <div class="form-grid" style="margin-bottom:0">
           <div class="fg">
-            <label>Цена за ночь</label>
-            <input type="number" id="a-night-price" placeholder="напр. 35" oninput="calcAirbnbFromNight()">
-            <div style="font-size:10px;color:var(--t3);margin-top:2px" id="a-nights-hint">× <span id="a-nights-count">0</span> ночей = <span id="a-acc-calc">$0</span></div>
-          </div>
-          <div class="fg">
-            <label>Уборка (включена в сумму)</label>
-            <div style="display:flex;gap:6px;margin-top:4px">
-              <button type="button" class="btn btn-gh btn-xs" id="ac-0" onclick="setAirbnbCleaning(0)">Нет</button>
-              <button type="button" class="btn btn-gh btn-xs" id="ac-20" onclick="setAirbnbCleaning(20)">$20</button>
-              <button type="button" class="btn btn-gh btn-xs" id="ac-25" onclick="setAirbnbCleaning(25)">$25</button>
-              <button type="button" class="btn btn-gh btn-xs" id="ac-x" onclick="setAirbnbCleaning(-1)">Другая</button>
+            <label style="font-weight:600">Стоимость одной ночи</label>
+            <input type="number" id="night-price" placeholder="напр. 35" oninput="calcFromNight()">
+            <div style="font-size:11px;color:var(--t3);margin-top:4px">
+              × <span id="nights-count-lbl">0</span> ночей = <span id="nights-total-lbl" style="font-weight:600;color:var(--sage)">$0</span>
             </div>
-            <input type="number" id="a-clean" placeholder="сумма" style="margin-top:6px;display:none" oninput="calcAirbnb()">
           </div>
           <div class="fg">
-            <label>Гость заплатил итого <span style="color:var(--t3);font-weight:400">(необязательно)</span></label>
-            <input type="number" id="a-guest-total" placeholder="напр. 105">
-            <div style="font-size:10px;color:var(--t3);margin-top:2px">Из экрана "Уплачено гостем" в Airbnb</div>
+            <label style="font-weight:600">Уборка <span id="cleaning-direction-lbl" style="font-weight:400;color:var(--t3)">(прибавляется)</span></label>
+            <div style="display:flex;gap:6px;margin-top:4px">
+              <button type="button" class="btn btn-gh btn-xs" id="cl-0" onclick="setUnivCleaning(0)">Нет</button>
+              <button type="button" class="btn btn-gh btn-xs" id="cl-20" onclick="setUnivCleaning(20)">$20</button>
+              <button type="button" class="btn btn-gh btn-xs" id="cl-25" onclick="setUnivCleaning(25)">$25</button>
+              <button type="button" class="btn btn-gh btn-xs" id="cl-x" onclick="setUnivCleaning(-1)">Другая</button>
+            </div>
+            <input type="number" id="univ-clean" placeholder="сумма" style="margin-top:6px;display:none" oninput="calcFromNight()">
           </div>
-        </div>
-        <input type="hidden" id="a-acc">
-        <div style="background:var(--bg3);border-radius:8px;padding:12px;display:grid;grid-template-columns:repeat(3,1fr);gap:10px">
-          <div><div style="font-size:10px;color:var(--t3)">Сбор с хозяина</div><div id="a-host-lbl" style="font-weight:700;color:var(--pink-d)">$0</div><div style="font-size:9px;color:var(--t3)">(ночи+уборка)×3.54%</div></div>
-          <div><div style="font-size:10px;color:var(--t3)">Вы получите</div><div id="a-payout-lbl" style="font-weight:700;font-size:15px;color:var(--sage)">$0</div></div>
-          <div><div style="font-size:10px;color:var(--t3)">База собственника</div><div id="a-base-lbl" style="font-weight:700">$0</div><div style="font-size:9px;color:var(--t3)">без уборки</div></div>
         </div>
       </div>
 
-      <!-- BOOKING -->
+      <!-- Hidden fields for compat -->
+      <input type="hidden" id="a-acc">
+      <input type="hidden" id="a-clean">
+      <input type="hidden" id="bk-total">
+      <input type="hidden" id="bk-clean">
+      <input type="hidden" id="s-acc">
+      <input type="hidden" id="s-clean">
+      <input type="hidden" id="d-total">
+      <input type="hidden" id="d-clean">
+
+      <!-- AIRBNB specifics -->
+      <div id="fin-airbnb">
+        <div style="font-size:12px;color:var(--t2);background:var(--pink-bg);padding:8px 12px;border-radius:6px;margin-bottom:10px;border-left:3px solid var(--pink)">Сбор с хозяина 3.54% считается от (ночи + уборка) автоматически</div>
+        <div class="fg" style="margin-bottom:10px">
+          <label>Гость заплатил итого <span style="color:var(--t3);font-weight:400">(необязательно)</span></label>
+          <input type="number" id="a-guest-total" placeholder="из Airbnb — уплачено гостем">
+        </div>
+        <div style="background:var(--bg3);border-radius:8px;padding:12px;display:grid;grid-template-columns:repeat(3,1fr);gap:10px">
+          <div><div style="font-size:10px;color:var(--t3)">Сбор с хозяина</div><div id="a-host-lbl" style="font-weight:700;color:var(--pink-d)">$0</div><div style="font-size:9px;color:var(--t3)">(ночи+уборка)×3.54%</div></div>
+          <div><div style="font-size:10px;color:var(--t3)">Вы получите</div><div id="a-payout-lbl" style="font-weight:700;font-size:15px;color:var(--sage)">$0</div></div>
+          <div><div style="font-size:10px;color:var(--t3)">База собственника</div><div id="a-base-lbl" style="font-weight:700">$0</div><div style="font-size:9px;color:var(--t3)">только ночи</div></div>
+        </div>
+      </div>
+
+      <!-- BOOKING specifics -->
       <div id="fin-booking" style="display:none">
-        <div style="font-size:12px;color:var(--t2);background:var(--pink-bg);padding:8px 12px;border-radius:6px;margin-bottom:12px;border-left:3px solid var(--pink)">Введите цену за ночь — итог считается автоматически. Комиссия 15% + НДС 18%</div>
-        <div class="form-grid">
-          <div class="fg">
-            <label>Цена за ночь</label>
-            <input type="number" id="bk-night-price" placeholder="напр. 50" oninput="calcBookingFromNight()">
-            <div style="font-size:10px;color:var(--t3);margin-top:2px">× <span id="bk-nights-count">0</span> ночей = <span id="bk-total-calc">0</span></div>
-          </div>
-          <div class="fg">
-            <label>Уборка (вычесть)</label>
-            <div style="display:flex;gap:6px;margin-top:4px">
-              <button type="button" class="btn btn-gh btn-xs" id="bc-0" onclick="setBookingCleaning(0)">Нет</button>
-              <button type="button" class="btn btn-gh btn-xs" id="bc-20" onclick="setBookingCleaning(20)">$20</button>
-              <button type="button" class="btn btn-gh btn-xs" id="bc-25" onclick="setBookingCleaning(25)">$25</button>
-              <button type="button" class="btn btn-gh btn-xs" id="bc-x" onclick="setBookingCleaning(-1)">Другая</button>
-            </div>
-            <input type="number" id="bk-clean" placeholder="сумма" style="margin-top:6px;display:none" oninput="calcBooking()">
-          </div>
-          </div>
-          <div class="fg"><label>Комиссия Booking</label><input type="number" id="bk-comm" placeholder="0" oninput="calcBooking()"></div>
+        <div style="font-size:12px;color:var(--t2);background:var(--pink-bg);padding:8px 12px;border-radius:6px;margin-bottom:10px;border-left:3px solid var(--pink)">Уборка вычитается из итога для аналитики. Комиссию вводи из выписки Booking</div>
+        <div class="form-grid" style="margin-bottom:10px">
+          <div class="fg"><label>Комиссия Booking <span style="color:var(--t3);font-weight:400">(из выписки)</span></label><input type="number" id="bk-comm" placeholder="0" oninput="calcBooking()"></div>
           <div class="fg"><label>НДС на комиссию (18%)</label><input type="number" id="bk-vat" readonly style="background:var(--bg3)"></div>
         </div>
-        <input type="hidden" id="bk-total">
         <div style="background:var(--bg3);border-radius:8px;padding:12px;display:grid;grid-template-columns:repeat(3,1fr);gap:10px">
           <div><div style="font-size:10px;color:var(--t3)">Комиссия итого</div><div id="bk-fees-lbl" style="font-weight:700;color:var(--pink-d)">0</div></div>
           <div><div style="font-size:10px;color:var(--t3)">Вы получите</div><div id="bk-net-lbl" style="font-weight:700;font-size:15px;color:var(--sage)">0</div></div>
@@ -383,27 +380,9 @@ input[type=date]{max-width:100%;font-size:13px}
         </div>
       </div>
 
-      <!-- SUTOCHNO -->
+      <!-- SUTOCHNO specifics -->
       <div id="fin-sutochno" style="display:none">
-        <div style="font-size:12px;color:var(--t2);background:var(--pink-bg);padding:8px 12px;border-radius:6px;margin-bottom:12px;border-left:3px solid var(--pink)">Предоплата 20% = комиссия Суточно. Остаток получите при заезде наличными</div>
-        <div class="form-grid">
-          <div class="fg">
-            <label>Цена за ночь</label>
-            <input type="number" id="s-night-price" placeholder="напр. 45" oninput="calcSutochnoFromNight()">
-            <div style="font-size:10px;color:var(--t3);margin-top:2px">× <span id="s-nights-count">0</span> ночей = <span id="s-acc-calc">$0</span></div>
-          </div>
-          <input type="hidden" id="s-acc">
-          <div class="fg">
-            <label>Уборка</label>
-            <div style="display:flex;gap:6px;margin-top:4px">
-              <button type="button" class="btn btn-gh btn-xs" id="sc-0" onclick="setSutochnoCleaning(0)">Нет</button>
-              <button type="button" class="btn btn-gh btn-xs" id="sc-20" onclick="setSutochnoCleaning(20)">$20</button>
-              <button type="button" class="btn btn-gh btn-xs" id="sc-25" onclick="setSutochnoCleaning(25)">$25</button>
-              <button type="button" class="btn btn-gh btn-xs" id="sc-x" onclick="setSutochnoCleaning(-1)">Другая</button>
-            </div>
-            <input type="number" id="s-clean" placeholder="сумма" style="margin-top:6px;display:none" oninput="calcSutochno()">
-          </div>
-        </div>
+        <div style="font-size:12px;color:var(--t2);background:var(--pink-bg);padding:8px 12px;border-radius:6px;margin-bottom:10px;border-left:3px solid var(--pink)">Предоплата 20% = комиссия Суточно. Остаток получите при заезде наличными</div>
         <div style="background:var(--bg3);border-radius:8px;padding:12px;display:grid;grid-template-columns:repeat(3,1fr);gap:10px">
           <div><div style="font-size:10px;color:var(--t3)">Итого с гостя</div><div id="s-total-lbl" style="font-weight:700;font-size:15px">$0</div></div>
           <div><div style="font-size:10px;color:var(--t3)">Предоплата (20%)</div><div id="s-prepay-lbl" style="font-weight:700;color:var(--pink-d)">$0</div></div>
@@ -411,32 +390,15 @@ input[type=date]{max-width:100%;font-size:13px}
         </div>
       </div>
 
-      <!-- DIRECT -->
+      <!-- DIRECT specifics -->
       <div id="fin-direct" style="display:none">
-        <div class="form-grid">
-          <div class="fg">
-            <label>Цена за ночь</label>
-            <input type="number" id="d-night-price" placeholder="напр. 50" oninput="calcDirectFromNight()">
-            <div style="font-size:10px;color:var(--t3);margin-top:2px">× <span id="d-nights-count">0</span> ночей = <span id="d-total-calc">$0</span></div>
-          </div>
-          <input type="hidden" id="d-total">
-          <div class="fg">
-            <label>Уборка (входит в сумму гостя)</label>
-            <div style="display:flex;gap:6px;margin-top:4px">
-              <button type="button" class="btn btn-gh btn-xs" id="dc-0" onclick="setDirectCleaning(0)">Нет</button>
-              <button type="button" class="btn btn-gh btn-xs" id="dc-20" onclick="setDirectCleaning(20)">$20</button>
-              <button type="button" class="btn btn-gh btn-xs" id="dc-25" onclick="setDirectCleaning(25)">$25</button>
-              <button type="button" class="btn btn-gh btn-xs" id="dc-x" onclick="setDirectCleaning(-1)">Другая</button>
-            </div>
-            <input type="number" id="d-clean" placeholder="сумма" style="margin-top:6px;display:none" oninput="calcDirect()">
-          </div>
-        </div>
         <div style="background:var(--bg3);border-radius:8px;padding:12px;display:grid;grid-template-columns:repeat(3,1fr);gap:10px">
           <div><div style="font-size:10px;color:var(--t3)">Итого с гостя</div><div id="d-net-lbl" style="font-weight:700;font-size:15px;color:var(--sage)">$0</div></div>
-          <div><div style="font-size:10px;color:var(--t3)">Уборка (сверху)</div><div id="d-clean-lbl" style="font-weight:700">$0</div></div>
+          <div><div style="font-size:10px;color:var(--t3)">Уборка (сверху)</div><div id="d-clean-lbl" style="font-weight:700">—</div></div>
           <div><div style="font-size:10px;color:var(--t3)">База собственника</div><div id="d-base-lbl" style="font-weight:700">$0</div><div style="font-size:9px;color:var(--t3)">только ночи</div></div>
         </div>
       </div>
+</div>
 
       <div style="border-top:1px solid var(--bdr);margin-top:14px;padding-top:14px">
         <div class="form-grid">
@@ -3303,11 +3265,8 @@ function calcWizNights(){
       const el=document.getElementById(id); if(el) el.textContent=n;
     });
     // Recalc if price already entered
-    ['calcAirbnbFromNight','calcBookingFromNight','calcSutochnoFromNight','calcDirectFromNight'].forEach(fn=>{
-      const fields={'calcAirbnbFromNight':'a-night-price','calcBookingFromNight':'bk-night-price','calcSutochnoFromNight':'s-night-price','calcDirectFromNight':'d-night-price'};
-      const el=document.getElementById(fields[fn]);
-      if(el && el.value) window[fn]();
-    });
+    const priceEl=document.getElementById('night-price');
+    if(priceEl && priceEl.value) calcFromNight();
     onObjChange();
   }
 }
@@ -3338,18 +3297,17 @@ function onSrcChange(){
     const el = document.getElementById('fin-'+s);
     if(el) el.style.display = s===src ? 'block' : 'none';
   });
+  // Update cleaning direction label
+  const lbl=document.getElementById('cleaning-direction-lbl');
+  if(lbl) lbl.textContent = src==='booking' ? '(вычитается)' : '(прибавляется)';
   autoHighlightCleaning();
 }
 
 function autoHighlightCleaning(){
   const obj = document.getElementById('w-obj').value;
-  const src = document.getElementById('w-src').value;
   const apt = APT_SETTINGS[obj] || {cleaning:20};
   const cl = apt.cleaning || 20;
-  if(src==='airbnb') setAirbnbCleaning(cl);
-  else if(src==='sutochno') setSutochnoCleaning(cl);
-  else if(src==='booking') setBookingCleaning(cl);
-  else setDirectCleaning(0);
+  setUnivCleaning(cl===20?20:cl===25?25:cl>0?cl:0);
 }
 
 function hlBtn(prefix, val){
@@ -3431,15 +3389,53 @@ function getWizCleaning(){
 
 function getWizNights(){return parseInt(document.getElementById('w-nights').value)||0;}
 
-function calcAirbnbFromNight(){
-  const price=parseFloat(document.getElementById('a-night-price').value)||0;
+function setUnivCleaning(val){
+  const inp=document.getElementById('univ-clean');
+  if(val===-1){
+    ['cl-0','cl-20','cl-25','cl-x'].forEach(id=>{const b=document.getElementById(id);if(b){b.style.background='';b.style.color='';}});
+    const bx=document.getElementById('cl-x');if(bx){bx.style.background='var(--pink)';bx.style.color='#fff';}
+    inp.style.display='';inp.focus();
+  } else {
+    ['cl-0','cl-20','cl-25','cl-x'].forEach(id=>{const b=document.getElementById(id);if(b){b.style.background='';b.style.color='';}});
+    const key=val===0?'cl-0':val===20?'cl-20':val===25?'cl-25':'cl-x';
+    const btn=document.getElementById(key);if(btn){btn.style.background='var(--pink)';btn.style.color='#fff';}
+    inp.style.display='none';inp.value=val;
+  }
+  calcFromNight();
+}
+
+function calcFromNight(){
+  const src=document.getElementById('w-src').value;
+  const price=parseFloat(document.getElementById('night-price').value)||0;
   const nights=getWizNights();
-  const total=+(price*nights).toFixed(2);
-  document.getElementById('a-acc').value=total;
-  document.getElementById('a-nights-count').textContent=nights;
-  const sym=document.getElementById('w-cur').value==='gel'?'₾':'$';
-  document.getElementById('a-acc-calc').textContent=sym+total.toFixed(2);
-  calcAirbnb();
+  const cl=parseFloat(document.getElementById('univ-clean').value)||0;
+  const pet=parseFloat(document.getElementById('w-pet-fee').value)||0;
+  const cur=document.getElementById('w-cur').value;
+  const sym=cur==='gel'?'₾':'$';
+  const nightsTotal=+(price*nights).toFixed(2);
+
+  // Update common labels
+  const ntl=document.getElementById('nights-count-lbl');if(ntl)ntl.textContent=nights;
+  const ttl=document.getElementById('nights-total-lbl');if(ttl)ttl.textContent=sym+nightsTotal.toFixed(2);
+
+  // Set hidden fields for each platform
+  if(src==='airbnb'){
+    document.getElementById('a-acc').value=nightsTotal;
+    document.getElementById('a-clean').value=cl;
+    calcAirbnb();
+  } else if(src==='booking'){
+    document.getElementById('bk-total').value=nightsTotal;
+    document.getElementById('bk-clean').value=cl;
+    calcBooking();
+  } else if(src==='sutochno'){
+    document.getElementById('s-acc').value=nightsTotal;
+    document.getElementById('s-clean').value=cl;
+    calcSutochno();
+  } else {
+    document.getElementById('d-total').value=nightsTotal;
+    document.getElementById('d-clean').value=cl;
+    calcDirect();
+  }
 }
 
 function calcBookingFromNight(){
@@ -3753,14 +3749,19 @@ function resetWizard(){
     const el=document.getElementById(id); if(el) el.value=el.options?.[0]?.value||'';
   });
   ['w-guest','w-phone','w-ci','w-co','w-nights','w-comment',
-   'a-acc','a-clean','a-guest-total','bk-total','bk-clean','bk-comm','bk-vat',
-   's-acc','s-clean','d-total','d-clean','w-pet-fee','w-received-date'].forEach(id=>{
+   'a-guest-total','bk-comm','bk-vat','w-pet-fee','w-received-date','night-price','univ-clean'].forEach(id=>{
     const el=document.getElementById(id); if(el) el.value='';
   });
   document.getElementById('w-adults').value=2;
   document.getElementById('w-children').value=0;
   document.getElementById('w-pets').checked=false;
   document.getElementById('pet-fee-block').style.display='none';
+  // Reset unified fields
+  const np=document.getElementById('night-price');if(np)np.value='';
+  const uc=document.getElementById('univ-clean');if(uc){uc.value='';uc.style.display='none';}
+  const ntl=document.getElementById('nights-count-lbl');if(ntl)ntl.textContent='0';
+  const ttl=document.getElementById('nights-total-lbl');if(ttl)ttl.textContent='$0';
+  ['cl-0','cl-20','cl-25','cl-x'].forEach(id=>{const b=document.getElementById(id);if(b){b.style.background='';b.style.color='';}});
   document.getElementById('w-booking-ref').textContent='';
   document.getElementById('w-nights-lbl').textContent='';
   document.getElementById('wiz-review').innerHTML='';
