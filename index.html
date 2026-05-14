@@ -639,6 +639,7 @@ input[type=date]{max-width:100%;font-size:13px}
 <div class="card-b" style="display:flex;gap:10px;flex-wrap:wrap">
 <button class="btn btn-gh" onclick="loadFromSupabase()"><i class="ti ti-cloud-download" aria-hidden="true"></i> Загрузить из Supabase</button>
 <button class="btn btn-gh" onclick="if(confirm('Очистить локальный кэш и перезагрузить?')){localStorage.removeItem('bre_data');location.reload();}"><i class="ti ti-trash" aria-hidden="true"></i> Очистить кэш</button>
+<button class="btn btn-gh" onclick="cleanupDuplicateObjs()" style="color:var(--pink-d);border-color:var(--pink-l)"><i class="ti ti-git-merge" aria-hidden="true"></i> Удалить дубли объектов</button>
 </div>
 </div>
 
@@ -701,17 +702,18 @@ const APT_TYPES={studio:'Студия',one_bedroom:'1 спальня',special:'�
 function defOwn(){const o={};OBJ_DEFAULT.forEach(x=>{o[x]={name:'',shortPct:70,longPct:x==='Корал'?90:85,type:'studio',cleaning:20,cleanerCost:50,note:''};});return o;}
 
 function initApartments(){
-  // Sync OBJ array from S.owners keys
-  const customObjs=Object.keys(S.owners).filter(o=>!OBJ_DEFAULT.includes(o));
-  OBJ=[...OBJ_DEFAULT,...customObjs];
-  // Ensure all OBJ have settings
+  // Use renamed defaults if available, otherwise use OBJ_DEFAULT
+  const currentDefaults = (S.renamedDefaults && S.renamedDefaults.length===OBJ_DEFAULT.length)
+    ? S.renamedDefaults : OBJ_DEFAULT.slice();
+  const allKnown = new Set([...OBJ_DEFAULT, ...currentDefaults]);
+  const customObjs = Object.keys(S.owners).filter(o => !allKnown.has(o));
+  OBJ = [...currentDefaults, ...customObjs];
   OBJ.forEach(o=>{
     if(!S.owners[o]) S.owners[o]={name:'',shortPct:70,longPct:85,type:'studio',cleaning:20,cleanerCost:50,note:''};
-    // Migrate old entries
     const cfg=S.owners[o];
     if(!cfg.type) cfg.type='studio';
-    if(!cfg.cleaning) cfg.cleaning=['Батуми Вью','Гранат','Бургунди','Гринсайд'].includes(o)?25:20;
-    if(!cfg.cleanerCost) cfg.cleanerCost=['Батуми Вью','Гранат','Бургунди','Гринсайд'].includes(o)?65:50;
+    if(!cfg.cleaning) cfg.cleaning=25;
+    if(!cfg.cleanerCost) cfg.cleanerCost=50;
   });
   // Update APT_SETTINGS from S.owners
   OBJ.forEach(o=>{
@@ -723,20 +725,53 @@ function initApartments(){
 function renameObj(oldName, newName){
   newName = newName.trim();
   if(!newName || newName === oldName) return;
-  if(OBJ.includes(newName)){ alert('Объект с таким названием уже есть'); return; }
+  if(OBJ.includes(newName) && newName !== oldName){ alert('Объект с таким названием уже есть'); return; }
+  // Update owners
   S.owners[newName] = S.owners[oldName];
   delete S.owners[oldName];
+  // Update bookings and expenses
   S.bookings.forEach(b=>{ if(b.obj===oldName) b.obj=newName; });
   S.expenses.forEach(e=>{ if(e.obj===oldName) e.obj=newName; });
-  // Update OBJ_DEFAULT if needed
-  const di = OBJ_DEFAULT.indexOf(oldName);
-  if(di!==-1) OBJ_DEFAULT[di]=newName;
+  // Track renamed defaults
+  if(!S.renamedDefaults) S.renamedDefaults = OBJ_DEFAULT.slice();
+  const di = S.renamedDefaults.indexOf(oldName);
+  if(di!==-1) S.renamedDefaults[di]=newName;
   initApartments();
   save();
   popSels();
   renderSettings();
 }
 
+function cleanupDuplicateObjs(){
+  // Find objects that are in S.owners but NOT in OBJ (i.e. duplicates from bad renames)
+  // Also remove English duplicates of Russian names
+  const englishToRussian = {
+    'Red Camelia':'Красная камелия','White Camelia':'Белая камелия',
+    'Lermontova':'Лермонтова','Coral apartment':'Корал',
+    'Cozy apart center':'Кава Вью','Next apartment 1718':'НЕКСТ',
+    'Batumi View 606':'Батуми Вью','Greenside':'Гринсайд',
+    'Sunrise':'Санрайс','Granat Orbi D2':'Гранат',
+    'Alliance 803 Burgundy':'Бургунди'
+  };
+  let removed = [];
+  Object.keys(englishToRussian).forEach(eng => {
+    if(S.owners[eng]) {
+      delete S.owners[eng];
+      removed.push(eng);
+    }
+  });
+  // Also remove from bookings/expenses if they point to English names
+  Object.entries(englishToRussian).forEach(([eng, rus]) => {
+    S.bookings.forEach(b => { if(b.obj===eng) b.obj=rus; });
+    S.expenses.forEach(e => { if(e.obj===eng) e.obj=rus; });
+  });
+  if(removed.length) {
+    initApartments(); save(); popSels(); renderSettings();
+    alert('Удалено дублей: ' + removed.join(', '));
+  } else {
+    alert('Дублей не найдено');
+  }
+}
 function toggleNewObjForm(){
   const f=document.getElementById('new-obj-form');
   f.style.display=f.style.display==='none'?'block':'none';
@@ -774,6 +809,14 @@ function deleteObj(name){
   if(hasBk||hasEx) msg+=`\n\nВНИМАНИЕ: есть ${hasBk?S.bookings.filter(b=>b.obj===name).length+' бронирований':''}${hasBk&&hasEx?' и ':''}${hasEx?S.expenses.filter(e=>e.obj===name).length+' расходов':''} — они останутся в базе.`;
   if(!confirm(msg))return;
   delete S.owners[name];
+  // Remove from renamedDefaults if present
+  if(S.renamedDefaults){
+    const di=S.renamedDefaults.indexOf(name);
+    if(di!==-1) S.renamedDefaults.splice(di,1);
+  }
+  // Remove from OBJ_DEFAULT if present
+  const di2=OBJ_DEFAULT.indexOf(name);
+  if(di2!==-1) OBJ_DEFAULT.splice(di2,1);
   initApartments();
   save();
   popSels();
@@ -1651,7 +1694,8 @@ function renderSettings(){
           <div class="fg"><label>Долго %</label><input type="number" value="${cfg.longPct||85}" min="0" max="100" style="${ist};width:100%" onchange="saveObjField('${o}','longPct',+this.value)"></div>
           <div class="fg" style="grid-column:span 2"><label>Заметки</label><input type="text" value="${cfg.note||''}" placeholder="Адрес..." style="${ist};width:100%" onchange="saveObjField('${o}','note',this.value)"></div>
         </div>
-        ${canDelete(o)?`<button class="btn btn-xs bxd" style="margin-top:10px" onclick="deleteObj('${o}')"><i class="ti ti-trash" aria-hidden="true"></i> Удалить объект</button>`:''}
+        ${canDelete(o)?`<button class="btn btn-xs bxd" style="margin-top:10px" onclick="deleteObj('${o}')"><i class="ti ti-trash" aria-hidden="true"></i> Удалить объект</button>`:
+        `<button class="btn btn-xs bxd" style="margin-top:10px;opacity:.7" onclick="if(confirm('Удалить стандартный объект &quot;${o}&quot;? Бронирования останутся в базе.'))deleteObj('${o}')"><i class="ti ti-trash" aria-hidden="true"></i> Удалить объект</button>`}
       </div>
     </div>`;
   }).join('');
