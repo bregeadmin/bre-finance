@@ -3633,12 +3633,73 @@ async function loadFromSupabase(){
     if(Array.isArray(sets)){
       const gelRow = sets.find(s=>s.key==='gel_rate');
       const ownRow = sets.find(s=>s.key==='owners');
+      const rdRow  = sets.find(s=>s.key==='renamedDefaults');
       if(gelRow) S.gelRate = parseFloat(gelRow.value)||2.65;
       if(ownRow) try{
         const o=JSON.parse(ownRow.value);
         if(o&&Object.keys(o).length) S.owners=o;
       }catch(e){}
+      if(rdRow) try{
+        const rd=JSON.parse(rdRow.value);
+        if(Array.isArray(rd)) S.renamedDefaults=rd;
+      }catch(e){}
     }
+
+    // ============================================================
+    // АВТО-МИГРАЦИЯ: удалить русские названия квартир, заменить на латинские
+    // ============================================================
+    const RU_TO_EN = {
+      'Красная камелия':'Red camelia',
+      'Белая камелия':'White Camelia',
+      'Лермонтова':'Lermontova',
+      'Корал':'Coral apartment',
+      'Кава Вью':'Cozy apart center',
+      'НЕКСТ':'Next apartment 1718',
+      'Батуми Вью':'Batumi view 606',
+      'Гринсайд':'Greenside 603',
+      'Санрайс':'Sunrise',
+      'Гранат':'Granat orbi d2 1225',
+      'Бургунди':'Alliance palace 803 Burgundy'
+    };
+    let migrated = false;
+    // 1. Переименовать бронирования
+    S.bookings.forEach(b => {
+      if(b.obj && RU_TO_EN[b.obj]){ b.obj = RU_TO_EN[b.obj]; migrated = true; }
+    });
+    // 2. Переименовать расходы
+    S.expenses.forEach(e => {
+      if(e.obj && RU_TO_EN[e.obj]){ e.obj = RU_TO_EN[e.obj]; migrated = true; }
+    });
+    // 3. Удалить русские ключи из owners (английские уже есть)
+    Object.keys(RU_TO_EN).forEach(ru => {
+      if(S.owners[ru]){
+        // Если английского ещё нет — переносим настройки, иначе просто удаляем
+        const en = RU_TO_EN[ru];
+        if(!S.owners[en]) S.owners[en] = S.owners[ru];
+        delete S.owners[ru];
+        migrated = true;
+      }
+    });
+    // 4. Очистить renamedDefaults если он содержит русские имена
+    if(Array.isArray(S.renamedDefaults) && S.renamedDefaults.some(n=>RU_TO_EN[n])){
+      S.renamedDefaults = null;
+      migrated = true;
+    }
+    // 5. Если что-то мигрировали — сохранить обратно в Supabase
+    if(migrated){
+      console.log('[migration] Removed Russian apartment names');
+      try{
+        await sbUpsert('settings', [
+          {key:'owners', value:JSON.stringify(S.owners)},
+          {key:'renamedDefaults', value:JSON.stringify(S.renamedDefaults||[])}
+        ]);
+        // Также синхронизируем переименованные брони/расходы
+        if(S.bookings.length) await sbUpsert('bookings', S.bookings.map(bToDb));
+        if(S.expenses.length) await sbUpsert('expenses', S.expenses.map(eToDb));
+      }catch(e){ console.warn('[migration] save failed:', e); }
+    }
+    // ============================================================
+
     save();
     initApartments();
     popSels();
