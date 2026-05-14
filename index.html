@@ -1301,7 +1301,7 @@ document.getElementById('wiz-prepay-block').style.display=isPre?'block':'none';
 if(isPre){document.getElementById('b-pre-amt').value=b.prepayAmt||0;document.getElementById('b-pre-type').value=b.prepayType||'cash';document.getElementById('b-pre-rest').value=b.prepayRest||0;document.getElementById('b-pre-when').value=b.prepayWhen||'checkin';}
 calcP();
 }
-function editB(id){const b=S.bookings.find(x=>x.id===id);if(!b)return;eBid=id;fillBF(b);document.getElementById('w-ftitle').textContent='Редактировать бронирование';document.getElementById('w-btn').textContent='Сохранить';document.getElementById('w-can').style.display='';go('bookings');renderB();}
+// editB defined below
 function canB(){eBid=null;['b-gst','b-amt','b-cl','b-extra','b-comment','b-pre-amt','b-pre-rest','b-guest-paid','b-cp-abs'].forEach(id=>{const el=document.getElementById(id);if(el){el.value='';el.style.display='none';}});
 document.getElementById('b-cl').style.display='none';
 document.getElementById('b-extra-check').checked=false;
@@ -1342,14 +1342,23 @@ save();canB();renderB();renderDash();
 }
 function delB(id){if(!confirm('Удалить бронирование?'))return;S.bookings=S.bookings.filter(b=>b.id!==id);save();sbDelete('bookings',id).catch(e=>console.warn(e));renderB();renderDash();}
 function editE(id){const e=S.expenses.find(x=>x.id===id);if(!e)return;eEid=id;
+go('expenses');
+setTimeout(()=>{
 document.getElementById('e-obj').value=e.obj;document.getElementById('e-cat').value=e.cat;
-document.getElementById('e-amt').value=e.amount;document.getElementById('e-cur').value=e.currency;
+document.getElementById('e-amt').value=e.amount;document.getElementById('e-cur').value=e.currency||'gel';
 document.getElementById('e-dt').value=e.date;document.getElementById('e-paid').value=e.paidBy||'company';
 document.getElementById('e-paytype').value=e.payType||'cash';
 document.getElementById('e-who').value=e.enteredBy||'olya';
 document.getElementById('e-cm').value=e.comment||'';
 if(e.cat==='free'){document.getElementById('e-free-wrap').style.display='';document.getElementById('e-free-cat').value=e.freeCat||'';}
-document.getElementById('e-ftitle').textContent='Редактировать расход';document.getElementById('e-btn').textContent='Сохранить';document.getElementById('e-can').style.display='';renderE();}
+document.getElementById('e-ftitle').textContent='Редактировать расход';
+document.getElementById('e-btn').textContent='Сохранить';
+document.getElementById('e-can').style.display='';
+// Scroll to form
+const form=document.getElementById('e-amt');
+if(form){form.scrollIntoView({behavior:'smooth',block:'center'});form.focus();}
+},150);
+}
 function canE(){eEid=null;['e-amt','e-cm','e-free-cat'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});document.getElementById('e-obj').value='__all';document.getElementById('e-paid').value='company';document.getElementById('e-free-wrap').style.display='none';document.getElementById('e-ftitle').textContent='Новый расход';document.getElementById('e-btn').textContent='Добавить';document.getElementById('e-can').style.display='none';renderE();}
 function subE(){
 const obj=document.getElementById('e-obj').value,cat=document.getElementById('e-cat').value;
@@ -3498,6 +3507,8 @@ function editB(id){
   go('bookings');
   toggleWizard(true);
   setTimeout(()=>{
+    const wiz=document.getElementById('booking-wizard');
+    if(wiz) wiz.scrollIntoView({behavior:'smooth',block:'start'});
     document.getElementById('w-obj').value = b.obj||'';
     document.getElementById('w-src').value = b.source||'airbnb';
     document.getElementById('w-guest').value = b.guest||'';
