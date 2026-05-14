@@ -3015,18 +3015,12 @@ let _bmEditMode=false;
 
 function toggleBMEdit(){
   console.log('toggleBMEdit called, _bmId=', window._bmId);
-  _bmEditMode=!_bmEditMode;
-  const btn=document.getElementById('bm-mode-btn');
-  const footer=document.getElementById('bm-footer');
-  if(_bmEditMode){
-    btn.innerHTML='<i class="ti ti-x"></i> Просмотр';
-    footer.style.display='flex';
-    openBookingModal(window._bmId, true);
-  } else {
-    btn.innerHTML='<i class="ti ti-edit"></i> Изменить';
-    footer.style.display='none';
-    openBookingModal(window._bmId, false);
-  }
+  const id = window._bmId;
+  if(!id) return;
+  _bmEditMode = true;
+  document.getElementById('bm-mode-btn').style.display='none';
+  document.getElementById('bm-footer').style.display='flex';
+  openBookingModal(id, true);
 }
 
 function saveBMEdit(){
@@ -3084,8 +3078,7 @@ function saveBMEdit(){
   renderB(); renderDash();
   _bmEditMode=false;
   openBookingModal(id, false);
-  const btn=document.getElementById('bm-mode-btn');
-  if(btn) btn.innerHTML='<i class="ti ti-edit"></i> Изменить';
+  document.getElementById('bm-mode-btn').style.display='';
   document.getElementById('bm-footer').style.display='none';
 }
 
