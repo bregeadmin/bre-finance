@@ -1374,6 +1374,7 @@ const exp=S.expenses.find(e=>e.id===expenseId);
 if(exp) sbUpsert('expenses',[eToDb(exp)]).catch(e=>console.warn('Expense save error:',e));
 ['e-amt','e-cm','e-free-cat'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
 canE();renderE();
+resetZoom();
 }
 function delE(id){if(!confirm('Удалить расход?'))return;S.expenses=S.expenses.filter(e=>e.id!==id);save();sbDelete('expenses',id).catch(e=>console.warn(e));renderE();}
 // Split booking proportionally across months
@@ -2972,6 +2973,15 @@ function closeExpenseModal(){
   document.getElementById('expense-modal').style.display='none';
   window._emId=null;
 }
+function resetZoom(){
+  // Reset iOS zoom after form submit
+  const vp=document.querySelector('meta[name=viewport]');
+  if(vp){
+    const orig=vp.content;
+    vp.content='width=device-width,initial-scale=1,maximum-scale=1,viewport-fit=cover';
+    setTimeout(()=>vp.content=orig, 100);
+  }
+}
 
 function toggleEMEdit(){
   const id=window._emId;
@@ -3757,6 +3767,7 @@ function submitWizard(){
   renderB(); renderE(); renderDash();
   setSyncStatus('✅ Бронирование добавлено','var(--sage)');
   setTimeout(()=>setSyncStatus(''),3000);
+  resetZoom();
 }
 
 function resetWizard(){
